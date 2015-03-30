@@ -14,18 +14,18 @@ class ContainersController < DockerController
 
   reroute :post, %w(
     /create
-		/:id/kill
-		/:id/pause
-		/:id/unpause
-		/:id/rename
-		/:id/restart
-		/:id/start
-		/:id/stop
-		/:id/wait
-		/:id/resize
-		/:id/attach
-		/:id/copy
-		/:id/exec
+    /:id/kill
+    /:id/pause
+    /:id/unpause
+    /:id/rename
+    /:id/restart
+    /:id/start
+    /:id/stop
+    /:id/wait
+    /:id/resize
+    /:id/attach
+    /:id/copy
+    /:id/exec
   )
 
   reroute :delete, %w( /:id )
