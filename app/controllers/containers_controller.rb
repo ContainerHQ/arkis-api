@@ -12,6 +12,10 @@ class ContainersController < DockerController
     /:id/attach/ws
   )
 
+  hijack :post, %w(
+    /:id/attach
+  )
+
   reroute :post, %w(
     /create
     /:id/kill
@@ -23,7 +27,6 @@ class ContainersController < DockerController
     /:id/stop
     /:id/wait
     /:id/resize
-    /:id/attach
     /:id/copy
     /:id/exec
   )
