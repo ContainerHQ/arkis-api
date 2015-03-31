@@ -1,35 +1,38 @@
 require 'pry'
+require 'socket'
 
 # Inherit from this class when wrapping Docker API calls.
 class DockerController < ApplicationController
   def self.reroute(method, routes)
     routes.each do |route|
       send(method, route) do
-        binding.pry
-        response = DockerRequest.new(request).send(method)
+        req = DockerRequest.new(request)
+
+        #Test properly hijack request
+        if req.hijack?
+          env['rack.hijack'].call do |io|
+            io.write('lol')
+          end
+        end
+
+        response = req.send(method)
 
         status  response.code
         body    response.body
-        headers \
-          'Content-Type'   => response.headers[:content_type],
-          'Content-Length' => response.headers[:content_length]
+
         response
       end
     end
   end
+           #  # remote_ip: socket.remote_address.ip? &&
+          #             socket.remote_address.ip_address,
 
-  def self.hijack(method, routes)
-    routes.each do |route|
-      send(method, route) do
-     #   puts "sending request"
+     #   {
 
-        binding.pry
-  #      DockerRequest.new(request).send
-
-    #    puts "Proxy hijacked"
-
-   #     TCPSocket.open('staging-runners.42grounds.io', 2375)
-      end
-    end
-  end
+    #                 ,
+    #      local_adress: socket.local_address.ip? &&
+    #                    socket.local_address.ip_address,
+    #      local_port: socket.local_address.ip? &&
+    #                  socket.local_address.ip_port,
+    #    }
 end

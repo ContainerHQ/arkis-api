@@ -1,2 +1,2 @@
-# docker-api
-Docker API wrapper (compatible with Docker CLI)
+# docker-proxy
+Docker API proxy (compatible with Docker CLI)

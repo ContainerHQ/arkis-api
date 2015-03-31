@@ -1,4 +1,4 @@
-# map to /containers
+# map to /vX.XX/containers
 class ContainersController < DockerController
   reroute :get, %w(
     /ps
@@ -12,13 +12,10 @@ class ContainersController < DockerController
     /:id/attach/ws
   )
 
-  hijack :post, %w(
-    /:id/attach
-  )
-
   reroute :post, %w(
     /create
     /:id/kill
+    /:id/attach
     /:id/pause
     /:id/unpause
     /:id/rename
