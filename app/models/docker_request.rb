@@ -17,10 +17,6 @@ class DockerRequest < Struct.new(:request)
     RestClient.delete(url) { |response| response }
   end
 
-  def hijack?
-    @hijack ||= request.env['rack.hijack?']
-  end
-
   private
 
   def headers

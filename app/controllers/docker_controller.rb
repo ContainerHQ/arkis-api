@@ -7,7 +7,7 @@ class DockerController < ApplicationController
   def self.reroute(method, routes)
     routes.each do |route|
       send(method, route) do
-        if env['HTTP_UPGRADE'] == 'tcp' && env['HTTP_CONNECTION'].downcase == 'upgrade'
+        if hijack?
           hijack
         else
           redirect_to_docker(method)
@@ -16,13 +16,24 @@ class DockerController < ApplicationController
     end
   end
 
+  def hijack?
+    env['HTTP_UPGRADE']    == 'tcp' &&
+    env['HTTP_CONNECTION'] == 'Upgrade' &&
+    env['rack.hijack?']
+  end
+
   def hijack
-    # TODO: verify if hijack is possible
     env['rack.hijack'].call
     io = env['rack.hijack_io']
     begin
-      10.times do |i|
-        io.write("#{i}\r\n")
+      if params['stdin']
+        while line = io.gets
+          io.write("received #{line.chomp}\r\n")
+        end
+      else
+        10.times do |i|
+          io.write("#{i}\r\n")
+        end
       end
       # TODO:
       # If AttachStdin, read, write on docker host socket, read docker host socket and write this one.
