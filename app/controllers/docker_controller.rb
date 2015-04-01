@@ -27,8 +27,16 @@ class DockerController < ApplicationController
     io = env['rack.hijack_io']
     begin
       if params['stdin']
+        # Should run in a thread
+        # we don't need to close docker socket I think, only the server
+        # (docker host) should close it.
+        # thread.run do
+        #    read docker socket
+        #    write to client socket
+        # end
         while line = io.gets
-          io.write("received #{line.chomp}\r\n")
+          # send to docker socket
+
         end
       else
         10.times do |i|
