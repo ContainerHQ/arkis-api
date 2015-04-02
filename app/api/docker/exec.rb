@@ -1,14 +1,12 @@
-module API
-  module Docker
-    class Exec < API::Docker::Application
-      reroute :get, %w(
-    	  /:id/json
-      )
+class Docker::API::Exec < Docker::API
+  prefix: :exec
 
-      reroute :post, %w(
-        /id/start
-    	  /:id/resize
-      )
-    end
-  end
+  reroute :get, %w(
+	  /:id/json
+  )
+
+  reroute :post, %w(
+    /id/start
+	  /:id/resize
+  )
 end

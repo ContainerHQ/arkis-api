@@ -9,6 +9,10 @@ describe 'Create a container' do
     OUTER_APP
   end
 
+
+## get rack ip
+
+
   it 'creates a container' do
     binding.pry
   end

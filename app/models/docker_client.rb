@@ -18,6 +18,7 @@ class DockerClient < Struct.new(:host, :cert_path, :tls_verify)
 
   private
 
+# send block as method (something like .get(url, &avoid_exceptions)
   def get(request)
     RestClient.get(request.url) { |response| response }
   end
