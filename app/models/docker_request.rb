@@ -1,26 +1,11 @@
-require 'rest-client'
-
-class DockerRequest < Struct.new(:request)
-  # Should be in config
-  DOCKER_HOST             = 'http://staging-runners.42grounds.io:2375'
-  DOCKER_DEFAULT_REGISTRY = 'https://registry-1.docker.io'
-
-  def get
-    RestClient.get(url) { |response| response }
-  end
-
-  def post
-    RestClient.post(url, content, headers) { |response| response }
-  end
-
-  def delete
-    RestClient.delete(url) { |response| response }
-  end
-
-  private
-
+class DockerRequest < Struct.new(:client, :request, :params)
+  # headers must add ssl certficates if client.tls_verify?
   def headers
-    @headers ||= { content_type: :json, accept: :json }
+    { content_type: :json, accept: :json }
+  end
+
+  def method
+    request.request_method.downcase
   end
 
   def content
@@ -28,6 +13,6 @@ class DockerRequest < Struct.new(:request)
   end
 
   def url
-    @url ||= "#{DOCKER_HOST}#{request.script_name}#{request.path_info}?#{request.query_string}"
+    @url ||= "#{client.host}#{request.script_name}#{request.path_info}?#{request.query_string}"
   end
 end

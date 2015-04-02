@@ -1,12 +1,10 @@
-require 'sinatra/base'
+#\ -p 8080 -o 0.0.0.0 -s puma -E production
 
-require './app/helpers/application_helper'
-require './app/controllers/application_controller'
-require './app/controllers/docker_controller'
+require 'grape'
 
-Dir.glob('./app/{models,helpers,controllers}/*.rb').each { |file| require file }
+Dir.glob('./app/{models,helpers,api}/*.rb').each { |file| require file }
 
-map('/v1.17/containers') { run ContainersController }
-map('/v1.17/images')     { run ImagesController }
-map('/v1.17/exec')       { run ExecController }
-map('/v1.17/')           { run IndexController }
+map('/containers') { run API::Docker::Containers }
+map('/images')     { run API::Docker::Images }
+map('/exec')       { run API::Docker::Exec }
+map('/')           { run API::Docker::Root }
