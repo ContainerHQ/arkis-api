@@ -24,6 +24,8 @@ module Docker
         def hijack
           env['rack.hijack'].call
           io = env['rack.hijack_io']
+          # Warning: sending a \r\n means that we are closing header writing!
+          #
           Thread.new do
             begin
               # it appears that the socket must be in the same thread to write
