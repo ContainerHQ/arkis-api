@@ -10,56 +10,19 @@ module Docker
         @client = Docker::Client.get
       end
 
+      # TODO: copy header response
       after do
         # FORMAT STATUS BODY HEADERS HERE
-      end
-
-      helpers do
-        def hijack?
-          env['HTTP_UPGRADE']    == 'tcp' &&
-          env['HTTP_CONNECTION'] == 'Upgrade' &&
-          env['rack.hijack?']
-        end
-
-        def hijack
-          env['rack.hijack'].call
-          io = env['rack.hijack_io']
-          # Warning: sending a \r\n means that we are closing header writing!
-          #
-          Thread.new do
-            begin
-              # it appears that the socket must be in the same thread to write
-              @client.hijack(io, request, params: params)
-            ensure
-              io.close
-            end
-          end
-        end
+        status @response.status
+        body   @response.body
       end
     end
-
-    ## REST CLIENT MULTIPART IS SHITTY
-    ## IT'S SEEMS TO BE WAITING FOR EACH PART BEFORE LEAVING
-    ## WE NEED A PROPER STREAM READER
 
     module ClassMethods
       def reroute(method, routes)
         routes.each do |route|
           send(method, route) do
-            return hijack if hijack?
-
-            response = @client.send_request(request, params: params)
-
-            status response.code
-            body   response.body
-
-            # response.headers.each do |key, value|
-            #   puts key.to_s.titleize.gsub(' ', '-')
-            #   puts value
-            #   header key.to_s.titleize.gsub(' ', '-'), value
-            # end
-            #header 'Content-Type', 'application/json'
-            # TODO: copy header response
+            @response = @client.send_request(request, params: params)
           end
         end
       end

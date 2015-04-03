@@ -12,11 +12,5 @@ module Docker
       docker_request = Docker::Request.new(self, request, params)
       docker_request.send
     end
-
-    def hijack(socket, request, params:)
-      # move in before
-      docker_request = Docker::Request.new(self, request, params)
-      docker_request.stream(socket)
-    end
   end
 end
