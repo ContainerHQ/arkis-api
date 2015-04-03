@@ -2,6 +2,8 @@ source 'https://rubygems.org'
 
 gem 'grape'
 gem 'rest-client'
+gem 'activesupport'
+gem 'curb'
 gem 'puma'
 
 group :development, :test do

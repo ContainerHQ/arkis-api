@@ -1,10 +1,11 @@
 #\ -p 8080 -o 0.0.0.0 -s puma -E production
 
+$LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
+
 require 'grape'
+require 'docker'
 
-Dir.glob('./app/{models,helpers,api}/*.rb').each { |file| require file }
+# we can load everything *.rb in api/
+require_relative 'api/docker'
 
-map('/containers') { run API::Docker::Containers }
-map('/images')     { run API::Docker::Images }
-map('/exec')       { run API::Docker::Exec }
-map('/')           { run API::Docker::Root }
+map('/v1.17') { run Docker::API::Base }
