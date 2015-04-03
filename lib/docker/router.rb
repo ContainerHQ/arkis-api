@@ -37,11 +37,14 @@ module Docker
       end
     end
 
+    ## REST CLIENT MULTIPART IS SHITTY
+    ## IT'S SEEMS TO BE WAITING FOR EACH PART BEFORE LEAVING
+    ## WE NEED A PROPER STREAM READER
+
     module ClassMethods
       def reroute(method, routes)
         routes.each do |route|
           send(method, route) do
-            puts route
             return hijack if hijack?
 
             response = @client.send_request(request, params: params)

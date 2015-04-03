@@ -1,6 +1,6 @@
 require 'rest-client'
 require 'socket'
-
+require 'curb'
 module Docker
   class Request < Struct.new(:client, :request, :params)
     # headers must add ssl certficates if client.tls_verify?
@@ -11,11 +11,25 @@ module Docker
     end
 
     def stream(socket)
-      RestClient.post(url, { multipart: true}, headers) do |response|
-        puts response
-        socket.write(response)
-      end
+      curl = Curl::Easy.new(url)
+
+
+      # DOCKER do something if headers arrived after
+      # close socket fater
+
+      curl.on_body   { |data| socket.write(data) }
+      curl.on_header { |data| socket.write(data) }
+
+      curl.multipart_form_post = true
+      curl.http_post
+      # RestClient.post(url, { multipart: true}, headers) do |response|
+      #   puts response
+      #   socket.write(response)
+      # end
     end
+
+    # TODO: remove restclient
+
 
     def headers
       { content_type: :json, accept: :json }
