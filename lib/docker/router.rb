@@ -22,11 +22,10 @@ module Docker
         end
 
         def hijack
+          env['rack.hijack'].call
+          io = env['rack.hijack_io']
           Thread.new do
-            env['rack.hijack'].call
-            io = env['rack.hijack_io']
             begin
-              io.write("Status: 101\r\n")
               # it appears that the socket must be in the same thread to write
               @client.hijack(io, request, params: params)
             ensure
