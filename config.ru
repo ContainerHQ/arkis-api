@@ -2,10 +2,15 @@
 
 $LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
 
-require 'grape'
-require 'docker'
+require 'sinatra/base'
+require 'sinatra/streaming'
 
 # we can load everything *.rb in api/
 require_relative 'api/docker'
 
-map('/v1.17') { run Docker::API::Base }
+map('/v1.17') do
+  map('/containers') { run Docker::API::Containers }
+  map('/exec')       { run Docker::API::Exec }
+  map('/images')     { run Docker::API::Images }
+  map('/')           { run Docker::API::Root }
+end

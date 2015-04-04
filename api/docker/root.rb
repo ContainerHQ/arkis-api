@@ -1,7 +1,8 @@
+require_relative 'base'
+
 module Docker
   module API
-    class Root < Grape::API
-      include Docker::Router
+    class Root < Docker::API::Base
 
       reroute :get, %w(
         /_ping

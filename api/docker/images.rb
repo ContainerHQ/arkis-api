@@ -1,9 +1,8 @@
+require_relative 'base'
+
 module Docker
   module API
-    class Images < Grape::API
-      include Docker::Router
-
-      prefix :images
+    class Images < Docker::API::Base
 
       reroute :get, %w(
         /json

@@ -1,9 +1,8 @@
+require_relative 'base'
+
 module Docker
   module API
-    class Containers < Grape::API
-      include Docker::Router
-
-      prefix :containers
+    class Containers < Docker::API::Base
 
       reroute :get, %w(
         /ps
@@ -11,11 +10,18 @@ module Docker
         /:id/export
         /:id/changes
         /:id/json
-        /:id/logs
         /:id/top
         /:id/stats
         /:id/attach/ws
       )
+
+      get '/:id/logs' do
+        stream do |out|
+          @client.stream(request, params: params) do |data|
+            out.write(data)
+          end
+        end
+      end
 
       reroute :post, %w(
         /create

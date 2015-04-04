@@ -1,16 +1,15 @@
+require_relative 'base'
+
 module Docker
   module API
-    class Exec < Grape::API
-      include Docker::Router
-
-      prefix :exec
+    class Exec < Docker::API::Base
 
       reroute :get, %w(
         /:id/json
       )
 
       reroute :post, %w(
-        /id/start
+        /:id/start
         /:id/resize
       )
     end

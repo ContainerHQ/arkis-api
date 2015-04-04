@@ -19,5 +19,9 @@ module Docker
     def send(request, params:)
       Docker::Request.new(self, request, params).send
     end
+
+    def stream(request, params:, &block)
+      Docker::Request.new(self, request, params).stream(&block)
+    end
   end
 end

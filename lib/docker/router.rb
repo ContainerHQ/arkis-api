@@ -12,8 +12,7 @@ module Docker
 
       after do
         # FORMAT STATUS BODY HEADERS HERE
-        status @response.status
-        body   @response.body
+
       end
     end
 
@@ -21,7 +20,10 @@ module Docker
       def reroute(method, routes)
         routes.each do |route|
           send(method, route) do
-            @response = @client.send(request, params: params)
+            @res = @client.send(request, params: params)
+
+            status @res.status
+            body   @res.body
           end
         end
       end

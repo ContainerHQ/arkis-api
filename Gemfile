@@ -1,6 +1,7 @@
 source 'https://rubygems.org'
 
-gem 'grape'
+gem 'sinatra'
+gem 'sinatra-contrib'
 gem 'rack-stream'
 gem 'activesupport'
 gem 'curb'
