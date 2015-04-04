@@ -1,4 +1,4 @@
-#\ -p 8081 -o 0.0.0.0 -s unicorn -E production
+#\ -p 8081 -o 0.0.0.0 -s puma -E production
 
 $LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
 

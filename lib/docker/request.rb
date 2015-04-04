@@ -19,12 +19,20 @@ module Docker
     def stream(io)
       http_client = curl
       http_client.on_body do |data|
-        io.write(data)
+        if data == 8
+          io.write(data)
+          io.write("\r\n")
+        else
+          io.write(data)
+        end
       end
       http_client.on_header { |data| io.write(data) }
 
       http_client.multipart_form_post = true
-      http_client.send(:"http_#{method}")
+      begin
+        http_client.send(:"http_#{method}")
+      rescue
+      end
     end
 
     # THREAD.new bad idea
@@ -35,7 +43,6 @@ module Docker
         begin
           stream(io)
         ensure
-          puts "finished"
           io.close
         end
       end
