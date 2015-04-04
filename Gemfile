@@ -1,9 +1,11 @@
 source 'https://rubygems.org'
 
 gem 'grape'
+gem 'rack-stream'
 gem 'activesupport'
 gem 'curb'
 gem 'puma'
+gem 'unicorn'
 
 group :development, :test do
   gem 'pry'

@@ -10,7 +10,6 @@ module Docker
         @client = Docker::Client.get
       end
 
-      # TODO: copy header response
       after do
         # FORMAT STATUS BODY HEADERS HERE
         status @response.status
@@ -22,7 +21,7 @@ module Docker
       def reroute(method, routes)
         routes.each do |route|
           send(method, route) do
-            @response = @client.send_request(request, params: params)
+            @response = @client.send(request, params: params)
           end
         end
       end

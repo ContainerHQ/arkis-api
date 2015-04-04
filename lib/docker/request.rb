@@ -9,31 +9,34 @@ module Docker
     # send block as method (something like .get(url, &avoid_exceptions)
 
     def send
-      return hijack if hijack?
+      return hijack if hijack? || stream?
 
       __send__(method)
     end
 
     private
 
-    def stream(socket)
-      curl = Curl::Easy.new(url)
+    def stream(io)
+      http_client = curl
+      http_client.on_body do |data|
+        io.write(data)
+      end
+      http_client.on_header { |data| io.write(data) }
 
-      curl.on_body   { |data| socket.write(data) }
-      curl.on_header { |data| socket.write(data) }
-
-      curl.multipart_form_post = true
-      curl.http_post
+      http_client.multipart_form_post = true
+      http_client.send(:"http_#{method}")
     end
 
+    # THREAD.new bad idea
     def hijack
       request.env['rack.hijack'].call
-      socket = request.env['rack.hijack_io']
+      io = request.env['rack.hijack_io']
       Thread.new do
         begin
-          stream(socket)
+          stream(io)
         ensure
-          socket.close
+          puts "finished"
+          io.close
         end
       end
       # use grape/sinatra response instead?
@@ -44,6 +47,10 @@ module Docker
       request.env['HTTP_UPGRADE']    == 'tcp' &&
       request.env['HTTP_CONNECTION'] == 'Upgrade' &&
       request.env['rack.hijack?']
+    end
+
+    def stream?
+      params.include?('follow')
     end
 
     def headers
@@ -62,7 +69,7 @@ module Docker
     end
 
     def url
-      @url ||= "#{client.host}#{request.script_name}#{request.path_info}?#{request.query_string}"
+      @url ||= "#{client.endpoint}#{request.script_name}#{request.path_info}?#{request.query_string}"
     end
 
     # TODO: Share Curl::Easy.new across request
@@ -81,6 +88,11 @@ module Docker
     def curl
       Curl::Easy.new(url) do |curl|
         curl.headers['Content-Type'] = 'application/json'
+
+        curl.cacert   = File.join(client.cert_path, 'ca.pem')
+        curl.cert     = File.join(client.cert_path, 'cert.pem')
+        curl.cert_key = File.join(client.cert_path, 'key.pem')
+        curl.ssl_verify_peer = client.tls_verify?
       end
     end
   end

@@ -11,8 +11,8 @@ module Docker
         /:id/export
         /:id/changes
         /:id/json
-        /:id/top
         /:id/logs
+        /:id/top
         /:id/stats
         /:id/attach/ws
       )

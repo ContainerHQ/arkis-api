@@ -7,19 +7,19 @@ module Docker
 
       reroute :get, %w(
         /json
-    		/viz
-    		/search
-    		/get
-    		/:id/get
-    		/:id/history
-    		/:id/json
+        /viz
+        /search
+        /get
+        /:id/get
+        /:id/history
+        /:id/json
       )
 
       reroute :post, %w(
         /create
         /load
-    		/:id/push
-    	  /:id/tag
+        /:id/push
+        /:id/tag
       )
 
       reroute :delete, %w(

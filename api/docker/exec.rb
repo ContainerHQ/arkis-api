@@ -6,12 +6,12 @@ module Docker
       prefix :exec
 
       reroute :get, %w(
-    	  /:id/json
+        /:id/json
       )
 
       reroute :post, %w(
         /id/start
-    	  /:id/resize
+        /:id/resize
       )
     end
   end
