@@ -28,7 +28,7 @@ var api = {
         '/containers/:id/logs',
         '/containers/:id/stats',
         //'/containers/:id/attach/ws',
-        '/exec/:execid/json',
+        '/exec/:id/json',
     ],
     post: [
         '/auth',
