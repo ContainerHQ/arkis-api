@@ -12,7 +12,7 @@ var server = app.listen(port);
 
 var docker = new DockerProxy();
 
-server.on('upgrade', function(req, socket, head) {
+server.on('upgrade', function(req, socket) {
     docker.hijack(req, socket);
 });
 
