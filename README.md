@@ -16,11 +16,11 @@ production.**
 Some endpoints have not yet been implemented and will return a 404 error.
 
 ```
-GET  "/containers/{name:.*}/attach/ws"
-POST "/exec/{execid:.*}/start"
+GET  "/containers/(id)/attach/ws"
+POST "/exec/(id)/start"
 POST "/build"
 POST "/image/load"
-POST "/images/{name:.*}/push" (auth failed)
+POST "/images/(id)/push" (auth failed)
 ```
 
 Weird behaviors:
