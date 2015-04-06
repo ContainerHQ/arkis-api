@@ -1,0 +1,29 @@
+{
+  "name": "docker-proxy",
+  "version": "0.1.0",
+  "description": "A docker remote API proxy",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/foliea/docker-proxy.git"
+  },
+  "keywords": [
+    "docker",
+    "proxy"
+  ],
+  "author": "Adrien Folie <folieadrien@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/foliea/docker-proxy/issues"
+  },
+  "homepage": "https://github.com/foliea/docker-proxy",
+  "dependencies": {
+    "body-parser": "^1.12.2",
+    "express": "^4.12.3",
+    "request": "^2.55.0",
+    "underscore": "^1.8.3"
+  }
+}
