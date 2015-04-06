@@ -8,8 +8,8 @@ and then with Docker Swarm API.
 This means also that Docker CLI is able to work nicely with this
 proxy.
 
-** This project is at an early development stage. Don't use it in
-production. **
+**This project is at an early development stage. Don't use it in
+production.**
 
 ## Missing Endpoints
 
@@ -28,3 +28,15 @@ Weird behaviors:
 * Interactive attach seems to leave a ghost container.
 * Authentication is not persistent.
 ```
+
+## Author
+
+**Adrien Folie**
+
+* http://twitter.com/folieadrien
+* http://github.com/foliea
+
+## Licensing
+
+docker-proxy is licensed under the MIT License. See [LICENSE](LICENSE) for full
+license text.
