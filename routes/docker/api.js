@@ -2,7 +2,6 @@ module.exports.get = [
     '/_ping',
     '/events',
     '/info',
-//    '/version',
     '/images/json',
     '/images/viz',
     '/images/search',
@@ -18,7 +17,6 @@ module.exports.get = [
     '/containers/:id/top',
     '/containers/:id/logs',
     '/containers/:id/stats',
-   // '/containers/:id/attach/ws',
     '/exec/:id/json',
 ];
 
@@ -27,7 +25,7 @@ module.exports.post = [
     '/commit',
     '/build',
     '/images/create',
- //   '/images/load',
+    '/images/load',
   //  '/images/:id/push',
     '/images/:id/tag',
     '/containers/create',
