@@ -22,15 +22,11 @@ POST "/image/load"
 POST "/images/(id)/push" (auth failed)
 ```
 
-Weird behaviors:
+Known issues:
 ```
 * Authentication is not persistent.
-```
-
-Not implemented yet:
-
-```
-Proper error handling.
+* When the targeted Docker host can't be reached, it should returns a 404
+not found to the client instead of crashing.
 ```
 
 ## Author
