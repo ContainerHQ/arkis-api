@@ -25,7 +25,6 @@ POST "/images/(id)/push" (auth failed)
 
 Weird behaviors:
 ```
-* Interactive attach seems to leave a ghost container.
 * Authentication is not persistent.
 ```
 
