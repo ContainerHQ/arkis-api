@@ -1,14 +1,16 @@
 var express = require('express'),
     bodyParser = require('body-parser'),
+    multer = require('multer'),
     routes = require('./routes'),
-    app = express(),
-    port = process.env.PORT || 4000;
+    app = express();
 
-app.use(bodyParser.json());
-app.use('/v1.17', routes.docker);
+var port = process.env.PORT || 4000;
 
-var server = app.listen(port);
-
-server.on('upgrade', routes.upgrade);
+app.use(bodyParser.json())
+   .use(bodyParser.urlencoded({ extended: true }))
+   .use(multer())
+   .use('/v1.17', routes.docker)
+   .listen(port)
+   .on('upgrade', routes.upgrade);
 
 console.log('Listenning on port: %s', port);

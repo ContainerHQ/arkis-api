@@ -2,7 +2,7 @@ module.exports.get = [
     '/_ping',
     '/events',
     '/info',
-    '/version',
+//    '/version',
     '/images/json',
     '/images/viz',
     '/images/search',
@@ -25,7 +25,7 @@ module.exports.get = [
 module.exports.post = [
     '/auth',
     '/commit',
-  //  '/build',
+    '/build',
     '/images/create',
  //   '/images/load',
   //  '/images/:id/push',

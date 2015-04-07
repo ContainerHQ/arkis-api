@@ -1,5 +1,6 @@
 var _ = require('underscore'),
     express = require('express'),
+    es = require('event-stream'),
     api = require('./api'),
     DockerProxy = require('../../lib/docker');
 
@@ -15,6 +16,19 @@ _.each(api, function(routes, method) {
     _.each(routes, function(route) {
         router[method](route, proxyRequest);
     });
+});
+
+router.get('/version', function(req, res) {
+    docker.redirect(req)
+          .pipe(es.split())
+          .pipe(es.parse())
+          .pipe(es.map(function(data, cb) {
+              data['ApiVersion'] += ' (Docker Proxy)';
+              cb(null, data);
+          }))
+          .pipe(es.stringify())
+          .pipe(es.join(','))
+          .pipe(res);
 });
 
 module.exports = router;

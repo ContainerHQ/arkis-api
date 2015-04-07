@@ -18,7 +18,6 @@ Some endpoints have not yet been implemented and will return a 404 error.
 ```
 GET  "/containers/(id)/attach/ws"
 POST "/exec/(id)/start"
-POST "/build"
 POST "/image/load"
 POST "/images/(id)/push" (auth failed)
 ```
@@ -26,6 +25,12 @@ POST "/images/(id)/push" (auth failed)
 Weird behaviors:
 ```
 * Authentication is not persistent.
+```
+
+Not implemented yet:
+
+```
+Proper error handling.
 ```
 
 ## Author
