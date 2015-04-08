@@ -24,11 +24,8 @@ router.get('/version', function(req, res) {
           .pipe(es.parse())
           .pipe(es.map(function(data, cb) {
               data['ApiVersion'] += ' (Docker Proxy)';
-              cb(null, data);
-          }))
-          .pipe(es.stringify())
-          .pipe(es.join(','))
-          .pipe(res);
+              res.send(data);
+          }));
 });
 
 module.exports = router;
