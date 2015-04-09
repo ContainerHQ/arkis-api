@@ -1,4 +1,6 @@
-var express = require('express'),
+require('babel/register');
+
+var  express = require('express'),
     bodyParser = require('body-parser'),
     morgan = require('morgan'),
     multer = require('multer'),
