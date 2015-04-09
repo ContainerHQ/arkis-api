@@ -1,6 +1,6 @@
 var docker = require('../../lib/docker');
 
-var dockerHost = new docker.Host();
+var dockerHost = new docker.Host.default();
 
 module.exports = function(req, socket, head) {
     // TODO: check route, write 404 if invalid. Close socket

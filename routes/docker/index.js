@@ -4,7 +4,7 @@ var _ = require('underscore'),
     api = require('./api'),
     docker = require('../../lib/docker');
 
-var dockerHost = new docker.Host(),
+var dockerHost = new docker.Host.default(),
     router = express.Router();
 
 router.use(function(req, res, next) {
