@@ -1,8 +1,12 @@
-var DockerProxy = require('../../lib/docker');
+var docker = require('../../lib/docker');
 
-var docker = new DockerProxy();
+var dockerHost = new docker.Host();
 
 module.exports = function(req, socket, head) {
     // TODO: check route, write 404 if invalid. Close socket
-    docker.hijack(req, socket);
+
+    console.log(req.headers);
+    var proxy = new docker.Proxy(req, dockerHost);
+
+    proxy.hijack(socket);
 }

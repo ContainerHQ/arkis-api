@@ -2,12 +2,14 @@ var _ = require('underscore'),
     express = require('express'),
     es = require('event-stream'),
     api = require('./api'),
-    DockerProxy = require('../../lib/docker');
+    docker = require('../../lib/docker');
 
-var docker = new DockerProxy();
+var dockerHost = new docker.Host();
 
 function proxyRequest(req, res) {
-    docker.redirect(req).pipe(res);
+    var proxy = new docker.Proxy(req, dockerHost);
+
+    proxy.redirect().pipe(res);
 }
 
 var router = express.Router();
@@ -19,7 +21,9 @@ _.each(api, function(routes, method) {
 });
 
 router.get('/version', function(req, res) {
-    docker.redirect(req)
+    var proxy = new docker.Proxy(req, dockerHost);
+
+    proxy.redirect()
           .pipe(es.split())
           .pipe(es.parse())
           .pipe(es.map(function(data, cb) {
