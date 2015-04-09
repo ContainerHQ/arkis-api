@@ -8,4 +8,4 @@ module.exports = function(req, socket, head) {
     var proxy = new docker.Proxy(req, dockerHost);
 
     proxy.hijack(socket);
-}
+};

@@ -27,7 +27,7 @@ router.get('/version', function(req, res) {
         .pipe(es.split())
         .pipe(es.parse())
         .pipe(es.map(function(data, cb) {
-          data['ApiVersion'] += ' (Docker Proxy)';
+          data.ApiVersion += ' (Docker Proxy)';
           res.send(data);
         }));
 });
