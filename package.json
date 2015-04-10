@@ -4,7 +4,7 @@
   "description": "A docker remote API proxy",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
@@ -14,12 +14,15 @@
     "docker",
     "proxy"
   ],
-  "author": "Adrien Folie <folieadrien@gmail.com>",
+  "author": "Adrien Folie <folie.adrien@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/foliea/docker-proxy/issues"
   },
   "homepage": "https://github.com/foliea/docker-proxy",
+  "engines": {
+    "node": "0.12.x"
+  },
   "dependencies": {
     "babel": "5.0.12",
     "body-parser": "1.12.x",
@@ -30,7 +33,10 @@
     "request": "2.55.x",
     "underscore": "1.8.x"
   },
-  "engines": {
-    "node": "0.12.x"
+  "devDependencies": {
+    "chai": "2.2.0",
+    "mocha": "2.2.x",
+    "rewire": "^2.3.1",
+    "sinon": "1.14.x"
   }
 }

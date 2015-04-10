@@ -4,13 +4,29 @@ var _ = require('underscore'),
   api = require('./api'),
   docker = require('../../lib/docker');
 
-let dockerHost = new docker.Host.default(),
-    router = express.Router();
+let router = express.Router();
 
-router.use((req, res, next) => {
-  req.proxy = new docker.Proxy(req, dockerHost);
+function setStreaming(req, res, next) {
+  req.isStreaming = true;
   next();
-});
+}
+
+router
+  .post('/build', setStreaming)
+  .post('/images/load', setStreaming)
+  .use((req, res, next) => {
+    req.proxy = new docker.Proxy(req);
+    next();
+  })
+  .get('/version', (req, res) => {
+    req.proxy.redirect()
+      .pipe(es.split())
+      .pipe(es.parse())
+      .pipe(es.map((data, cb) => {
+        data.ApiVersion += ' (Docker Proxy)';
+        res.send(data);
+      }));
+  });
 
 for (let method of Object.keys(api)) {
   for (let route of api[method]) {
@@ -19,15 +35,5 @@ for (let method of Object.keys(api)) {
     });
   }
 }
-
-router.get('/version', (req, res) => {
-  req.proxy.redirect()
-    .pipe(es.split())
-    .pipe(es.parse())
-    .pipe(es.map((data, cb) => {
-      data.ApiVersion += ' (Docker Proxy)';
-      res.send(data);
-    }));
-});
 
 module.exports = router;

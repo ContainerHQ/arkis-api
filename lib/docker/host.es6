@@ -1,19 +1,17 @@
 var fs  = require('fs'),
-   path = require('path');
+  path = require('path');
 
 class Host {
-  constructor(host, tlsVerify, certPath) {
+  constructor(addr, tlsVerify=false, certPath='') {
     this.tlsVerify = tlsVerify;
-    this.addr      = this._getAddr(host);
+    this.url       = this._getUrl(addr);
     this.certs     = this._getCerts(certPath);
   }
-   /**
+  /*
    * We are following the same format used by the Docker client:
    *  `tcp://[host][:port]` or `unix://path`
    * If there isn't a host available in env, fallback to:
    *  unix:///var/run/docker.sock
-   * We are then parsing this host to request format:
-   *  `http://unix:/absolute/path/to/unix.socket:/request/path`
    */
   static default() {
     return new Host(
@@ -22,8 +20,13 @@ class Host {
         process.env.DOCKER_CERT_PATH
     );
   }
-
-  _getAddr(host) {
+  /*
+   * We are parsing this host to request format:
+   *  `http://unix:/absolute/path/to/unix.socket:/request/path`
+   * Or:
+   *  `http://host/request/path`
+   */
+  _getUrl(host) {
     let protocol = this.tlsVerify ? 'https' : 'http';
 
     if (host.startsWith('unix://')) {
