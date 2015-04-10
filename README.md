@@ -1,4 +1,5 @@
 # Docker Proxy
+[![Circle CI](https://circleci.com/gh/foliea/docker-proxy.svg?style=svg)](https://circleci.com/gh/foliea/docker-proxy)
 
 Docker remote API Proxy.
 
