@@ -72,7 +72,7 @@ describe('Docker', () => {
       });
 
       it('returns a new host using DOCKER_HOST env var', () => {
-        let expected = host._getUrl(process.env.DOCKER_HOST);
+        let expected = host._getUrl(process.env.DOCKER_HOST || UNIX_HOST);
 
         expect(host.url).to.equal(expected);
       });
