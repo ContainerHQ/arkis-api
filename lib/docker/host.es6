@@ -34,6 +34,8 @@ class Host {
     }
     else if (host.startsWith('tcp://')) {
       host = host.substring(6);
+    } else {
+      return host;
     }
     return `${protocol}://${host}`;
   }
