@@ -1,7 +1,7 @@
 var fs  = require('fs'),
-    path = require('path');
+   path = require('path');
 
-class Host{
+class Host {
   constructor(host, tlsVerify, certPath) {
     this.tlsVerify = tlsVerify;
     this.addr      = this._getAddr(host);

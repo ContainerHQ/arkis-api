@@ -2,7 +2,7 @@
   "name": "docker-proxy",
   "version": "0.1.0",
   "description": "A docker remote API proxy",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/foliea/docker-proxy",
   "dependencies": {
-    "babel": "^5.0.12",
+    "babel": "5.0.12",
     "body-parser": "1.12.x",
     "event-stream": "3.3.x",
     "express": "4.12.x",
