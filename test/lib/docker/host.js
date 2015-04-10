@@ -66,24 +66,26 @@ describe('Docker Host', () => {
   });
 
   describe('.default', () => {
+    let expectedHost = new Host(
+      process.env.DOCKER_HOST || UNIX_HOST,
+      !!process.env.DOCKER_TLS_VERIFY,
+      process.env.DOCKER_CERT_PATH
+    );
+
     beforeEach(() => {
       host = Host.default();
     });
 
     it('returns a new host using DOCKER_HOST env var', () => {
-      let expected = host._getUrl(process.env.DOCKER_HOST || UNIX_HOST);
-
-      expect(host.url).to.equal(expected);
+      expect(host.url).to.equal(expectedHost.url);
     });
 
     it('returns a new host using DOCKER_TLS_VERIFY env var', () => {
-      expect(host.tlsVerify).to.equal(!!process.env.DOCKER_TLS_VERIFY);
+      expect(host.tlsVerify).to.equal(expectedHost.tlsVerify);
     });
 
     it('returns a new host using DOCKER_CERT_PATH env var', () => {
-      let expected = host._getCerts(process.env.DOCKER_CERT_PATH);
-
-      expect(host.certs).to.deep.equal(expected);
+      expect(host.certs).to.deep.equal(expectedHost.certs);
     });
   });
 });
