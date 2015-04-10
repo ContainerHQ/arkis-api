@@ -11,12 +11,8 @@ const UNIX_SOCKET = '/var/run/docker.sock',
 Host.__set__('fs', { readFileSync: function(path) { return path; } });
 
 describe('Docker Host', () => {
-  let host = null;
-
   context('with tcp address', () => {
-    beforeEach(() => {
-      host = new Host(TCP_HOST);
-    });
+    let host = new Host(TCP_HOST);
 
     it('has an http url', () => {
       expect(host.url.startsWith('http://')).to.be.true;
@@ -32,9 +28,7 @@ describe('Docker Host', () => {
   });
 
   context('with unix socket address', () => {
-    beforeEach(() => {
-      host = new Host(UNIX_HOST);
-    });
+    let host = new Host(UNIX_HOST);
 
     it('has an url following request format', () => {
       let expected = `http://unix:${UNIX_SOCKET}:`;
@@ -44,9 +38,7 @@ describe('Docker Host', () => {
   });
 
   context('when using ssl', () => {
-    beforeEach(() => {
-      host = new Host(TCP_HOST, true, CERT_PATH);
-    });
+    let host = new Host(TCP_HOST, true, CERT_PATH);
 
     it('is tsl verified', () => {
       expect(host.tlsVerify).to.be.true;
@@ -72,9 +64,7 @@ describe('Docker Host', () => {
       process.env.DOCKER_CERT_PATH
     );
 
-    beforeEach(() => {
-      host = Host.default();
-    });
+    let host = Host.default();
 
     it('returns a new host using DOCKER_HOST env var', () => {
       expect(host.url).to.equal(expectedHost.url);
