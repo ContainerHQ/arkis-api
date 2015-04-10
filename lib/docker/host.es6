@@ -30,14 +30,12 @@ class Host {
     let protocol = this.tlsVerify ? 'https' : 'http';
 
     if (host.startsWith('unix://')) {
-      host = `unix:${host.substring(7)}:`;
+      return `${protocol}://unix:${host.substring(7)}:`;
     }
-    else if (host.startsWith('tcp://')) {
-      host = host.substring(6);
-    } else {
-      return host;
+    if (host.startsWith('tcp://')) {
+      return `${protocol}://${host.substring(6)}`;
     }
-    return `${protocol}://${host}`;
+    return host;
   }
 
   _getCerts(certPath) {
@@ -45,11 +43,11 @@ class Host {
 
     let certs = {};
 
-    ['ca', 'cert', 'key'].forEach(cert => {
+    for (let cert of ['ca', 'cert', 'key']) {
       let filepath = path.resolve(certPath, `${cert}.pem`);
 
       certs[cert] = fs.readFileSync(filepath);
-    });
+    }
     return certs;
   }
 }
