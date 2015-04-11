@@ -69,7 +69,10 @@ describe('Docker Host', () => {
     });
 
     it('has ssl cerificates following docker parameters', () => {
-      expect(host.certs).to.exist;
+      if (host.tlsVerify) {
+        return expect(host.certs).to.exist;
+      }
+      expect(host.certs).not.to.exist;
     });
   });
 });
