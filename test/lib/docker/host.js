@@ -60,15 +60,15 @@ describe('Docker Host', () => {
   describe('.default', () => {
     let host = Host.default();
 
-    it('returns a new host using DOCKER_HOST env var', () => {
+    it('has a url following docker parameters', () => {
       expect(host.url).to.be.a('string');
     });
 
-    it('returns a new host using DOCKER_TLS_VERIFY env var', () => {
+    it('has tls verify following docker parameters', () => {
       expect(host.tlsVerify).to.equal(!!process.env.DOCKER_TLS_VERIFY);
     });
 
-    it('returns a new host using DOCKER_CERT_PATH env var', () => {
+    it('has ssl cerificates following docker parameters', () => {
       expect(host.certs).to.exist;
     });
   });
