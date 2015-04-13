@@ -81,13 +81,13 @@ describe('Docker Host', () => {
         expect(host.url.startsWith('https://')).to.be.true;
       });
   
-      for (let cert of ['ca', 'cert', 'key']) {
+      ['ca', 'cert', 'key'].forEach(cert => {
         it(`has ${cert} ssl certificate`, () => {
           let expected = path.resolve(CERT_PATH, `${cert}.pem`);
   
           expect(host.certs[cert]).to.equal(expected);
         });
-      }
+      });
     });
   });
 
