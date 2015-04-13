@@ -24,17 +24,17 @@ describe('Docker Host', () => {
     })
 
     context('with unix socket address', () => {
-      it('has an url formated as http://unix:/absolute/socket.sock:', () => {
-        let host = new Host(UNIX_HOST);
+      let host = new Host(UNIX_HOST);
 
+      it('has an url formated as http://unix:/absolute/socket.sock:', () => {
         expect(host.url).to.equal(`http://unix:${UNIX_SOCKET}:`);
       });
     });
     
     context('with tcp address', () => {
-      it('has an http url formated as http://host:port', () => {
-        let host = new Host(TCP_HOST);
+      let host = new Host(TCP_HOST);
 
+      it('has an http url formated as http://host:port', () => {
         expect(host.url).to.equal(HTTP_HOST);
       });
     });
@@ -48,11 +48,7 @@ describe('Docker Host', () => {
     });
     
     context('when not using ssl', () => {
-      let host;
-
-      before(() => {
-        host = new Host(TCP_HOST);
-      });
+      let host = new Host(TCP_HOST);
       
       it("isn't tls verified", () => {
         expect(host.tlsVerify).to.be.false;
@@ -64,11 +60,7 @@ describe('Docker Host', () => {
     });
     
     context('when using ssl', () => {
-      let host;
-
-      before(() => {
-        host = new Host(TCP_HOST, true, CERT_PATH);
-      });
+      let host = new Host(TCP_HOST, true, CERT_PATH);
       
       it('is tls verified', () => {
         expect(host.tlsVerify).to.be.true;
