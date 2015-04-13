@@ -34,7 +34,7 @@ describe('Docker Host', () => {
       context('when using ssl', () => {
         let host = new Host(TCP_HOST, true);
 
-        it('has an https url formated as https://host:port', () => {
+        it('has an https url', () => {
           let expected = TCP_HOST.replace('tcp', 'https');
 
           expect(host.url).to.equal(expected);
