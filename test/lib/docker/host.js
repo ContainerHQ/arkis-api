@@ -24,7 +24,7 @@ describe('Docker Host', () => {
 
     context('with unix socket address', () => {
       it('has an url formated as http://unix:/absolute/socket.sock:', () => {
-        let host     = new Host(UNIX_HOST);
+        let host = new Host(UNIX_HOST);
 
         expect(host.url).to.equal(`http://unix:${UNIX_SOCKET}:`);
       });
