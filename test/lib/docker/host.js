@@ -40,9 +40,9 @@ describe('Docker Host', () => {
     });
     
     context('with http address', () => {
-      it('has an url equal to this address', () => {
-        let host = new Host(HTTP_HOST);
+      let host = new Host(HTTP_HOST);
 
+      it('has an url equal to this address', () => {
         expect(host.url).to.equal(HTTP_HOST);
       });
     });
