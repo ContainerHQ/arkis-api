@@ -23,31 +23,33 @@ describe('Docker Host', () => {
     })
 
     context('with unix socket address', () => {
-      let host;
+      it('has an url formated as http://unix:/absolute/socket.sock:', () => {
+        let host     = new Host(UNIX_HOST);
 
-      before(() => {
-        host = new Host(UNIX_HOST);
-      });
-
-      it('has an url with format http://unix:/socket/path/socket.sock:', () => {
-        let expected = `http://unix:${UNIX_SOCKET}:`;
-
-        expect(host.url).to.equal(expected);
+        expect(host.url).to.equal(`http://unix:${UNIX_SOCKET}:`);
       });
     });
+    
+    context('with tcp address', () => {
+      it('has an http url formated as http://host:port', () => {
+        let host = new Host(TCP_HOST);
 
+        expect(host.url).to.equal(TCP_HOST.replace('tcp', 'http'));
+      });
+    });
+    
     context('when not using ssl', () => {
       let host;
 
       before(() => {
         host = new Host(TCP_HOST);
       });
-
+      
       it('has an http url', () => {
         expect(host.url.startsWith('http://')).to.be.true;
       });
 
-      it("isn't tsl verified", () => {
+      it("isn't tls verified", () => {
         expect(host.tlsVerify).to.be.false;
       });
 
@@ -55,26 +57,26 @@ describe('Docker Host', () => {
         expect(host.certs).not.to.exist;
       });
     });
-
+    
     context('when using ssl', () => {
       let host;
 
       before(() => {
         host = new Host(TCP_HOST, true, CERT_PATH);
       });
-
-      it('is tsl verified', () => {
+      
+      it('is tls verified', () => {
         expect(host.tlsVerify).to.be.true;
       });
-
+  
       it('has an https url', () => {
         expect(host.url.startsWith('https://')).to.be.true;
       });
-
+  
       for (let cert of ['ca', 'cert', 'key']) {
         it(`has ${cert} ssl certificate`, () => {
           let expected = path.resolve(CERT_PATH, `${cert}.pem`);
-
+  
           expect(host.certs[cert]).to.equal(expected);
         });
       }
