@@ -28,8 +28,7 @@ describe('Docker Host', () => {
       });
     });
     
-    const TCP_HOST  = 'tcp://127.0.0.1:2375',
-          CERT_PATH = 'mypath';
+    const TCP_HOST = 'tcp://127.0.0.1:2375';
     
     context('with tcp address', () => {
       it('has an http url formated as http://host:port', () => {
@@ -66,6 +65,8 @@ describe('Docker Host', () => {
     });
     
     context('when using ssl', () => {
+      const CERT_PATH = 'mypath';
+  
       let host;
 
       before(() => {
