@@ -12,14 +12,14 @@ let fakeFs = { readFileSync: function(path) { return path; } };
 
 describe('Docker Host', () => {
   describe('.new', () => {
-    let revertFs;
+    let revertHost;
 
     before(() => {
-      revertFs = Host.__set__('fs', fakeFs);
+      revertHost = Host.__set__('fs', fakeFs);
     });
 
     after(() => {
-      revertFs();
+      revertHost();
     })
 
     context('with unix socket address', () => {
