@@ -5,6 +5,12 @@ var expect = require('chai').expect,
 
 let fakeFs = { readFileSync: function(path) { return path; } };
 
+const UNIX_SOCKET = '/var/run/docker.sock',
+      UNIX_HOST   = `unix://${UNIX_SOCKET}`,
+      TCP_HOST    = 'tcp://127.0.0.1:2375',
+      HTTP_HOST   = TCP_HOST.replace('tcp', 'http'),
+      CERT_PATH   = 'mypath';
+
 describe('Docker Host', () => {
   describe('.new', () => {
     let revertHost;
@@ -18,8 +24,7 @@ describe('Docker Host', () => {
     })
 
     context('with unix socket address', () => {
-      const UNIX_SOCKET = '/var/run/docker.sock',
-            UNIX_HOST   = `unix://${UNIX_SOCKET}`;
+      
 
       it('has an url formated as http://unix:/absolute/socket.sock:', () => {
         let host = new Host(UNIX_HOST);
@@ -28,19 +33,17 @@ describe('Docker Host', () => {
       });
     });
     
-    const TCP_HOST = 'tcp://127.0.0.1:2375';
+    
     
     context('with tcp address', () => {
       it('has an http url formated as http://host:port', () => {
         let host = new Host(TCP_HOST);
 
-        expect(host.url).to.equal(TCP_HOST.replace('tcp', 'http'));
+        expect(host.url).to.equal(HTTP_HOST);
       });
     });
     
     context('with http address', () => {
-      const HTTP_HOST = 'http://127.0.0.1:8080';
-
       it('has an url equal to this address', () => {
         let host = new Host(HTTP_HOST);
 
@@ -65,8 +68,6 @@ describe('Docker Host', () => {
     });
     
     context('when using ssl', () => {
-      const CERT_PATH = 'mypath';
-  
       let host;
 
       before(() => {
