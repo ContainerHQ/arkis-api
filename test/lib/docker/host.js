@@ -38,13 +38,13 @@ describe('Docker Host', () => {
       });
     });
     
-    context('with address of another format', () => {
-      const ADDRESS = 'http://127.0.0.1:8080';
+    context('with http address', () => {
+      const HTTP_HOST = 'http://127.0.0.1:8080';
 
       it('has an url equal to this address', () => {
-        let host = new Host(ADDRESS);
+        let host = new Host(HTTP_HOST);
 
-        expect(host.url).to.equal(ADDRESS);
+        expect(host.url).to.equal(HTTP_HOST);
       });
     });
     

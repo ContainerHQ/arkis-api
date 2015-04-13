@@ -28,12 +28,12 @@ router
       }));
   });
 
-for (let method of Object.keys(api)) {
-  for (let route of api[method]) {
+['get', 'post', 'delete'].forEach(method =>{
+  api[method].forEach(route => {
     router[method](route, (req, res) => {
       req.proxy.redirect().pipe(res);
     });
-  }
-}
+  });
+});
 
 module.exports = router;
