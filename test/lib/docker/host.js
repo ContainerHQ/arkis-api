@@ -24,16 +24,12 @@ describe('Docker Host', () => {
     })
 
     context('with unix socket address', () => {
-      
-
       it('has an url formated as http://unix:/absolute/socket.sock:', () => {
         let host = new Host(UNIX_HOST);
 
         expect(host.url).to.equal(`http://unix:${UNIX_SOCKET}:`);
       });
     });
-    
-    
     
     context('with tcp address', () => {
       it('has an http url formated as http://host:port', () => {
