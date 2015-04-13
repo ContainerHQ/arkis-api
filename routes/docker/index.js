@@ -2,6 +2,7 @@ var _ = require('underscore'),
   express = require('express'),
   es = require('event-stream'),
   api = require('./api'),
+  config = require('../../config'),
   docker = require('../../lib/docker');
 
 let router = express.Router();
@@ -15,7 +16,7 @@ router
   .post('/build', setStreaming)
   .post('/images/load', setStreaming)
   .use((req, res, next) => {
-    req.proxy = new docker.Proxy(req);
+    req.proxy = new docker.Proxy(req, config.docker);
     next();
   })
   .get('/version', (req, res) => {
