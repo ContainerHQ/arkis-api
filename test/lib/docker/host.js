@@ -14,37 +14,39 @@ describe('Docker Host', () => {
       it('has an url formated as http://unix:/absolute/socket.sock:', () => {
         expect(host.url).to.equal(`http://unix:${UNIX_SOCKET}:`);
       });
+
+      context('when using ssl', () => {
+        let host = new Host(UNIX_HOST, true);
+
+        it('has a unix https url', () => {
+          expect(host.url).to.equal(`https://unix:${UNIX_SOCKET}:`);
+        });
+      });
     });
-    
+
     context('with tcp address', () => {
       let host = new Host(TCP_HOST);
 
       it('has an http url formated as http://host:port', () => {
         expect(host.url).to.equal(HTTP_HOST);
       });
-      
-      context('with ssl', () => {
+
+      context('when using ssl', () => {
         let host = new Host(TCP_HOST, true);
 
-        it('has an https url with the same format', () => {
-          expect(host.url).to.equal(TCP_HOST.replace('tcp', 'https'));
+        it('has an https url formated as https://host:port', () => {
+          let expected = TCP_HOST.replace('tcp', 'https');
+
+          expect(host.url).to.equal(expected);
         });
-      })
+      });
     });
-    
+
     context('with http address', () => {
       let host = new Host(HTTP_HOST);
 
       it('has an url equal to this address', () => {
         expect(host.url).to.equal(HTTP_HOST);
-      });
-    });
-
-    context('when using ssl', () => {
-      let host = new Host(TCP_HOST, true);
-  
-      it('has an https url', () => {
-        expect(host.url.startsWith('https://')).to.be.true;
       });
     });
   });

@@ -12,7 +12,7 @@ function loadCerts(dir) {
 
   return _.mapValues({ca:'', cert:'', key:''}, (value, cert) => {
     let filepath = path.resolve(dir, `${cert}.pem`);
-  
+
     return fs.readFileSync(filepath);
   });
 }
