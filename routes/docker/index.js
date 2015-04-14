@@ -1,40 +1,46 @@
-var _ = require('underscore'),
-  express = require('express'),
-  es = require('event-stream'),
-  api = require('./api'),
-  config = require('../../config'),
-  docker = require('../../lib/docker');
+var express = require('express'),
+  containers = require('./containers'),
+  images = require('./images'),
+  docker = require('../../config').docker;
 
 let router = express.Router();
 
-function setStreaming(req, res, next) {
-  req.isStreaming = true;
-  next();
-}
-
 router
-  .post('/build', setStreaming)
-  .post('/images/load', setStreaming)
-  .use((req, res, next) => {
-    req.proxy = new docker.Proxy(req, config.docker);
-    next();
+  .use('/containers', containers)
+  .use('/images', images)
+  .get('/_ping', (req, res) => {
+    docker.ping((err, data) => {
+      res.send(data);
+    });
+  })
+  .get('/events', (req, res) => {
+    docker.getEvents(req.query, (err, data) => {
+      res.contentType('application/json');
+
+      data.pipe(res);
+    });
+  })
+  .get('/info', (req, res) => {
+    docker.info((err, data) => {
+      res.send(data);
+    });
   })
   .get('/version', (req, res) => {
-    req.proxy.redirect()
-      .pipe(es.split())
-      .pipe(es.parse())
-      .pipe(es.map((data, cb) => {
-        data.ApiVersion += ' (Docker Proxy)';
-        res.send(data);
-      }));
-  });
+    docker.version((err, data) => {
+      res.send(data);
+    });
+  })
+  .post('/auth', (req, res) => {
+    docker.checkAuth(req.body, (err, data) => {
+      res.send(data);
+    });
+  })
+  .post('/build', (req, res) => {
+    docker.buildImage(req, req.body, (err, data) => {
+      res.contentType('application/json');
 
-['get', 'post', 'delete'].forEach(method =>{
-  api[method].forEach(route => {
-    router[method](route, (req, res) => {
-      req.proxy.redirect().pipe(res);
+      data.pipe(res);
     });
   });
-});
 
 module.exports = router;

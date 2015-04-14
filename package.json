@@ -26,11 +26,13 @@
   "dependencies": {
     "babel": "5.0.12",
     "body-parser": "1.12.x",
+    "dockerode": "^2.1.1",
     "event-stream": "3.3.x",
     "express": "4.12.x",
     "lodash": "3.6.x",
     "morgan": "1.5.x",
     "multer": "0.1.x",
+    "path-to-regexp": "^1.0.3",
     "request": "2.55.x"
   },
   "devDependencies": {
