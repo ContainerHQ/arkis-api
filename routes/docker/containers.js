@@ -8,7 +8,8 @@ let router = express.Router()
 //
 // Very usefull to avoid duplication, and then
 // to parse request opts when it will be necessary (like adding labels, etc);
-
+// beside, body and query won't be both with something except when
+// necessary
 router
   .get('/json', (req, res) => {
     docker.listContainers(req.query, (err, data) => {
