@@ -5,6 +5,14 @@ var express = require('express'),
 
 let router = express.Router();
 
+function jsonHandler(req, res, cb=null) {
+  return function (err, data) {
+    if (cb !== null)
+      data = cb(data);
+    res.send(data);
+  };
+}
+
 router
   .use('/containers', containers)
   .use('/images', images)
@@ -26,9 +34,10 @@ router
     });
   })
   .get('/version', (req, res) => {
-    docker.version((err, data) => {
-      res.send(data);
-    });
+    docker.version(jsonHandler(req, res, (data) => {
+      data.ApiVersion += ' (Docker Proxy)';
+      return data;
+    }));
   })
   .post('/auth', (req, res) => {
     docker.checkAuth(req.body, (err, data) => {
