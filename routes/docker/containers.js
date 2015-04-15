@@ -32,6 +32,7 @@ router
       res.status(201).send(data);
     });
   })
+
   .param('id', (req, res, next, id) => {
     req.container = docker.getContainer(id);
     next();
@@ -50,6 +51,12 @@ router
   })
   .get('/:id/json', (req, res) => {
     req.container.inspect((err, data) => {
+      if (err) {
+        let id = req.query.id;
+
+        return res.redirect(`/images/${id}/json`);
+      }
+
       res.send(data);
     });
   })
@@ -123,6 +130,12 @@ router
     req.container.wait((err, data) => {
       res.send(data);
     });
+  })
+  .post('/containers/:id/copy', (req, res) => {
+    res.status(404).json('Not yet implemented.');
+  })
+  .post('/containers/:id/exec', (req, res) => {
+    res.status(404).json('Not yet implemented.');
   })
   .delete('/:id', (req, res) => {
     req.container.remove(req.query, (err, data) => {

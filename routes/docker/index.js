@@ -1,6 +1,7 @@
 var express = require('express'),
   containers = require('./containers'),
   images = require('./images'),
+  exec = require('./exec'),
   docker = require('../../config').docker;
 
 let router = express.Router();
@@ -16,6 +17,8 @@ function jsonHandler(res, cb) {
 router
   .use('/containers', containers)
   .use('/images', images)
+  .use('/exec', exec)
+
   .get('/_ping', (req, res) => {
     docker.ping((err, data) => {
       res.send(data);
@@ -50,6 +53,9 @@ router
 
       data.pipe(res);
     });
+  })
+  .post('/commit', (req, res) => {
+    res.status(404).json('Not yet implemented.');
   });
 
 module.exports = router;
