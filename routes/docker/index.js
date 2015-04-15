@@ -5,9 +5,9 @@ var express = require('express'),
 
 let router = express.Router();
 
-function jsonHandler(res, cb=null) {
+function jsonHandler(res, cb) {
   return function (err, data) {
-    if (cb !== null)
+    if (typeof cb === 'function')
       data = cb(data);
     res.send(data);
   };
