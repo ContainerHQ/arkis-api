@@ -17,11 +17,7 @@ router
     docker.ping(handler.sendTo(res));
   })
   .get('/events', (req, res) => {
-    docker.getEvents(req.query, (err, data) => {
-      res.contentType('application/json');
-
-      data.pipe(res);
-    });
+    docker.getEvents(req.query, handler.streamTo(res));
   })
   .get('/info', (req, res) => {
     docker.info(handler.sendTo(res));
@@ -36,11 +32,7 @@ router
     docker.checkAuth(req.body, handler.sendTo(res));
   })
   .post('/build', (req, res) => {
-    docker.buildImage(req, req.body, (err, data) => {
-      res.contentType('application/json');
-
-      data.pipe(res);
-    });
+    docker.buildImage(req, req.body, handler.streamTo(res));
   })
   .post('/commit', handler.notImplemented);
 

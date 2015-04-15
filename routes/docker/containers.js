@@ -39,11 +39,9 @@ router
     next();
   })
   .get('/:id/export', (req, res) => {
-    req.container.export((err, data) => {
-      res.contentType('application/octet-stream');
-
-      data.pipe(res);
-    });
+    req.container.export(handler.streamTo(res,
+      'application/octed-stream'
+    ));
   })
   .get('/:id/changes', (req, res) => {
     req.container.changes(handler.sendTo(res));
@@ -55,7 +53,6 @@ router
 
         return res.redirect(`/images/${id}/json`);
       }
-
       res.send(data);
     });
   })
@@ -63,18 +60,12 @@ router
     req.container.top(req.query, handler.sendTo(res));
   })
   .get('/:id/logs', (req, res) => {
-    req.container.logs(req.query, (err, data) => {
-      res.contentType('application/vnd.docker.raw-stream');
-
-      data.pipe(res);
-    });
+    req.container.logs(req.query, handler.streamTo(res,
+      'application/vnd.docker.raw-stream'
+    ));
   })
   .get('/:id/stats', (req, res) => {
-    req.container.stats((err, data) => {
-      res.contentType('application/json');
-
-      data.pipe(res);
-    });
+    req.container.stats(handler.streamTo(res));
   })
   .post('/:id/attach', (req, res) => {
     req.container.attach(req.query, (err, stream) => {
