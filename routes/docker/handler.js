@@ -22,6 +22,7 @@ module.exports.sendTo = function(res, callback) {
 module.exports.streamTo = function(res, type='application/json') {
   return function (err, data) {
     if (err) {
+      console.log(err);
       return res.status(err.statusCode).send(err.json);
     }
     res.contentType(type);

@@ -4,6 +4,8 @@ var express = require('express'),
 
 let router = express.Router();
 
+const NAME_GROUP = '(([^\\\\]+\/?)+)';
+
 router
   .get('/json', (req, res) => {
     docker.listImages(req.query, handler.sendTo(res));
@@ -11,33 +13,43 @@ router
   .get('/search', (req, res) => {
     docker.searchImages(req.query, handler.sendTo(res));
   })
-  .get('/get', handler.notImplemented)
   .post('/create', (req, res) => {
     docker.pull('', req.query, handler.streamTo(res));
     
     // This should import if fromSrc is set instead of fromImage.
   })
-  .post('/load', handler.notImplemented)
-
+  
+  // Id should be parsed in the same way in containers (for the redirection)
   .param('name', (req, res, next, name) => {
+    console.log(name);
     req.image = docker.getImage(name);
     next();
   })
   .get('/:name/get', (req, res) => {
     req.image.get(req.query, handler.streamTo(res));
   })
-  .get('/:name/history', (req, res) => {
+  .get('/:name'+NAME_GROUP+'/history', (req, res) => {
     req.image.history(handler.sendTo(res));
   })
   .get('/:name/json', (req, res) => {
     req.image.inspect(handler.sendTo(res));
   })
-  .post('/:name/push', handler.notImplemented)
+  .post('/:name/push', (req, res) => {
+    req.image.push(req.query, handler.streamTo(res));
+  })
   .post('/:name/tag', (req, res) => {
     req.image.tag(req.query, handler.sendTo(res));
   })
   .delete('/:name', (req, res) => {
     req.image.remove(req.query, handler.sendTo(res));
-  });
+  })
+
+  /*
+   *
+   * Not yet Implemented
+   *
+   */
+  .get('/get', handler.notImplemented)
+  .post('/load', handler.notImplemented);
 
 module.exports = router;
