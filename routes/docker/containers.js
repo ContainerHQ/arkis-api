@@ -1,5 +1,6 @@
 var _ = require('lodash'),
   express = require('express'),
+  handler = require('./handler'),
   docker = require('../../config').docker;
 
 let router = express.Router()
@@ -131,12 +132,8 @@ router
       res.send(data);
     });
   })
-  .post('/containers/:id/copy', (req, res) => {
-    res.status(404).json('Not yet implemented.');
-  })
-  .post('/containers/:id/exec', (req, res) => {
-    res.status(404).json('Not yet implemented.');
-  })
+  .post('/containers/:id/copy', handler.notImplemented)
+  .post('/containers/:id/exec', handler.notImplemented)
   .delete('/:id', (req, res) => {
     req.container.remove(req.query, (err, data) => {
       res.status(204).send();

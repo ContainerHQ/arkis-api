@@ -2,6 +2,7 @@ var express = require('express'),
   containers = require('./containers'),
   images = require('./images'),
   exec = require('./exec'),
+  handler = require('./handler'),
   docker = require('../../config').docker;
 
 let router = express.Router();
@@ -54,8 +55,6 @@ router
       data.pipe(res);
     });
   })
-  .post('/commit', (req, res) => {
-    res.status(404).json('Not yet implemented.');
-  });
+  .post('/commit', handler.notImplemented);
 
 module.exports = router;
