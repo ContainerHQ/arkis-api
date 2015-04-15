@@ -46,9 +46,7 @@ router
     });
   })
   .get('/:id/changes', (req, res) => {
-    req.container.changes((err, data) => {
-      res.send(data);
-    });
+    req.container.changes(handler.sendTo(res));
   })
   .get('/:id/json', (req, res) => {
     req.container.inspect((err, data) => {
@@ -62,9 +60,7 @@ router
     });
   })
   .get('/:id/top', (req, res) => {
-    req.container.top(req.query, (err, data) => {
-      res.send(data);
-    });
+    req.container.top(req.query, handler.sendTo(res));
   })
   .get('/:id/logs', (req, res) => {
     req.container.logs(req.query, (err, data) => {
@@ -88,9 +84,7 @@ router
     });
   })
   .post('/:id/start', (req, res) => {
-    req.container.start(req.query, (err, data) => {
-      res.status(204).send();
-    });
+    req.container.start(req.query, handler.sendTo(res));
   })
   .post('/:id/stop', (req, res) => {
     req.container.stop(req.query, (err, data) => {
@@ -118,19 +112,13 @@ router
     });
   })
   .post('/:id/rename', (req, res) => {
-    req.container.rename(req.query, (err, data) => {
-      res.send(data);
-    });
+    req.container.rename(req.query, handler.sendTo(res));
   })
   .post('/:id/resize', (req, res) => {
-    req.container.resize(req.query, (err, data) => {
-      res.send(data);
-    });
+    req.container.resize(req.query, handler.sendTo(res));
   })
   .post('/:id/wait', (req, res) => {
-    req.container.wait((err, data) => {
-      res.send(data);
-    });
+    req.container.wait(handler.sendTo(res));
   })
   .post('/containers/:id/copy', handler.notImplemented)
   .post('/containers/:id/exec', handler.notImplemented)

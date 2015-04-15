@@ -7,13 +7,6 @@ var express = require('express'),
 
 let router = express.Router();
 
-function jsonHandler(res, cb) {
-  return function (err, data) {
-    if (typeof cb === 'function')
-      data = cb(data);
-    res.send(data);
-  };
-}
 
 router
   .use('/containers', containers)
@@ -21,9 +14,7 @@ router
   .use('/exec', exec)
 
   .get('/_ping', (req, res) => {
-    docker.ping((err, data) => {
-      res.send(data);
-    });
+    docker.ping(handler.sendTo(res));
   })
   .get('/events', (req, res) => {
     docker.getEvents(req.query, (err, data) => {
@@ -33,20 +24,16 @@ router
     });
   })
   .get('/info', (req, res) => {
-    docker.info((err, data) => {
-      res.send(data);
-    });
+    docker.info(handler.sendTo(res));
   })
   .get('/version', (req, res) => {
-    docker.version(jsonHandler(res, (data) => {
+    docker.version(handler.sendTo(res, (data) => {
       data.ApiVersion += ' (Docker Proxy)';
       return data;
     }));
   })
   .post('/auth', (req, res) => {
-    docker.checkAuth(req.body, (err, data) => {
-      res.send(data);
-    });
+    docker.checkAuth(req.body, handler.sendTo(res));
   })
   .post('/build', (req, res) => {
     docker.buildImage(req, req.body, (err, data) => {

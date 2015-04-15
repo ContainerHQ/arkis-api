@@ -6,14 +6,10 @@ let router = express.Router();
 
 router
   .get('/json', (req, res) => {
-    docker.listImages(req.query, (err, data) => {
-      res.send(data);
-    });
+    docker.listImages(req.query, handler.sendTo(res));
   })
   .get('/search', (req, res) => {
-    docker.searchImages(req.query, (err, data) => {
-      res.send(data);
-    });
+    docker.searchImages(req.query, handler.sendTo(res));
   })
   .get('/get', handler.notImplemented)
   .post('/create', handler.notImplemented)
@@ -25,22 +21,15 @@ router
   })
   .get('/:name/get', handler.notImplemented)
   .get('/:name/history', (req, res) => {
-    req.image.history((err, data) => {
-      res.send(data);
-    });
+    req.image.history(handler.sendTo(res));
   })
   .get('/:name/json', (req, res) => {
-    req.image.inspect((err, data) => {
-      res.send(data);
-    });
+    req.image.inspect(handler.sendTo(res));
   })
   .post('/:name/push', handler.notImplemented)
   .post('/:name/tag', handler.notImplemented)
   .delete('/:name', (req, res) => {
-    req.image.remove(req.query, (err, data) => {
-      res.send(data);
-    });
+    req.image.remove(req.query, handler.sendTo(res));
   });
-
 
 module.exports = router;

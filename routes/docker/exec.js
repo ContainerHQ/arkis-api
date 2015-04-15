@@ -12,6 +12,7 @@ let router = express.Router();
 
 router
   .param('id', (req, res, next, id) => {
+    // req.exec = docker.getExec(id);
     next();
   })
   .get('/:id/json', handler.notImplemented)
