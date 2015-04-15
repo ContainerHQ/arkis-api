@@ -13,10 +13,7 @@ let router = express.Router()
 // necessary
 router
   .get('/json', (req, res) => {
-    docker.listContainers(req.query, (err, data) => {
-      console.log(err);
-      res.send(data);
-    });
+    docker.listContainers(req.query, handler.sendTo(res));
   })
   .post('/create', (req, res) => {
     let opts = _.merge(req.query, req.body);
@@ -71,6 +68,7 @@ router
     req.container.attach(req.query, (err, stream) => {
       res.socket.write('101\r\n');
 
+      // This is unstab
       res.socket.pipe(stream).pipe(res.socket);
     });
   })

@@ -2,6 +2,11 @@ module.exports.notImplemented = function(req, res) {
   res.status(404).json('Not yet implemented.');
 };
 
+// TODO:
+// Use middleware to merge req.opts = query+body;
+
+// Merge sendTo and streamTo : sendTo(res, ...args);
+
 module.exports.sendTo = function(res, callback) {
   return function (err, data) {
     if (err) {
