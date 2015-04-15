@@ -5,7 +5,7 @@ var express = require('express'),
 
 let router = express.Router();
 
-function jsonHandler(req, res, cb=null) {
+function jsonHandler(res, cb=null) {
   return function (err, data) {
     if (cb !== null)
       data = cb(data);
@@ -34,7 +34,7 @@ router
     });
   })
   .get('/version', (req, res) => {
-    docker.version(jsonHandler(req, res, (data) => {
+    docker.version(jsonHandler(res, (data) => {
       data.ApiVersion += ' (Docker Proxy)';
       return data;
     }));
