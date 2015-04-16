@@ -18,16 +18,15 @@ router
   .post('/create', (req, res) => {
     let opts = _.merge(req.query, req.body);
 
-    docker.createContainer(opts, handler.sendTo(res, container => {
-      let data = {};
-
+    docker.createContainer(opts, handler.sendTo(res, data => {
       // Containers returned by dockerode has wrong
       // keys, we need to capitalize them.
-      Object.keys(container).forEach((key) => {
-        data[_.capitalize(key)] = container[key];
+      Object.keys(data).forEach((key) => {
+        data[_.capitalize(key)] = data[key];
+
+        delete data[key];
       });
       res.status(201);
-      return data;
     }));
   })
 

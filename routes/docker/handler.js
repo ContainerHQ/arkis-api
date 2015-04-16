@@ -13,7 +13,7 @@ module.exports.sendTo = function(res, callback) {
       return res.status(err.statusCode).send(err.json);
     }
     if (typeof callback === 'function') {
-      data = callback(data);
+      callback(data);
     }
     res.send(data);
   };

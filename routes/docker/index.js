@@ -25,7 +25,6 @@ router
   .get('/version', (req, res) => {
     docker.version(handler.sendTo(res, (data) => {
       data.ApiVersion += ' (Docker Proxy)';
-      return data;
     }));
   })
   .post('/auth', (req, res) => {
