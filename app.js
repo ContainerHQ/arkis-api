@@ -15,7 +15,7 @@ const DOCKER_VERSIONS = [
 let port = process.env.PORT || 4000;
 
 app
-  .use(bodyParser.json())
+  .use(bodyParser.json({strict: false}))
   .use(bodyParser.urlencoded({ extended: true }))
   .use(multer())
   .use(morgan('combined'))

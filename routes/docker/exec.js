@@ -1,5 +1,5 @@
 var express = require('express'),
-  handler = require('./handler'),
+  handler = require('../common/handler'),
   docker = require('../../config').docker;
 
 let router = express.Router();
@@ -18,5 +18,5 @@ router
   .get('/:id/json', handler.notImplemented)
   .post('/:id/start', handler.notImplemented)
   .post('/:id/resize', handler.notImplemented);
-  
+
 module.exports = router;

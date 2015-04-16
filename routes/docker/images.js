@@ -1,6 +1,6 @@
 var _ = require('lodash'),
   express = require('express'),
-  handler = require('./handler'),
+  handler = require('../common/handler'),
   docker = require('../../config').docker;
 
 let router = express.Router();

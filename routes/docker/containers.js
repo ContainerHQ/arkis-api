@@ -1,6 +1,6 @@
 var _ = require('lodash'),
   express = require('express'),
-  handler = require('./handler'),
+  handler = require('../common/handler'),
   docker = require('../../config').docker;
 
 let router = express.Router()
@@ -57,40 +57,25 @@ router
     req.container.stats(handler.streamTo(res));
   })
   .post('/:id/attach', (req, res) => {
-    req.container.attach(req.query, (err, stream) => {
-      res.socket.write('101\r\n');
-
-      // This is unstab
-      res.socket.pipe(stream).pipe(res.socket);
-    });
+    req.container.attach(req.query, handler.hijack(req.socket));
   })
   .post('/:id/start', (req, res) => {
     req.container.start(req.query, handler.sendTo(res));
   })
   .post('/:id/stop', (req, res) => {
-    req.container.stop(req.query, (err, data) => {
-      res.status(204).send();
-    });
+    req.container.stop(req.query, handler.noContent(res));
   })
   .post('/:id/kill', (req, res) => {
-    req.container.kill(req.query, (err, data) => {
-      res.status(204).send();
-    });
+    req.container.kill(req.query, handler.noContent(res));
   })
   .post('/:id/restart', (req, res) => {
-    req.container.restart(req.query, (err, data) => {
-      res.status(204).send();
-    });
+    req.container.restart(req.query, handler.noContent(res));
   })
   .post('/:id/pause', (req, res) => {
-    req.container.pause(req.query, (err, data) => {
-      res.status(204).send();
-    });
+    req.container.pause(req.query, handler.noContent(res));
   })
   .post('/:id/unpause', (req, res) => {
-    req.container.unpause(req.query, (err, data) => {
-      res.status(204).send();
-    });
+    req.container.unpause(req.query, handler.noContent(res));
   })
   .post('/:id/rename', (req, res) => {
     req.container.rename(req.query, handler.sendTo(res));
@@ -104,9 +89,7 @@ router
   .post('/containers/:id/copy', handler.notImplemented)
   .post('/containers/:id/exec', handler.notImplemented)
   .delete('/:id', (req, res) => {
-    req.container.remove(req.query, (err, data) => {
-      res.status(204).send();
-    });
+    req.container.remove(req.query, handler.noContent(res));
   });
 
 module.exports = router;
