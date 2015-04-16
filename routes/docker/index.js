@@ -3,7 +3,8 @@ var express = require('express'),
   images = require('./images'),
   exec = require('./exec'),
   handler = require('./handler'),
-  docker = require('../../config').docker;
+  docker = require('../../config').docker,
+  version = require('../../package.json').version;
 
 let router = express.Router();
 
@@ -24,7 +25,7 @@ router
   })
   .get('/version', (req, res) => {
     docker.version(handler.sendTo(res, (data) => {
-      data.ApiVersion += ' (Docker Proxy)';
+      data.ApiVersion += ` (Docker Proxy ${version})`;
     }));
   })
   .post('/auth', (req, res) => {
