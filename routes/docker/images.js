@@ -73,6 +73,8 @@ router
   .post(imageName('/push'), (req, res) => {
     req.image.push(req.query, handler.streamTo(res), req.auth);
   })
+  // This one and 6 others requires to respond
+  // with 201 status.
   .post(imageName('/tag'), (req, res) => {
     req.image.tag(req.query, handler.sendTo(res));
   })
