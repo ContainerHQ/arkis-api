@@ -18,17 +18,17 @@ router
   .post('/create', (req, res) => {
     let opts = _.merge(req.query, req.body);
 
-    docker.createContainer(opts, (err, container) => {
-      if (err) return res.status(err.statusCode).send(err.json);
-
+    docker.createContainer(opts, handler.sendTo(res, container => {
       let data = {};
 
+      // Containers returned by dockerode has wrong
+      // keys, we need to capitalize them.
       Object.keys(container).forEach((key) => {
         data[_.capitalize(key)] = container[key];
       });
-
-      res.status(201).send(data);
-    });
+      res.status(201);
+      return data;
+    }));
   })
 
   .param('id', (req, res, next, id) => {
@@ -44,14 +44,7 @@ router
     req.container.changes(handler.sendTo(res));
   })
   .get('/:id/json', (req, res) => {
-    req.container.inspect((err, data) => {
-      if (err) {
-        let id = req.query.id;
-
-        return res.redirect(`/images/${id}/json`);
-      }
-      res.send(data);
-    });
+    req.container.inspect(handler.sendTo(res));
   })
   .get('/:id/top', (req, res) => {
     req.container.top(req.query, handler.sendTo(res));
