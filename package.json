@@ -26,19 +26,19 @@
   "dependencies": {
     "babel": "5.0.12",
     "body-parser": "1.12.x",
-    "dockerode": "^2.1.1",
+    "dockerode": "2.1.x",
     "event-stream": "3.3.x",
     "express": "4.12.x",
     "lodash": "3.6.x",
     "morgan": "1.5.x",
     "multer": "0.1.x",
-    "path-to-regexp": "^1.0.3",
+    "path-to-regexp": "1.0.x",
     "request": "2.55.x"
   },
   "devDependencies": {
     "chai": "2.2.0",
     "mocha": "2.2.x",
-    "rewire": "^2.3.1",
+    "rewire": "2.3.x",
     "sinon": "1.14.x"
   }
 }
