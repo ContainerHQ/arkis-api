@@ -74,7 +74,7 @@ router
     req.image.push(req.query, handler.streamTo(res), req.auth);
   })
   .post(imageName('/tag'), (req, res) => {
-    req.image.tag(req.query, handler.sendTo(res, data => {
+    req.image.tag(req.query, handler.sendTo(res, () => {
       res.status(201);
     }));
   })
