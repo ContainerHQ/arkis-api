@@ -47,6 +47,11 @@ module.exports.hijack = function(socket) {
     socket.write('Connection: Upgrade\r\n');
     socket.write('Upgrade: tcp\r\n');
     socket.write('\r\n');
-    socket.pipe(stream).pipe(socket);
+
+    stream.pipe(socket);
+
+    socket.on('data', (data) => {
+      stream.write(data);
+    });
   };
 };

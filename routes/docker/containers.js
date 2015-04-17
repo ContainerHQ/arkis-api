@@ -60,7 +60,9 @@ router
     req.container.attach(req.query, handler.hijack(req.socket));
   })
   .post('/:id/start', (req, res) => {
-    req.container.start(req.query, handler.sendTo(res));
+    req.container.start(req.query, handler.sendTo(res, data => {
+      res.status(204);
+    }));
   })
   .post('/:id/stop', (req, res) => {
     req.container.stop(req.query, handler.noContent(res));
