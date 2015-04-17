@@ -87,6 +87,8 @@ router
     req.container.wait(handler.sendTo(res));
   })
   .post('/containers/:id/copy', handler.notImplemented)
+
+  // Status 201
   .post('/containers/:id/exec', handler.notImplemented)
   .delete('/:id', (req, res) => {
     req.container.remove(req.query, handler.noContent(res));

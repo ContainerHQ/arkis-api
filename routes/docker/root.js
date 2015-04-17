@@ -30,7 +30,9 @@ router
   .post('/commit', (req, res) => {
     let container = docker.getContainer(req.query.container);
 
-    container.commit(req.query, handler.sendTo(res));
+    container.commit(req.query, handler.sendTo(res, data => {
+      res.status(201);
+    }));
   });
 
 module.exports = router;

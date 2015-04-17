@@ -16,7 +16,11 @@ router
     next();
   })
   .get('/:id/json', handler.notImplemented)
+
+  // Status: 201
   .post('/:id/start', handler.notImplemented)
+
+  // Status: 201
   .post('/:id/resize', handler.notImplemented);
 
 module.exports = router;
