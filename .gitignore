@@ -24,3 +24,6 @@ node_modules
 
 # Users Environment Variables
 .lock-wscript
+
+# Babel cache file
+.babel.json

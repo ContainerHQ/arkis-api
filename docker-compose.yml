@@ -1,0 +1,24 @@
+api:
+  build: .
+  command: node index.js
+  ports:
+    - '4000:4000'
+  volumes:
+    - '$DOCKER_CERT_PATH:/home/.docker'
+    - '/var/run/docker.sock:/var/run/docker.sock'
+  environment:
+    - DOCKER_CERT_PATH=/home/.docker
+    - DOCKER_HOST
+    - DOCKER_TLS_VERIFY
+
+# TODO: use new docker-compose extend to
+# extend each client config from service test
+# and just replace build path.
+test:
+  build: test/clients/dockerode
+  command: npm test
+  links:
+    - api
+  environment:
+    - DOCKER_HOST=http://api
+    - DOCKER_PORT=4000

@@ -19,6 +19,7 @@ app
   .use(bodyParser.urlencoded({ extended: true }))
   .use(multer())
   .use(morgan('combined'))
+  .use('/', routes.docker)
   .use(DOCKER_VERSIONS, routes.docker)
   .listen(port, () => {
      console.log('Listenning on port: %s', port);
