@@ -33,7 +33,7 @@ function imageName(route) {
 
 router
   .use(['/create', imageName('/push')], (req, res, next) => {
-    req.auth = { key: req.headers['x-registry-auth'] };
+    req.registryAuth = { key: req.headers['x-registry-auth'] };
     next();
   })
   .get('/json', (req, res) => {
@@ -43,8 +43,7 @@ router
     docker.searchImages(req.query, handler.sendTo(res));
   })
   .post('/create', (req, res) => {
-    console.log(req.auth);
-    docker.createImage(req.auth, req.query, handler.streamTo(res));
+    docker.createImage(req.registryAuth, req.query, handler.streamTo(res));
   })
   .post('/load', (req, res) => {
     docker.loadImage(req, req.body, handler.sendTo(res));
@@ -63,7 +62,7 @@ router
     req.image.inspect(handler.sendTo(res));
   })
   .post(imageName('/push'), (req, res) => {
-    req.image.push(req.query, handler.streamTo(res), req.auth);
+    req.image.push(req.query, handler.streamTo(res), req.registryAuth);
   })
   .post(imageName('/tag'), (req, res) => {
     req.image.tag(req.query, handler.sendTo(res, () => {
