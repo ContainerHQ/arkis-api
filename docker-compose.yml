@@ -16,7 +16,6 @@ api:
 # and just replace build path.
 test:
   build: test/clients/dockerode
-  command: npm test
   links:
     - api
   environment:

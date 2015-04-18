@@ -41,6 +41,7 @@ router
   // a base64 encoded string.
   .use((req, res, next) => {
     req.auth = req.headers['x-registry-auth'];
+    console.log(req.auth);
     next();
   })
   .get('/json', (req, res) => {
