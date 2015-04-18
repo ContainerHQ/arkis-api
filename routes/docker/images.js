@@ -32,16 +32,8 @@ function imageName(route) {
 }
 
 router
-  // check also x-registry-config
-  //
-  // We need to send a patch to docker-modem
-  // and then an example to dockerode ?
-  // Dockerode expect to have a auth object
-  // and encode itself, but we already have
-  // a base64 encoded string.
-  .use((req, res, next) => {
-    req.auth = req.headers['x-registry-auth'];
-    console.log(req.auth);
+  .use(['/create', imageName('/push')], (req, res, next) => {
+    req.auth = { key: req.headers['x-registry-auth'] };
     next();
   })
   .get('/json', (req, res) => {
@@ -51,6 +43,7 @@ router
     docker.searchImages(req.query, handler.sendTo(res));
   })
   .post('/create', (req, res) => {
+    console.log(req.auth);
     docker.createImage(req.auth, req.query, handler.streamTo(res));
   })
   .post('/load', (req, res) => {
@@ -61,9 +54,7 @@ router
     next();
   })
   .get(imageName('/get'), (req, res) => {
-    req.image.get(handler.streamTo(res,
-      'application/x-tar'
-    ));
+    req.image.get(handler.streamTo(res, 'application/x-tar'));
   })
   .get(imageName('/history'), (req, res) => {
     req.image.history(handler.sendTo(res));

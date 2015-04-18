@@ -35,9 +35,7 @@ router
     next();
   })
   .get('/:id/export', (req, res) => {
-    req.container.export(handler.streamTo(res,
-      'application/octed-stream'
-    ));
+    req.container.export(handler.streamTo(res, 'application/octed-stream'));
   })
   .get('/:id/changes', (req, res) => {
     req.container.changes(handler.sendTo(res));
@@ -60,9 +58,7 @@ router
     req.container.attach(req.query, handler.hijack(req.socket));
   })
   .post('/:id/start', (req, res) => {
-    req.container.start(req.query, handler.sendTo(res, () => {
-      res.status(204);
-    }));
+    req.container.start(req.query, handler.noContent(res));
   })
   .post('/:id/stop', (req, res) => {
     req.container.stop(req.query, handler.noContent(res));
@@ -88,10 +84,11 @@ router
   .post('/:id/wait', (req, res) => {
     req.container.wait(handler.sendTo(res));
   })
-  .post('/containers/:id/copy', handler.notImplemented)
-
+  .post('/:id/copy', (req, res) => {
+    req.container.copy(req.body, handler.streamTo(res));
+  })
   // Status 201
-  .post('/containers/:id/exec', handler.notImplemented)
+  .post('/:id/exec', handler.notImplemented)
   .delete('/:id', (req, res) => {
     req.container.remove(req.query, handler.noContent(res));
   });
