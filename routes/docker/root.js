@@ -25,7 +25,9 @@ router
     docker.checkAuth(req.body, handler.sendTo(res));
   })
   .post('/build', (req, res) => {
-    docker.buildImage(req, req.body, handler.streamTo(res));
+    let opts = _.merge(req.query, req.body);
+
+    docker.buildImage(req, opts, handler.streamTo(res));
   })
   .post('/commit', (req, res) => {
     docker

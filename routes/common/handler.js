@@ -9,6 +9,7 @@ function sendErrorTo(res, err) {
 module.exports.sendTo = function(res, callback) {
   return function(err, data) {
     if (err) {
+      console.log(err);
       return sendErrorTo(res, err);
     }
     if (typeof callback === 'function') {
@@ -39,6 +40,7 @@ module.exports.noContent = function(res) {
 
 module.exports.hijack = function(socket) {
   return function(err, stream) {
+    console.log('hijacking requested');
     if (err) {
       return socket.write(`HTTP/1.1 ${err.statusCode}\r\n\r\n`);
     }
@@ -48,6 +50,9 @@ module.exports.hijack = function(socket) {
     socket.write('Upgrade: tcp\r\n');
     socket.write('\r\n');
 
+    stream.on('data', data => {
+      console.log(data);
+    });
     stream.pipe(socket);
 
     socket.on('data', (data) => {

@@ -55,6 +55,7 @@ router
     req.container.stats(handler.streamTo(res));
   })
   .post('/:id/attach', (req, res) => {
+    console.log(req.headers);
     req.container.attach(req.query, handler.hijack(req.socket));
   })
   .post('/:id/start', (req, res) => {
