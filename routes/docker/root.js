@@ -28,11 +28,11 @@ router
     docker.buildImage(req, req.body, handler.streamTo(res));
   })
   .post('/commit', (req, res) => {
-    let container = docker.getContainer(req.query.container);
-
-    container.commit(req.query, handler.sendTo(res, () => {
-      res.status(201);
-    }));
+    docker
+      .getContainer(req.query.container)
+      .commit(req.query, handler.sendTo(res, () => {
+        res.status(201);
+      }));
   });
 
 module.exports = router;
