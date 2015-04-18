@@ -16,7 +16,6 @@ module.exports = function(req, socket, head) {
 
   let res = reg.exec(request.pathname);
 
-
   let container = docker.getContainer(res[2]);
 
   container.attach(request.query, handler.hijack(socket));

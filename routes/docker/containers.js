@@ -23,9 +23,8 @@ router
       // keys, we need to capitalize them.
       Object.keys(data).forEach((key) => {
         data[_.capitalize(key)] = data[key];
-
-        delete data[key];
       });
+      console.log('\ncreated: ', data, '\n');
       res.status(201);
     }));
   })
@@ -55,10 +54,11 @@ router
     req.container.stats(handler.streamTo(res));
   })
   .post('/:id/attach', (req, res) => {
-    console.log(req.headers);
     req.container.attach(req.query, handler.hijack(req.socket));
+    //req.container.attach(req.query, handler.streamTo(res));
   })
   .post('/:id/start', (req, res) => {
+    console.log('\nstarted: ', req.container, '\n');
     req.container.start(req.query, handler.noContent(res));
   })
   .post('/:id/stop', (req, res) => {
