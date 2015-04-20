@@ -14,12 +14,12 @@ router
   })
   .post('/:id/start', (req, res) => {
     console.log('start');
-    req.exec.start(req.body, handler.sendTo(res, data => {
+    req.exec.start(req.body, handler.sendTo(res, () => {
       res.status(201);
     }));
   })
   .post('/:id/resize', (req, res) => {
-    req.exec.start(req.body, handler.sendTo(res, data => {
+    req.exec.start(req.body, handler.sendTo(res, () => {
       res.status(201);
     }));
   });
