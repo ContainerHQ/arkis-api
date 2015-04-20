@@ -8,7 +8,7 @@ var express = require('express'),
 let port = process.env.PORT || 4000;
 
 app
-  .use(bodyParser.json({strict: false}))
+  .use(bodyParser.json({ strict: false }))
   .use(bodyParser.urlencoded({ extended: true }))
   .use(multer())
   .use(morgan('combined'))
