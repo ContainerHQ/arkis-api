@@ -14,15 +14,16 @@ production.**
 
 ## Missing Endpoints
 
-Some endpoints have not yet been implemented and will return a 404 error.
+Some endpoints have not yet been implemented and will return a 404 error:
 
 ```
 GET  "/containers/(id)/attach/ws"
+GET  "/images/get"
 ```
 
 Known issues:
 ```
-* Containers attach and exec start is working only on tcp upgrade.
+* Containers attach and exec start are working only on tcp upgrade.
 ```
 
 ## Author

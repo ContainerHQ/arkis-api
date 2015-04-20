@@ -5,13 +5,6 @@ var express = require('express'),
   routes = require('./routes'),
   app = express();
 
-const DOCKER_VERSIONS = [
-  '/v1.14',
-  '/v1.15',
-  '/v1.16',
-  '/v1.17',
-]
-
 let port = process.env.PORT || 4000;
 
 app
@@ -19,8 +12,7 @@ app
   .use(bodyParser.urlencoded({ extended: true }))
   .use(multer())
   .use(morgan('combined'))
-  .use('/', routes.docker)
-  .use(DOCKER_VERSIONS, routes.docker)
+  .use('/:version?', routes.docker)
   .listen(port, () => {
      console.log('Listenning on port: %s', port);
   })
