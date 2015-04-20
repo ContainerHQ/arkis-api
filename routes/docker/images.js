@@ -26,9 +26,8 @@ let router = express.Router();
  *    grounds.io/foliea/ubuntu
  *
  */
-function imageName(route) {
+function imageName(route='') {
   return `/:name(([^\\\\]+\/?)+)${route}`;
-
 }
 
 router
@@ -69,17 +68,10 @@ router
       res.status(201);
     }));
   })
-
-  // TODO: this route is broken
   .delete(imageName(), (req, res) => {
     req.image.remove(req.query, handler.sendTo(res));
   })
 
-  /*
-   * This one is not implemented by dockerode.
-   * We need to send a patch ASAP.
-   *
-   */
-  .get('/get', handler.notImplemented)
+  .get('/get', handler.notImplemented);
 
 module.exports = router;
