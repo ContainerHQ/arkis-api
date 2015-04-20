@@ -14,6 +14,6 @@ app
   .use(morgan('combined'))
   .use('/:version?', routes.docker)
   .listen(port, () => {
-     console.log('Listenning on port: %s', port);
+    console.log('Listenning on port: %s', port);
   })
   .on('upgrade', routes.upgrade);
