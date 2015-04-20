@@ -32,7 +32,6 @@
     "lodash": "3.6.x",
     "morgan": "1.5.x",
     "multer": "0.1.x",
-    "path-to-regexp": "1.0.x",
     "request": "2.55.x"
   },
   "devDependencies": {
