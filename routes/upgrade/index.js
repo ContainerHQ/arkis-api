@@ -1,22 +1,24 @@
-var _ = require('lodash'),
-    url = require('url'),
-    pathToRegexp = require('path-to-regexp'),
-    handler = require('../common/handler'),
-    docker = require('../../config').docker;
+var url = require('url'),
+  express = require('express'),
+  handler = require('../common/handler'),
+  docker = require('../../config').docker;
 
-// TODO: set http global agent
-// Cleanup
+let router = express.Router();
 
-module.exports = function(req, socket, head) {
-  let request = url.parse(req.url, true);
+router
+  .use((req, res, next) => {
+    req.query = url.parse(req.url, true).query;
+    next();
+  })
+  .post('/:version?/containers/:id/attach', (req, socket) => {
+    let container = docker.getContainer(req.params.id);
 
-  let keys = [];
+    container.attach(req.query, handler.hijack(socket));
+  })
+  .post('/:version?/exec/:id/start', (req, socket) => {
+    let exec = docker.getExec(req.params.id);
 
-  let reg = pathToRegexp('/:version/containers/:id/attach', keys);
+    exec.start(req.query, handler.hijack(socket));
+  });
 
-  let res = reg.exec(request.pathname);
-
-  let container = docker.getContainer(res[2]);
-
-  container.attach(request.query, handler.hijack(socket));
-};
+module.exports = router;

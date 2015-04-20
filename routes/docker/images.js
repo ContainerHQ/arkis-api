@@ -43,7 +43,6 @@ router
     docker.searchImages(req.query, handler.sendTo(res));
   })
   .post('/create', (req, res) => {
-    console.log(req.query);
     docker.createImage(req.registryAuth, req.query, handler.streamTo(res));
   })
   .post('/load', (req, res) => {

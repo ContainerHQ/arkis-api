@@ -12,7 +12,7 @@ module.exports.sendTo = function(res, callback) {
       return sendErrorTo(res, err);
     }
     if (typeof callback === 'function') {
-      callback(data);
+      data = callback(data) || data;
     }
     res.send(data);
   };
@@ -37,7 +37,7 @@ module.exports.noContent = function(res) {
   };
 };
 
-module.exports.hijack = function(socket, stdin=socket) {
+module.exports.hijack = function(socket) {
   return function(err, stream) {
     if (err) {
       return socket.write(`HTTP/1.1 ${err.statusCode}\r\n\r\n`);
@@ -49,6 +49,6 @@ module.exports.hijack = function(socket, stdin=socket) {
     socket.write('Upgrade: tcp\r\n');
     socket.write('\r\n');
 
-    stdin.pipe(stream, { end: false }).pipe(socket);
+    socket.pipe(stream, { end: false }).pipe(socket);
   };
 };

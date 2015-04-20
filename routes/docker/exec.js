@@ -4,23 +4,24 @@ var express = require('express'),
 
 let router = express.Router();
 
-/*
- * Waiting for https://github.com/apocas/dockerode/pull/131
- * to be merged upstream.
- *
- */
-
 router
   .param('id', (req, res, next, id) => {
-    // req.exec = docker.getExec(id);
+    req.exec = docker.getExec(id);
     next();
   })
-  .get('/:id/json', handler.notImplemented)
-
-  // Status: 201
-  .post('/:id/start', handler.notImplemented)
-
-  // Status: 201
-  .post('/:id/resize', handler.notImplemented);
+  .get('/:id/json', (req, res) => {
+    req.exec.inspect(handler.sendTo(res));
+  })
+  .post('/:id/start', (req, res) => {
+    console.log('start');
+    req.exec.start(req.body, handler.sendTo(res, data => {
+      res.status(201);
+    }));
+  })
+  .post('/:id/resize', (req, res) => {
+    req.exec.start(req.body, handler.sendTo(res, data => {
+      res.status(201);
+    }));
+  });
 
 module.exports = router;

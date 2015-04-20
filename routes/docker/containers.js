@@ -5,12 +5,6 @@ var _ = require('lodash'),
 
 let router = express.Router()
 
-// TODO: use middleware to merge opts:
-//
-// Very usefull to avoid duplication, and then
-// to parse request opts when it will be necessary (like adding labels, etc);
-// beside, body and query won't be both with something except when
-// necessary
 router
   .get('/json', (req, res) => {
     docker.listContainers(req.query, handler.sendTo(res));
@@ -18,14 +12,10 @@ router
   .post('/create', (req, res) => {
     let opts = _.merge(req.query, req.body);
 
-    docker.createContainer(opts, handler.sendTo(res, data => {
-      // Containers returned by dockerode has wrong
-      // keys, we need to capitalize them.
-      Object.keys(data).forEach((key) => {
-        data[_.capitalize(key)] = data[key];
-      });
-      console.log('\ncreated: ', data, '\n');
+    docker.createContainer(opts, handler.sendTo(res, container => {
       res.status(201);
+      // TODO: add warnings
+      return { Id: container.id };
     }));
   })
 
@@ -55,10 +45,8 @@ router
   })
   .post('/:id/attach', (req, res) => {
     req.container.attach(req.query, handler.hijack(req.socket));
-    //req.container.attach(req.query, handler.streamTo(res));
   })
   .post('/:id/start', (req, res) => {
-    console.log('\nstarted: ', req.container, '\n');
     req.container.start(req.query, handler.noContent(res));
   })
   .post('/:id/stop', (req, res) => {
@@ -88,8 +76,12 @@ router
   .post('/:id/copy', (req, res) => {
     req.container.copy(req.body, handler.streamTo(res));
   })
-  // Status 201
-  .post('/:id/exec', handler.notImplemented)
+  .post('/:id/exec', (req, res) => {
+    req.container.exec(req.body, handler.sendTo(res, exec => {
+      res.status(201);
+      return { Id: exec.id };
+    }));
+  })
   .delete('/:id', (req, res) => {
     req.container.remove(req.query, handler.noContent(res));
   });
