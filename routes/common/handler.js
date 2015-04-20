@@ -1,3 +1,5 @@
+var _ = require('lodash');
+
 module.exports.notImplemented = function(req, res) {
   res.status(404).json('Not yet implemented.');
 };
@@ -8,10 +10,9 @@ function sendErrorTo(res, err) {
 
 module.exports.sendTo = function(res, callback) {
   return function(err, data) {
-    if (err) {
-      return sendErrorTo(res, err);
-    }
-    if (typeof callback === 'function') {
+    if (err) { return sendErrorTo(res, err); }
+
+    if (_.isFunction(callback)) {
       data = callback(data) || data;
     }
     res.send(data);
@@ -20,19 +21,18 @@ module.exports.sendTo = function(res, callback) {
 
 module.exports.streamTo = function(res, type='application/json') {
   return function(err, data) {
-    if (err) {
-      return sendErrorTo(res, err);
-    }
+    if (err) { return sendErrorTo(res, err); }
+
     res.contentType(type);
+
     data.pipe(res);
   };
 };
 
 module.exports.noContent = function(res) {
   return function(err, data) {
-    if (err) {
-      return sendErrorTo(res, err);
-    }
+    if (err) { return sendErrorTo(res, err); }
+
     res.status(204).send();
   };
 };
