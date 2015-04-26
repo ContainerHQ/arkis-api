@@ -1,16 +1,13 @@
-var docker = require('../../lib/docker');
+var url = require('url'),
+  express = require('express');
 
-const NOT_FOUND = '404 Not Found\r\n\r\n';
+let router = express.Router();
 
-module.exports = function(req, socket, head) {
-  // TODO: check route, write 404 if invalid. Close socket
-  let proxy = new docker.Proxy(req);
-  
-  proxy.hijack()
-  .then(dockerSocket => {
-    dockerSocket
-      .pipe(socket)
-      .pipe(dockerSocket);
+router
+  .use((req, res, next) => {
+    req.query = url.parse(req.url, true).query;
+    next();
   })
-  .catch(err => socket.write(NOT_FOUND));
-};
+  .use('/:version?', require('./docker'));
+
+module.exports = router;

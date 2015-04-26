@@ -14,20 +14,16 @@ production.**
 
 ## Missing Endpoints
 
-Some endpoints have not yet been implemented and will return a 404 error.
+Some endpoints have not yet been implemented and will return a 404 error:
 
 ```
 GET  "/containers/(id)/attach/ws"
-POST "/exec/(id)/start"
+GET  "/images/get"
 ```
 
 Known issues:
 ```
-* Authentication is not persistent.
-* When the targeted Docker host can't be reached, it should returns a 404
-not found to the client.
-* Same error if hijacking fails.
-* Attach is not working for docker-compose.
+* Containers attach and exec start are working only on tcp upgrade.
 ```
 
 ## Author

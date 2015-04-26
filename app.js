@@ -8,15 +8,12 @@ var express = require('express'),
 let port = process.env.PORT || 4000;
 
 app
-  .use(bodyParser.json())
+  .use(bodyParser.json({ strict: false }))
   .use(bodyParser.urlencoded({ extended: true }))
   .use(multer())
   .use(morgan('combined'))
-  .use('/v1.14', routes.docker)
-  .use('/v1.15', routes.docker)
-  .use('/v1.16', routes.docker)
-  .use('/v1.17', routes.docker)
+  .use('/:version?', routes.docker)
   .listen(port, () => {
-     console.log('Listenning on port: %s', port);
+    console.log('Listenning on port: %s', port);
   })
   .on('upgrade', routes.upgrade);

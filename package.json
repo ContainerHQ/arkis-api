@@ -26,17 +26,16 @@
   "dependencies": {
     "babel": "5.0.12",
     "body-parser": "1.12.x",
-    "event-stream": "3.3.x",
+    "dockerode": "2.1.2",
     "express": "4.12.x",
     "lodash": "3.6.x",
     "morgan": "1.5.x",
-    "multer": "0.1.x",
-    "request": "2.55.x"
+    "multer": "0.1.x"
   },
   "devDependencies": {
     "chai": "2.2.0",
     "mocha": "2.2.x",
-    "rewire": "^2.3.1",
+    "rewire": "2.3.x",
     "sinon": "1.14.x"
   }
 }
