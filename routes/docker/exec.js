@@ -13,7 +13,6 @@ router
     req.exec.inspect(handler.sendTo(res));
   })
   .post('/:id/start', (req, res) => {
-    console.log('start');
     req.exec.start(req.body, handler.sendTo(res, () => {
       res.status(201);
     }));
