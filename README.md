@@ -3,8 +3,8 @@
 
 Docker remote API Proxy.
 
-This project aims to be fully compatible with Docker API,
-and then with Docker Swarm API.
+This project aims to be fully compatible with Docker API first,
+then with Docker Swarm API.
 
 This means also that Docker CLI is able to work nicely with this
 proxy.
