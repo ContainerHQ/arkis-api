@@ -1,18 +1,17 @@
 var _ = require('lodash'),
   express = require('express'),
-  handler = require('../common/handler'),
-  docker = require('../../config').docker;
+  handler = require('../common/handler');
 
 let router = express.Router()
 
 router
 .get('/json', (req, res) => {
-  docker.listContainers(req.query, handler.sendTo(res));
+  req.docker.listContainers(req.query, handler.sendTo(res));
 })
 .post('/create', (req, res) => {
   let opts = _.merge(req.query, req.body);
 
-  docker.createContainer(opts, handler.sendTo(res, container => {
+  req.docker.createContainer(opts, handler.sendTo(res, container => {
     res.status(201);
     // TODO: add warnings
     return { Id: container.id };
@@ -20,7 +19,7 @@ router
 })
 
 .param('id', (req, res, next, id) => {
-  req.container = docker.getContainer(id);
+  req.container = req.docker.getContainer(id);
   next();
 })
 .get('/:id/export', (req, res) => {

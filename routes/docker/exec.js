@@ -1,12 +1,11 @@
 var express = require('express'),
-  handler = require('../common/handler'),
-  docker = require('../../config').docker;
+  handler = require('../common/handler');
 
 let router = express.Router();
 
 router
 .param('id', (req, res, next, id) => {
-  req.exec = docker.getExec(id);
+  req.exec = req.docker.getExec(id);
   next();
 })
 .get('/:id/json', (req, res) => {
