@@ -1,14 +1,10 @@
 var express = require('express'),
-    docker = require('../../config/docker');
+  middlewares = require('../../middlewares');
 
 let router = express.Router();
 
 router
-.use((req, res, next) => {
-  // Create a middleware for that
-  req.docker = docker;
-  next();
-})
+.use(middlewares.docker)
 .use('/containers', require('./containers'))
 .use('/images', require('./images'))
 .use('/exec', require('./exec'))

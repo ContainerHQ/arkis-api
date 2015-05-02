@@ -1,10 +1,11 @@
 var express = require('express'),
   handler = require('../common/handler'),
-  docker = require('../../config').docker;
+  middlewares = require('../../middlewares');
 
 let router = express.Router();
 
 router
+.use(middlewares.docker)
 .post('/containers/:id/attach', (req, socket) => {
   docker
   .getContainer(req.params.id)
