@@ -7,12 +7,12 @@ let router = express.Router();
 router
 .use(middlewares.docker)
 .post('/containers/:id/attach', (req, socket) => {
-  docker
+  req.docker
   .getContainer(req.params.id)
   .attach(req.query, handler.hijack(socket));
 })
 .post('/exec/:id/start', (req, socket) => {
-  docker
+  req.docker
   .getExec(req.params.id)
   .start(req.query, handler.hijack(socket));
 });
