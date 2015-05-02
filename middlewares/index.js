@@ -1,3 +1,4 @@
 module.exports = {
-  docker: require('./docker')
-}
+  docker: require('./docker'),
+  parseQuery: require('./parsequery');
+};
