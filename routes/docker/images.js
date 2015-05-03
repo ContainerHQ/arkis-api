@@ -1,7 +1,6 @@
 var _ = require('lodash'),
   express = require('express'),
-  handler = require('../common/handler'),
-  docker = require('../../config').docker;
+  handler = require('../common/handler');
 
 let router = express.Router();
 
@@ -36,16 +35,16 @@ router
   next();
 })
 .get('/json', (req, res) => {
-  docker.listImages(req.query, handler.sendTo(res));
+  req.docker.listImages(req.query, handler.sendTo(res));
 })
 .get('/search', (req, res) => {
-  docker.searchImages(req.query, handler.sendTo(res));
+  req.docker.searchImages(req.query, handler.sendTo(res));
 })
 .post('/create', (req, res) => {
-  docker.createImage(req.registryAuth, req.query, handler.streamTo(res));
+  req.docker.createImage(req.registryAuth, req.query, handler.streamTo(res));
 })
 .post('/load', (req, res) => {
-  docker.loadImage(req, req.body, handler.sendTo(res));
+  req.docker.loadImage(req, req.body, handler.sendTo(res));
 })
 .param('name', (req, res, next, name) => {
   req.image = docker.getImage(name);
