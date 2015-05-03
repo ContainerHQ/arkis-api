@@ -1,23 +1,22 @@
 var _ = require('lodash'),
   express = require('express'),
   handler = require('../common/handler'),
-  docker = require('../../config').docker,
   version = require('../../package.json').version;
 
 let router = express.Router();
 
 router
 .get('/_ping', (req, res) => {
-  docker.ping(handler.sendTo(res));
+  req.docker.ping(handler.sendTo(res));
 })
 .get('/events', (req, res) => {
-  docker.getEvents(req.query, handler.streamTo(res));
+  req.docker.getEvents(req.query, handler.streamTo(res));
 })
 .get('/info', (req, res) => {
-  docker.info(handler.sendTo(res));
+  req.docker.info(handler.sendTo(res));
 })
 .get('/version', (req, res) => {
-  docker.version(handler.sendTo(res, (data) => {
+  req.docker.version(handler.sendTo(res, (data) => {
     data.ApiVersion += ` (Docker Proxy ${version})`;
   }));
 })
@@ -27,10 +26,10 @@ router
 .post('/build', (req, res) => {
   let opts = _.merge(req.query, req.body);
 
-  docker.buildImage(req, opts, handler.streamTo(res));
+  req.docker.buildImage(req, opts, handler.streamTo(res));
 })
 .post('/commit', (req, res) => {
-  docker
+  req.docker
   .getContainer(req.query.container)
   .commit(req.query, handler.sendTo(res, () => {
     res.status(201);
