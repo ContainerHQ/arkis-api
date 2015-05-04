@@ -21,3 +21,13 @@ test:
   environment:
     - DOCKER_HOST=http://api
     - DOCKER_PORT=4000
+  tty: true
+
+#cli:
+  #build: test/clients/docker-cli
+  #links:
+    #- api
+  #environment:
+    #- DOCKER_HOST=tcp://api:4000
+  #privileged: true
+  #tty: true

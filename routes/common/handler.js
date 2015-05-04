@@ -1,39 +1,47 @@
 var _ = require('lodash');
 
-module.exports.notImplemented = function(req, res) {
+module.exports.notYetImplemented = function(req, res) {
   res.status(404).json('Not yet implemented.');
 };
 
-function sendErrorTo(res, err) {
-  res.status(err.statusCode).send(err.json);
-}
+module.exports.docker = function(res, opts={}, callback) {
+  let stream = opts.stream || false,
+    type = opts.type || 'application/json',
+    status = opts.status || 200;
 
-module.exports.sendTo = function(res, callback) {
   return function(err, data) {
-    if (err) { return sendErrorTo(res, err); }
+    /*
+     * If an error happened with dockerode, this send
+     * the error back to the client.
+     *
+     */
+    if (err) {
+      return res.status(err.statusCode).send(err.json);
+    }
 
+    res.status(status);
+
+    /*
+     * In streaming mode, we get from drockerode a stream
+     * that we need to pipe to the response.
+     *
+     */
+    if (stream) {
+      res.contentType(type);
+
+      return data.pipe(res);
+    }
+
+    /*
+     * In non streaming mode, this allow us to
+     * modify the data returned by dockerode before
+     * sending it to the client.
+     *
+     */
     if (_.isFunction(callback)) {
       data = callback(data) || data;
     }
     res.send(data);
-  };
-};
-
-module.exports.streamTo = function(res, type='application/json') {
-  return function(err, data) {
-    if (err) { return sendErrorTo(res, err); }
-
-    res.contentType(type);
-
-    data.pipe(res);
-  };
-};
-
-module.exports.noContent = function(res) {
-  return function(err, data) {
-    if (err) { return sendErrorTo(res, err); }
-
-    res.status(204).send();
   };
 };
 

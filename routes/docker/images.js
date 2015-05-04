@@ -35,42 +35,43 @@ router
   next();
 })
 .get('/json', (req, res) => {
-  req.docker.listImages(req.query, handler.sendTo(res));
+  req.docker.listImages(req.query, handler.docker(res));
 })
 .get('/search', (req, res) => {
-  req.docker.searchImages(req.query, handler.sendTo(res));
+  req.docker.searchImages(req.query, handler.docker(res));
 })
 .post('/create', (req, res) => {
-  req.docker.createImage(req.registryAuth, req.query, handler.streamTo(res));
+  req.docker.createImage(req.registryAuth, req.query, handler.docker(res, {stream: true}));
 })
 .post('/load', (req, res) => {
-  req.docker.loadImage(req, req.body, handler.sendTo(res));
+  req.docker.loadImage(req, req.body, handler.docker(res));
 })
+
 .param('name', (req, res, next, name) => {
-  req.image = docker.getImage(name);
+  req.image = req.docker.getImage(name);
   next();
 })
 .get(imageName('/get'), (req, res) => {
-  req.image.get(handler.streamTo(res, 'application/x-tar'));
+  req.image.get(handler.docker(res,
+    {stream: true, type: 'application/x-tar'}
+  ));
 })
 .get(imageName('/history'), (req, res) => {
-  req.image.history(handler.sendTo(res));
+  req.image.history(handler.docker(res));
 })
 .get(imageName('/json'), (req, res) => {
-  req.image.inspect(handler.sendTo(res));
+  req.image.inspect(handler.docker(res));
 })
 .post(imageName('/push'), (req, res) => {
-  req.image.push(req.query, handler.streamTo(res), req.registryAuth);
+  req.image.push(req.query, handler.docker(res, {stream: true}), req.registryAuth);
 })
 .post(imageName('/tag'), (req, res) => {
-  req.image.tag(req.query, handler.sendTo(res, () => {
-    res.status(201);
-  }));
+  req.image.tag(req.query, handler.docker(res, {status: 201}));
 })
 .delete(imageName(), (req, res) => {
-  req.image.remove(req.query, handler.sendTo(res));
+  req.image.remove(req.query, handler.docker(res));
 })
 
-.get('/get', handler.notImplemented);
+.get('/get', handler.notYetImplemented);
 
 module.exports = router;
