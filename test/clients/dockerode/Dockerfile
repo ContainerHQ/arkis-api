@@ -1,6 +1,6 @@
 FROM node:0.12.2
 
-ENV VERSION 2.1.1
+ENV VERSION 2.1.2
 
 ENV APP /dockerode
 
