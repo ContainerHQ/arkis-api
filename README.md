@@ -17,7 +17,7 @@ production.**
 Some endpoints have not yet been implemented and will return a 404 error:
 
 ```
-GET  "/containers/(id)/attach/ws"
+GET  "/containers/:id/attach/ws"
 GET  "/images/get"
 ```
 
