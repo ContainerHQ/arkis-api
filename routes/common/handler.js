@@ -4,7 +4,7 @@ module.exports.notYetImplemented = function(req, res) {
   res.status(404).json('Not yet implemented.');
 };
 
-module.exports.docker = function(res, opts={}, callback) {
+module.exports.docker = function(res, opts={}, callback=opts) {
   let stream = opts.stream || false,
     type = opts.type || 'application/json',
     status = opts.status || 200;
