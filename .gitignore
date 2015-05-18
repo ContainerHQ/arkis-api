@@ -20,7 +20,11 @@ coverage
 build/Release
 
 # Dependency directory
-node_modules
+#
+# We currently need to store this to resolve properly dependencies inside a
+# container even when using a data volume.
+
+# node_modules
 
 # Users Environment Variables
 .lock-wscript
