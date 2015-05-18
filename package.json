@@ -33,7 +33,7 @@
     "multer": "0.1.x"
   },
   "devDependencies": {
-    "chai": "2.2.0",
+    "chai": "2.2.x",
     "mocha": "2.2.x",
     "rewire": "2.3.x",
     "sinon": "1.14.x"

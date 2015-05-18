@@ -3,9 +3,9 @@ var http = require('http'),
 
 http.globalAgent.maxSockets = 1000;
 
-let docker = new Docker();
+const CURRENT_DOCKER = new Docker();
 
 module.exports = function(req, res, next) {
-  req.docker = docker;
+  req.docker = CURRENT_DOCKER;
   next();
 };
