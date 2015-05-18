@@ -4,7 +4,8 @@
   "description": "A docker remote API proxy",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "watch": "nodemon --ignore tests/"
   },
   "repository": {
     "type": "git",
@@ -35,6 +36,7 @@
   "devDependencies": {
     "chai": "2.2.x",
     "mocha": "2.2.x",
+    "nodemon": "1.3.x",
     "rewire": "2.3.x",
     "sinon": "1.14.x"
   }
