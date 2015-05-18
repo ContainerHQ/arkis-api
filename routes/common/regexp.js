@@ -1,6 +1,6 @@
 /*
  *  Returns a route formated with a RegExp to be able
- *  to get paths like:
+ *  to resolve paths like:
  *
  *    /images/foliea/ubuntu/json
  *    /images/ubuntu/json
