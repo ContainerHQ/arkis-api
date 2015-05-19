@@ -1,4 +1,5 @@
 var express = require('express'),
+  cors = require('cors'),
   bodyParser = require('body-parser'),
   morgan = require('morgan'),
   multer = require('multer'),
@@ -8,6 +9,7 @@ var express = require('express'),
 let port = process.env.PORT || 4000;
 
 app
+.use(cors())
 .use(bodyParser.json({ strict: false }))
 .use(bodyParser.urlencoded({ extended: true }))
 .use(multer())
