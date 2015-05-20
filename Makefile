@@ -22,5 +22,5 @@ test: build
 up: build
 	$(compose) up api
 
-detach: build
+detach:
 	$(compose) up -d api

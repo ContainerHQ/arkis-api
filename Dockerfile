@@ -1,6 +1,6 @@
 FROM node:0.12.2
 
-ENV APP /home/dev
+ENV APP /home/dev/docker-proxy
 
 # Add user exec.
 RUN useradd dev
@@ -19,7 +19,7 @@ RUN cd $APP && npm install
 COPY . $APP
 
 # Change app's files owner.
-RUN chown -R dev:dev $APP
+RUN chown -R dev:dev $APP /home/dev
 
 # Switch to user dev
 USER dev

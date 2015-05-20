@@ -6,12 +6,11 @@ api:
   volumes:
     - '$DOCKER_CERT_PATH:/home/.docker'
     - '/var/run/docker.sock:/var/run/docker.sock'
-    - '.:/home/dev'
+    - '.:/home/dev/docker-proxy'
   environment:
     - DOCKER_CERT_PATH=/home/.docker
     - DOCKER_HOST
     - DOCKER_TLS_VERIFY
-    - PORT
 
 # TODO: use new docker-compose extend to
 # extend each client config from service test
