@@ -32,7 +32,11 @@
     "express": "4.12.x",
     "lodash": "3.6.x",
     "morgan": "1.5.x",
-    "multer": "0.1.x"
+    "multer": "0.1.x",
+    "pg": "4.3.x",
+    "pg-hstore": "2.3.x",
+    "sequelize": "3.1.x",
+    "sequelize-cli": "1.7.x"
   },
   "devDependencies": {
     "chai": "2.2.x",
