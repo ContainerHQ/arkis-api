@@ -12,7 +12,7 @@ router
   req.exec.inspect(handler.docker(res));
 })
 .post('/:id/start', (req, res) => {
-  req.exec.start(req.body, handler.docker(res, {status: 201, stream: true}));
+  req.exec.start(req.body, handler.docker(res, {status: 200, stream: true}));
 })
 .post('/:id/resize', (req, res) => {
   req.exec.resize(req.body, handler.docker(res, {status: 201}));

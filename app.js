@@ -16,6 +16,7 @@ app
 .use(morgan('combined'))
 .use('/', routes.docker)
 .use('/v:version', routes.docker)
+.use('/api', routes.api)
 .listen(port, () => {
   console.log('Listenning on port: %s', port);
 })

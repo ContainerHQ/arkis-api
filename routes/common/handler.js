@@ -1,7 +1,7 @@
 var _ = require('lodash');
 
 module.exports.notYetImplemented = function(req, res) {
-  res.status(404).json('Not yet implemented.');
+  res.status(501).json('Not implemented.');
 };
 
 module.exports.docker = function(res, opts={}, callback=opts) {
