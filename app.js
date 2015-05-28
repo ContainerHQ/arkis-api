@@ -21,3 +21,5 @@ app
   console.log('Listenning on port: %s', port);
 })
 .on('upgrade', routes.upgrade);
+
+module.exports = app;

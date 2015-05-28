@@ -5,7 +5,7 @@ api:
     - '4000:4000'
   links:
     - 'db'
-    - 'dbTest'
+    - 'dbtest'
   volumes:
     - '$DOCKER_CERT_PATH:/home/.docker'
     - '/var/run/docker.sock:/var/run/docker.sock'
