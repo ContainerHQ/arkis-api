@@ -3,6 +3,7 @@ var express = require('express'),
   bodyParser = require('body-parser'),
   morgan = require('morgan'),
   multer = require('multer'),
+  auth = require('./config/authentication'),
   routes = require('./routes'),
   app = express();
 
@@ -14,6 +15,7 @@ app
 .use(bodyParser.urlencoded({ extended: true }))
 .use(multer())
 .use(morgan('combined'))
+.use(auth.initialize())
 .use('/', routes.docker)
 .use('/v:version', routes.docker)
 .use('/api', routes.api)

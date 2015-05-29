@@ -1,10 +1,15 @@
-var express = require('express');
+var express = require('express'),
+  passport = require('passport');
 
 let router = express.Router();
 
 router
-.post('/signup', (req, res) => {
-  res.status(200).send({ name: 'mof le moche' });
-});
+.post('/login', passport.authenticate('local', { session: false }),
+  (req, res) => {
+    let status = req.user.hasBeenCreated() ? 201 : 200;
+
+    res.status(status).send({ email: req.user.email });
+  }
+);
 
 module.exports = router;
