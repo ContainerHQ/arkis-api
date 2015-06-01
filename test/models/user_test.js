@@ -8,15 +8,17 @@ const PASSWORD = 'allm8yMax';
 describe('User Model', () => {
   db.sync();
 
+  let user;
+
+  beforeEach(() => {
+    user = User.build({
+      email: 'max@furyroad.io',
+      password: PASSWORD
+    });
+  });
+
   context('when created', () => {
-    let user;
-
     beforeEach((done) => {
-      user = User.build({
-        email: 'max@furyroad.io',
-        password: PASSWORD
-      });
-
       user.save()
       .then(() => { done() })
       .catch((err) => {
