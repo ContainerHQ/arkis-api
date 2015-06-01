@@ -15,4 +15,9 @@ module.exports = {
     .get(`${ROUTE}/profile`)
     .set('Authorization', `JWT ${user.createToken()}`)
   },
+  changePassword: function(user) {
+    return request(app)
+    .post(`${ROUTE}/change_password`)
+    .set('Authorization', `JWT ${user.createToken()}`)
+  }
 };

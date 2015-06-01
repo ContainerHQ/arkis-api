@@ -27,10 +27,9 @@ passport
     .catch(done);
   }
 ))
-.use(new JwtStrategy({ secretOrKey: secrets.jwt }, function(playload, done) {
-  console.log(playload);
+.use(new JwtStrategy({ secretOrKey: secrets.jwt }, function(payload, done) {
   User
-  .findOne(playload)
+  .findOne(payload)
   .then(user => {
     done(null, user);
   })

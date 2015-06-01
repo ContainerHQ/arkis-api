@@ -1,4 +1,5 @@
-var bcrypt = require('bcrypt'),
+var _ = require('lodash'),
+  bcrypt = require('bcrypt'),
   jwt = require('jsonwebtoken'),
   secrets = require('../config/secrets');
 
@@ -25,7 +26,7 @@ module.exports = function(sequelize, DataTypes) {
     }
   }, {
     instanceMethods: {
-      encodePassword: function() {
+      hashPassword: function() {
         this.password = bcrypt.hashSync(this.password, SALT_COST);
       },
       verifyPassword: function(password) {
@@ -37,11 +38,13 @@ module.exports = function(sequelize, DataTypes) {
     },
     hooks: {
       beforeCreate: function(user, options, done) {
-        user.encodePassword();
+        user.hashPassword();
         done(null, user);
       },
       beforeUpdate: function(user, options, done) {
-        user.encodePassword();
+        if (_.contains(options.fields, 'password')) {
+          user.hashPassword();
+        }
         done(null, user);
       }
     }
