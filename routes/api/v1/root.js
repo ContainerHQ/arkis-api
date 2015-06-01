@@ -6,7 +6,7 @@ let router = express.Router();
 router
 .post('/login', passport.authenticate('local', { session: false }),
   (req, res) => {
-    let status = req.user.hasBeenCreated() ? 201 : 200;
+    let status = req.user.created ? 201 : 200;
 
     res.status(status).send({ email: req.user.email });
   }

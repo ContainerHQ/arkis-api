@@ -2,7 +2,7 @@ var passport = require('passport'),
   LocalStrategy = require('passport-local').Strategy,
   User = require('../models').User;
 
-const INVALID_PASSWORD = 'Invalid password.';
+const INCORRECT_PASSWORD = 'Incorrect password.';
 
 passport
 .use(new LocalStrategy({
@@ -16,10 +16,13 @@ passport
     })
     .spread((user, created) => {
       if (created || user.verifyPassword(password)) {
+        user.created = created;
+
         return done(null, user);
       }
-      return done(new Error(INVALID_PASSWORD));
-    });
+      return done(null, false, { message: INCORRECT_PASSWORD });
+    })
+    .catch(done);
   }
 ));
 

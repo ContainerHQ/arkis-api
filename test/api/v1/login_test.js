@@ -23,19 +23,19 @@ describe('POST /login', () => {
       .expect(200, { email: user.email }, done);
     });
 
-    context('with invalid password', () => {
-      it('responds with an error', (done) => {
-        login({
-          email: user.email,
-          password: `${user.password}+`
-        })
-        .expect(500, {}, done);
+    context('with incorect password', () => {
+      it('responds with an unauthorized status', (done) => {
+        login({ email: user.email, password: `${user.password}+` })
+        .expect(401, {}, done);
       });
     });
   });
 
-  context('when email is invalid', () => {
-
+  context('with invalid attributes', () => {
+    it('responds with a bad request status', (done) => {
+      login({ email: '', password: '' })
+      .expect(400, {}, done);
+    });
   });
 
   function login(user) {
