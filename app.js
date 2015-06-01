@@ -3,7 +3,7 @@ var express = require('express'),
   bodyParser = require('body-parser'),
   morgan = require('morgan'),
   multer = require('multer'),
-  auth = require('./config/authentication'),
+  auth = require('./middlewares/authentication'),
   routes = require('./routes'),
   app = express();
 
