@@ -14,6 +14,12 @@ router
     res.send(req.user);
   }
 )
+.delete('/cancel_subscribtion', passport.authenticate('jwt', { session: false }),
+  (req, res) => {
+    res.send(req.user);
+  }
+)
+
 .get('/request_password', passport.authenticate('jwt', { session: false }),
   (req, res) => {
     res.send(req.user);
@@ -42,13 +48,11 @@ router
   (req, res) => {
     let status = req.user.created ? 201 : 200;
 
-    res.status(status).send({ token: req.user.createToken() });
+    res.status(status).send({ token: req.user.token });
   }
 )
-.get('/auth/github',
-  passport.authenticate('github', { scope: [ 'user:email' ] }))
-.get('/auth/github/callback',
-  passport.authenticate('github'),
+.get('/auth/github', passport.authenticate('github'))
+.get('/auth/github/callback', passport.authenticate('github'),
   (req, res) => {
     res.send(req.user);
   }

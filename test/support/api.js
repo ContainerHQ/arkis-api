@@ -10,15 +10,15 @@ module.exports = {
     .field('email', user.email)
     .field('password', user.password);
   },
-  profile: function(user) {
+  profile: function(user, token=user.token) {
     return request(app)
     .get(`${ROUTE}/profile`)
-    .set('Authorization', `JWT ${user.createToken()}`);
+    .set('Authorization', `JWT ${token}`);
   },
   changePassword: function(user) {
     return request(app)
     .post(`${ROUTE}/change_password`)
-    .set('Authorization', `JWT ${user.createToken()}`);
+    .set('Authorization', `JWT ${user.token}`);
   },
   authGitHub: function() {
     return request(app)

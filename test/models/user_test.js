@@ -26,6 +26,11 @@ describe('User Model', () => {
       });
     });
 
+    // These are invalids if user is not reloaded
+    it('has a json web token', () => {
+      expect(user.token).to.exist;
+    });
+
     it('has a hashed password', () => {
       let isHashed = bcrypt.compareSync(PASSWORD, user.password);
 

@@ -10,9 +10,34 @@ module.exports = {
       },
       email: {
         type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: null,
+        unique: true,
+        validate: { isEmail: true }
+      },
+      password: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: null,
+        validate: { len: [6, 128] }
+      },
+      provider: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+      },
+      provider_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: null,
+        unique: 'provider'
+      },
+      token: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        defaultValue: null,
         unique: true
       },
-      password: DataTypes.STRING,
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE
     });

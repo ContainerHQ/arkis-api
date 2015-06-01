@@ -18,14 +18,8 @@ describe('GET /profile', () => {
 
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', (done) => {
-      let user = getUser();
-
-      user.createToken = function() {
-        return null;
-      };
-
       api
-      .profile(user)
+      .profile(getUser(), 'invalidToken')
       .expect(401, {}, done);
     });
   });

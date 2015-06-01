@@ -24,7 +24,24 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       defaultValue: null,
       validate: { len: [6, 128] }
-    }
+    },
+    provider: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
+    },
+    provider_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      unique: 'provider'
+    },
+    token: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      defaultValue: null,
+      unique: true
+    },
   }, {
     instanceMethods: {
       hashPassword: function() {
@@ -34,12 +51,18 @@ module.exports = function(sequelize, DataTypes) {
         return bcrypt.compareSync(password, this.password);
       },
       createToken: function() {
-        return jwt.sign(this, secrets.jwt);
+        let infos = _.pick(this.toJSON(), 'email');
+
+        this.token = jwt.sign(infos, secrets.jwt);
+      },
+      verifyToken: function() {
+        return this.token = jwt.verify(token, secrets.jwt);
       }
     },
     hooks: {
       beforeCreate: function(user, options, done) {
         user.hashPassword();
+        user.createToken();
         done(null, user);
       },
       beforeUpdate: function(user, options, done) {

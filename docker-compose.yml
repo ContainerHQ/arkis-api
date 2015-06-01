@@ -14,6 +14,8 @@ api:
     - DOCKER_CERT_PATH=/home/.docker
     - DOCKER_HOST
     - DOCKER_TLS_VERIFY
+    - GITHUB_CLIENT_ID
+    - GITHUB_SECRET_KEY
 
 db:
   image: postgres:9.4.2
