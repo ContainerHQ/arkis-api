@@ -1,6 +1,8 @@
 var passport = require('passport'),
   LocalStrategy = require('passport-local').Strategy,
-  User = require('../models').User;
+  JwtStrategy = require('passport-jwt').Strategy,
+  User = require('../models').User,
+  secrets = require('../config/secrets');
 
 const INCORRECT_PASSWORD = 'Incorrect password.';
 
@@ -20,10 +22,19 @@ passport
 
         return done(null, user);
       }
-      return done(null, false, { message: INCORRECT_PASSWORD });
+      done(null, false, { message: INCORRECT_PASSWORD });
     })
     .catch(done);
   }
-));
+))
+.use(new JwtStrategy({ secretOrKey: secrets.jwt }, function(playload, done) {
+  console.log(playload);
+  User
+  .findOne(playload)
+  .then(user => {
+    done(null, user);
+  })
+  .catch(done);
+}));
 
 module.exports = passport;

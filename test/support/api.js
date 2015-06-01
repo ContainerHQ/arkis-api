@@ -9,5 +9,10 @@ module.exports = {
     .post(`${ROUTE}/login`)
     .field('email', user.email)
     .field('password', user.password);
-  }
+  },
+  profile: function(user) {
+    return request(app)
+    .get(`${ROUTE}/profile`)
+    .set('Authorization', `JWT ${user.createToken()}`)
+  },
 };
