@@ -22,7 +22,8 @@ module.exports = function(sequelize, DataTypes) {
     password: {
       type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: null
+      defaultValue: null,
+      validate: { len: [6, 128] }
     }
   }, {
     instanceMethods: {

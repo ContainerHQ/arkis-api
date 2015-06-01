@@ -64,15 +64,15 @@ describe('User Model', () => {
       });
     });
 
-/*    context('creating an user with the same email', () => {*/
-      //it('fails with a validation error', (done) => {
-        //User.create({ email: user.email, password: 'azerty' })
-        //.then(done)
-        //.catch((err) => {
-          //expect(err).to.be.an.instanceof(sequelize.ValidationError);
-          //done();
-        //});
-      //});
-    /*});*/
+    context('creating an user with the same email', () => {
+      it.skip('fails with a validation error', (done) => {
+        User.create({ email: user.email, password: 'azerty' })
+        .then(done)
+        .catch((err) => {
+          expect(err).to.be.an.instanceof(sequelize.ValidationError);
+          done();
+        });
+      });
+    });
   });
 });
