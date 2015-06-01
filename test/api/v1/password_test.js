@@ -54,6 +54,21 @@ describe('POST /change_password', () => {
     });
   });
 
+  context('with invalid password', () => {
+    it('returns a bad request status', (done) => {
+      let user = getUser();
+
+      api
+      .changePassword(getUser())
+      .field('old_password', OLD_PASSWORD)
+      .expect(400)
+      .end((err, res) => {
+        expect(res.body).to.be.an('array');
+        done();
+      });
+    });
+  });
+
   function validatePassword(user, password, done) {
     return function(err, res) {
       if (err) return done(err);

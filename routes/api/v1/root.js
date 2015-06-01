@@ -32,8 +32,10 @@ router
     })
     .then(user => {
       res.send(user);
+    })
+    .catch(err => {
+      res.status(400).send(err.errors);
     });
-    // Validations error ?
   }
 )
 .post('/login', passport.authenticate('local', { session: false }),
