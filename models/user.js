@@ -2,28 +2,31 @@ var bcrypt = require('bcrypt');
 
 const SALT_COST = 10;
 
-module.exports = function(sequelize, Sequelize) {
-  let User = sequelize.define('user', {
+module.exports = function(sequelize, DataTypes) {
+  return sequelize.define('User', {
     id: {
-      type: Sequelize.INTEGER,
+      type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
     },
     email: {
-      type: Sequelize.STRING,
+      type: DataTypes.STRING,
       allowNull: false,
       defaultValue: null,
       unique: true,
       validate: { isEmail: true }
     },
     password: {
-      type: Sequelize.STRING,
+      type: DataTypes.STRING,
       allowNull: false,
       defaultValue: null
     }
   }, {
     instanceMethods: {
-      verifyPassword: function (password) {
+      encodePassword: function() {
+        this.password = bcrypt.hashSync(this.password, SALT_COST);
+      },
+      verifyPassword: function(password) {
         return bcrypt.compareSync(password, this.password);
       },
       /*
@@ -35,11 +38,17 @@ module.exports = function(sequelize, Sequelize) {
       hasBeenCreated: function() {
         return this.options.isNewRecord;
       }
+    },
+    hooks: {
+      beforeCreate: function(user, options, done) {
+        user.encodePassword();
+        done(null, user);
+      },
+      beforeUpdate: function(user, options, done) {
+        user.encodePassword();
+        done(null, user);
+      }
     }
   });
-  User.hashPassword = function(password) {
-    return bcrypt.hashSync(password, SALT_COST);
-  };
-  return User;
 };
 

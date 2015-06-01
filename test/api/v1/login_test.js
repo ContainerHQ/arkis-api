@@ -1,6 +1,6 @@
 var request = require('supertest'),
   app = require('../../../app.js'),
-  User = require('../../../models').user;
+  User = require('../../../models').User;
 
 describe('POST /login', () => {
   let user = User.build({
@@ -34,6 +34,10 @@ describe('POST /login', () => {
     });
   });
 
+  context('when email is invalid', () => {
+
+  });
+
   function login(user) {
     return request(app)
     .post('/api/v1/login')
@@ -47,12 +51,14 @@ describe('POST /login', () => {
       where: { email: user.email }
     })
     .then(user => {
-      if (user) {
-        return user
-        .destroy()
-        .then(() => { done() });
-      }
-      done();
+      if (!user) { return done(); }
+
+      user
+      .destroy()
+      .then(() => { done() })
+      .catch((err) => {
+        done(err);
+      });
     });
   }
 });
