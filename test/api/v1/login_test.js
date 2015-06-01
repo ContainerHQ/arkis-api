@@ -1,16 +1,14 @@
 var request = require('supertest'),
-  app = require('../../../app.js'),
-  User = require('../../../models').User;
+  db = require('../../support/db'),
+  app = require('../../../app.js');
 
 describe('POST /login', () => {
-  let user = User.build({
+  db.sync();
+
+  let user = {
     email: 'user@docker.com',
     password: 'password'
-  });
-
-  after((done) => {
-    destroy(user, done);
-  });
+  };
 
   it('registers a new user', (done) => {
     login(user)
@@ -18,6 +16,10 @@ describe('POST /login', () => {
   });
 
   context('when user already exists', () => {
+    beforeEach((done) => {
+      login(user).end(done);
+    });
+
     it('signs in the user', (done) => {
       login(user)
       .expect(200, { email: user.email }, done);
@@ -43,22 +45,5 @@ describe('POST /login', () => {
     .post('/api/v1/login')
     .field('email', user.email)
     .field('password', user.password);
-  }
-
-  function destroy(user, done) {
-    User
-    .findOne({
-      where: { email: user.email }
-    })
-    .then(user => {
-      if (!user) { return done(); }
-
-      user
-      .destroy()
-      .then(() => { done() })
-      .catch((err) => {
-        done(err);
-      });
-    });
   }
 });
