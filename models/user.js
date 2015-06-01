@@ -1,4 +1,6 @@
-var bcrypt = require('bcrypt');
+var bcrypt = require('bcrypt'),
+  jwt = require('jsonwebtoken'),
+  secrets = require('../config/secrets');
 
 const SALT_COST = 10;
 
@@ -29,6 +31,9 @@ module.exports = function(sequelize, DataTypes) {
       verifyPassword: function(password) {
         return bcrypt.compareSync(password, this.password);
       },
+      createToken: function() {
+        return jwt.sign(this, secrets.jwt);
+      }
     },
     hooks: {
       beforeCreate: function(user, options, done) {

@@ -8,7 +8,7 @@ router
   (req, res) => {
     let status = req.user.created ? 201 : 200;
 
-    res.status(status).send({ email: req.user.email });
+    res.status(status).send({ token: req.user.createToken() });
   }
 );
 

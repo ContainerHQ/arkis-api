@@ -1,5 +1,7 @@
-var db = require('../../support/db'),
- api = require('../../support/api');
+var jwt = require('jsonwebtoken'),
+  secrets = require('../../../config/secrets'),
+  db = require('../../support/db'),
+  api = require('../../support/api');
 
 describe('POST /login', () => {
   db.sync();
@@ -12,7 +14,9 @@ describe('POST /login', () => {
   it('registers a new user', (done) => {
     api
     .login(user)
-    .expect(201, { email: user.email }, done);
+    .expect(201)
+    .expect(validJsonWebToken)
+    .end(done);
   });
 
   context('when user already exists', () => {
@@ -23,7 +27,9 @@ describe('POST /login', () => {
     it('signs in the user', (done) => {
       api
       .login(user)
-      .expect(200, { email: user.email }, done);
+      .expect(200)
+      .expect(validJsonWebToken)
+      .end(done);
     });
 
     context('with incorect password', () => {
@@ -42,4 +48,10 @@ describe('POST /login', () => {
       .expect(400, {}, done);
     });
   });
+
+  function validJsonWebToken(res) {
+    let token = res.body.token;
+
+    return jwt.verify(token, secrets.jwt);
+  }
 });
