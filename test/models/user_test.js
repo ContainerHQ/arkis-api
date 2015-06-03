@@ -1,82 +1,98 @@
-var expect = require('chai').expect,
-  bcrypt = require('bcrypt'),
-  db = require('../support/db'),
-  User = require('../../models').User;
+'use strict';
 
-const PASSWORD = 'allm8yMax';
+var User = require('../../models').User;
+
+const VALID_ATTRIBUTES = { email: 'max@furyroad.ui', password: 'allm8yMax' };
 
 describe('User Model', () => {
   db.sync();
 
-  let user;
+  describe('validations', () => {
+    it('fail without email', () => {
+      expect(User.create({password:'password'})).to.be.rejected;
+    });
 
-  beforeEach(() => {
-    user = User.build({
-      email: 'max@furyroad.io',
-      password: PASSWORD
+    it('fail without password', () => {
+      expect(User.create({email:'adrien@gmail.com'})).to.be.rejected;
+    });
+
+    it('fail with a too short password', () => {
+      expect(User.create({email:'adrien@gmail.com', password: 'a'})).to.be.rejected;
+    });
+
+    it('fail with a too long password', () => {
+      let password = _.repeat('*', 129);
+
+      expect(User.create({email:'adrien@gmail.com', password: password})).to.be.rejected;
+    });
+
+    it('fail with already taken email', () => {
+      expect(User.create(VALID_ATTRIBUTES)).to.be.fulfilled;
+      expect(User.create(VALID_ATTRIBUTES)).to.be.rejected;
+    });
+
+    it('succeed with valid attributes', () => {
+      expect(User.create(VALID_ATTRIBUTES)).to.be.fulfilled;
     });
   });
 
-  context('when created', () => {
-    beforeEach((done) => {
-      user.save()
-      .then(() => { done() })
-      .catch((err) => {
-        done(err);
-      });
-    });
-
-    // These are invalids if user is not reloaded
+  describe('afterCreate', () => {
     it('has a json web token', () => {
-      expect(user.token).to.exist;
+      expect(User.create(VALID_ATTRIBUTES)).to.eventually.satisfy(has.validJWT);
     });
 
-    it('has a hashed password', () => {
-      let isHashed = bcrypt.compareSync(PASSWORD, user.password);
 
-      expect(isHashed).to.be.true;
+    it('has a hash password', () => {
+      expect(User.create(VALID_ATTRIBUTES)).to.eventually.satisfy(has.hashPassword(VALID_ATTRIBUTES.password));
     });
+  });
 
-    describe('#verifyPassword()', () => {
-      context('when compared password is identical', () => {
-        it('returns true', () => {
-          expect(user.verifyPassword(PASSWORD)).to.be.true;
-        });
-      });
+  describe('afterUpdate', () => {
+    let user;
 
-      context('when compared password is different', () => {
-        it('returns false', () => {
-          expect(user.verifyPassword(`${PASSWORD}*`)).to.be.false;
-        });
-      });
+    beforeEach(() => {
+      user = User.build(VALID_ATTRIBUTES);
+      return user.save();
     });
-
-    context('updating this user with a new password', () => {
-      const NEW_PASSWORD = 'newpassword';
-
-      beforeEach((done) => {
-        user.update({ password: NEW_PASSWORD })
-        .then(() => { done() })
-        .catch((err) => {
-          done(err);
-        });
-      });
-
-      it('hashes the new password', () => {
-        let isHashed = bcrypt.compareSync(NEW_PASSWORD, user.password);
-
-        expect(isHashed).to.be.true;
+    /*
+     * We must unsure that the password is not hashed
+     * again when the password property is not modified.
+     *
+     */
+    context('without a new password', () => {
+      it('has the same hash password', () => {
+        expect(user.update({ email: 'azert@gmail.com' }))
+          .to.eventually.satisfy(has.hashPassword(VALID_ATTRIBUTES.password));
       });
     });
 
-    context('creating an user with the same email', () => {
-      it.skip('fails with a validation error', (done) => {
-        User.create({ email: user.email, password: 'azerty' })
-        .then(done)
-        .catch((err) => {
-          expect(err).to.be.an.instanceof(sequelize.ValidationError);
-          done();
-        });
+    context('with a new password', () => {
+      it('has a new hash password', () => {
+        let newPassword = 'azertyu';
+
+        expect(user.update({ password: newPassword } ))
+          .to.eventually.satisfy(has.hashPassword(newPassword));
+      });
+    });
+  });
+
+  describe('#verifyPassword()', () => {
+    let user;
+
+    beforeEach(() => {
+      user = User.build(VALID_ATTRIBUTES);
+      return user.save();
+    });
+
+    context('when compared password is identical', () => {
+      it('returns true', () => {
+        expect(user.verifyPassword(VALID_ATTRIBUTES.password)).to.be.true;
+      });
+    });
+
+    context('when compared password is different', () => {
+      it('returns false', () => {
+        expect(user.verifyPassword(`${VALID_ATTRIBUTES.password}*`)).to.be.false;
       });
     });
   });

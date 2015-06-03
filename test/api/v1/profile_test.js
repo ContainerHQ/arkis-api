@@ -1,32 +1,39 @@
-var db = require('../../support/db'),
-  api = require('../../support/api');
+'use strict';
 
-db.sync();
+describe('/profile', () => {
+  db.sync();
 
-let getUser = db.createUser({
-  email: 'harry@hogwarts.com',
-  password: '<3mAgic'
-});
+  let user;
 
-describe('GET /profile', () => {
-  it('returns the user profile', (done) => {
-    api
-    .profile(getUser())
-    .expect(200)
-    .end(done);
+  beforeEach(() => {
+    user = factory.buildSync('user');
+    return user.save();
   });
 
-  context('when API token is incorrect', () => {
-    it('returns an unauthorized status', (done) => {
+  describe('GET', () => {
+    it('returns the user profile', (done) => {
       api
-      .profile(getUser(), 'invalidToken')
-      .expect(401, {}, done);
+      .profile(user)
+      .expect(200)
+      .end(done);
+    });
+
+    context('when API token is incorrect', () => {
+      beforeEach(() => {
+        user.token += '*';
+      });
+
+      it('returns an unauthorized status', (done) => {
+        api
+        .profile(user)
+        .expect(401, {}, done);
+      });
     });
   });
-});
 
-describe('POST /profile', () => {
-  it('updates the user profile', () => {
+  describe('POST', () => {
+    it('updates the user profile', () => {
 
+    });
   });
 });

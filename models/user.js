@@ -3,8 +3,6 @@ var _ = require('lodash'),
   jwt = require('jsonwebtoken'),
   secrets = require('../config/secrets');
 
-const SALT_COST = 10;
-
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('User', {
     id: {
@@ -45,7 +43,7 @@ module.exports = function(sequelize, DataTypes) {
   }, {
     instanceMethods: {
       hashPassword: function() {
-        this.password = bcrypt.hashSync(this.password, SALT_COST);
+        this.password = bcrypt.hashSync(this.password, 10);
       },
       verifyPassword: function(password) {
         return bcrypt.compareSync(password, this.password);

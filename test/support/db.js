@@ -1,16 +1,16 @@
-var sequelize = require('../../models').sequelize,
-  User = require('../../models').User;
+'use strict';
+
+var models = require('../../models'),
+  sequelize = models.sequelize,
+  User = models.User;
 
 /*
  * Drop database entries before each test.
  *
  */
 module.exports.sync = function() {
-  beforeEach((done) => {
-    sequelize
-    .sync({force: true})
-    .then(() => { done(); })
-    .catch(done);
+  beforeEach(() => {
+    return sequelize.sync({force: true});
   });
 };
 
@@ -20,19 +20,14 @@ module.exports.sync = function() {
  *
  */
 module.exports.createUser = function(attributes) {
-  let createdUser;
+  let user;
 
-  beforeEach((done) => {
-    User
-    .create(attributes)
-    .then((user) => {
-      createdUser = user;
-      done();
-    })
-    .catch(done);
+  beforeEach(() => {
+    user = User.build(attributes);
+    return user.save();
   });
 
   return function() {
-    return createdUser;
+    return user;
   };
 };

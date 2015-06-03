@@ -1,5 +1,4 @@
-var expect = require('chai').expect,
-  docker = require('../../middlewares').docker;
+var docker = require('../../middlewares').docker;
 
 describe('Docker Middleware', () => {
   it('adds a docker client to the request object', (done) => {

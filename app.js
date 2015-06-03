@@ -1,3 +1,5 @@
+'use strict';
+
 var express = require('express'),
   cors = require('cors'),
   bodyParser = require('body-parser'),
@@ -14,7 +16,6 @@ app
 .use(bodyParser.json({ strict: false }))
 .use(bodyParser.urlencoded({ extended: true }))
 .use(multer())
-.use(morgan('combined'))
 .use(auth.initialize())
 .use('/', routes.docker)
 .use('/v:version', routes.docker)
@@ -23,5 +24,14 @@ app
   console.log('Listenning on port: %s', port);
 })
 .on('upgrade', routes.upgrade);
+
+switch (process.env.NODE_ENV || 'development') {
+  case 'development':
+    app.use(morgan('dev'));
+    break;
+  case 'production':
+    app.use(morgan('combined'));
+    break;
+}
 
 module.exports = app;

@@ -1,24 +1,21 @@
-var expect = require('chai').expect,
-  bcrypt = require('bcrypt'),
-  db = require('../../support/db'),
-  api = require('../../support/api');
+'use strict';
 
 const OLD_PASSWORD = '<3mAgic',
       NEW_PASSWORD = 'lolilol';
 
-db.sync();
+describe('PATCH /change_password', () => {
+  db.sync();
 
-let getUser = db.createUser({
-  email: 'harry@hogwarts.com',
-  password: OLD_PASSWORD
-});
+  let user;
 
-describe('POST /change_password', () => {
+  beforeEach(() => {
+    user = factory.buildSync('user', { password: OLD_PASSWORD });
+    return user.save();
+  });
+
   it('updates the user password', (done) => {
-    let user = getUser();
-
     api
-    .changePassword(getUser())
+    .changePassword(user)
     .field('old_password', OLD_PASSWORD)
     .field('password', NEW_PASSWORD)
     .field('password_confirmation', NEW_PASSWORD)
@@ -28,10 +25,8 @@ describe('POST /change_password', () => {
 
   context('with incorrect old password', () => {
     it('returns an unauthorized status', (done) => {
-      let user = getUser();
-
       api
-      .changePassword(getUser())
+      .changePassword(user)
       .field('old_password', NEW_PASSWORD)
       .field('password', NEW_PASSWORD)
       .field('password_confirmation', NEW_PASSWORD)
@@ -42,10 +37,8 @@ describe('POST /change_password', () => {
 
   context('with incorrect password confirmation', () => {
     it('returns a bad request status', (done) => {
-      let user = getUser();
-
       api
-      .changePassword(getUser())
+      .changePassword(user)
       .field('old_password', OLD_PASSWORD)
       .field('password', NEW_PASSWORD)
       .field('password_confirmation', OLD_PASSWORD)
@@ -56,10 +49,8 @@ describe('POST /change_password', () => {
 
   context('with invalid password', () => {
     it('returns a bad request status', (done) => {
-      let user = getUser();
-
       api
-      .changePassword(getUser())
+      .changePassword(user)
       .field('old_password', OLD_PASSWORD)
       .expect(400)
       .end((err, res) => {

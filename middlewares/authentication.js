@@ -22,7 +22,6 @@ passport
       if (created || user.verifyPassword(password)) {
         user.created = created;
 
-        console.log(user.token);
         return done(null, user);
       }
       done(null, false, { message: INCORRECT_PASSWORD });

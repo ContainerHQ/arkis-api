@@ -1,5 +1,4 @@
-var expect = require('chai').expect,
-  parseQuery = require('../../middlewares').parseQuery;
+var parseQuery = require('../../middlewares').parseQuery;
 
 const URL = 'http://127.0.0.1?a=2&b=3';
 
