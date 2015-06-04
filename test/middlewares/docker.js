@@ -1,4 +1,4 @@
-var docker = require('../../middlewares').docker;
+var docker = require('../../app/middlewares').docker;
 
 describe('Docker Middleware', () => {
   it('adds a docker client to the request object', (done) => {

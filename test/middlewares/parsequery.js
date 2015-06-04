@@ -1,4 +1,4 @@
-var parseQuery = require('../../middlewares').parseQuery;
+var parseQuery = require('../../app/middlewares').parseQuery;
 
 const URL = 'http://127.0.0.1?a=2&b=3';
 

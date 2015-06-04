@@ -1,7 +1,7 @@
 var _ = require('lodash'),
   bcrypt = require('bcrypt'),
   jwt = require('jsonwebtoken'),
-  secrets = require('../config/secrets');
+  secrets = require('../../config/secrets');
 
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('User', {

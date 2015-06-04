@@ -1,7 +1,7 @@
 var _ = require('lodash'),
   express = require('express'),
   handler = require('../common/handler'),
-  version = require('../../package.json').version;
+  version = require('../../../package.json').version;
 
 let router = express.Router();
 

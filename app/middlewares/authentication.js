@@ -3,7 +3,7 @@ var passport = require('passport'),
   JwtStrategy = require('passport-jwt').Strategy,
   GitHubStrategy = require('passport-github2').Strategy,
   User = require('../models').User,
-  secrets = require('../config/secrets');
+  secrets = require('../../config/secrets');
 
 const INCORRECT_PASSWORD = 'Incorrect password.';
 

@@ -1,6 +1,6 @@
 'use strict';
 
-var sequelize = require('../../models').sequelize;
+var sequelize = require('../../app/models').sequelize;
 
 /*
  * Drop database entries before each test.
