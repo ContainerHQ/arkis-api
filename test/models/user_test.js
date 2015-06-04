@@ -16,6 +16,12 @@ describe('User Model', () => {
       expect(user.save()).to.be.rejected;
     });
 
+    it('fail with invalid email', () => {
+      let user = factory.buildSync('user', { email: 'max@furyroad' });
+
+      expect(user.save()).to.be.rejected;
+    });
+
     it('fail without password', () => {
       let user = factory.buildSync('user', { password: '' });
 
