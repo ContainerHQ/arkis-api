@@ -2,7 +2,7 @@ var _ = require('lodash'),
   express = require('express'),
   handler = require('../common/handler');
 
-let router = express.Router()
+let router = express.Router();
 
 router
 .get('/json', (req, res) => {

@@ -41,8 +41,7 @@
     "passport-local": "1.0.x",
     "pg": "4.3.x",
     "pg-hstore": "2.3.x",
-    "sequelize": "3.1.x",
-    "sequelize-cli": "1.7.x"
+    "sequelize": "3.1.x"
   },
   "devDependencies": {
     "chai": "2.2.x",
@@ -50,7 +49,6 @@
     "factory-girl": "1.5.x",
     "factory-girl-sequelize": "1.0.x",
     "mocha": "2.2.x",
-    "nodemon": "1.3.x",
     "rewire": "2.3.x",
     "sinon": "1.14.x",
     "supertest": "1.0.x"

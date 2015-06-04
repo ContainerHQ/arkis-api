@@ -20,4 +20,4 @@
  */
 module.exports.imageName = function(route='') {
   return `/:name(([^\\\\]+\/?)+)${route}`;
-}
+};

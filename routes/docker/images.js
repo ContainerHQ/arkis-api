@@ -1,5 +1,4 @@
-var _ = require('lodash'),
-  express = require('express'),
+var express = require('express'),
   handler = require('../common/handler'),
   regexp  = require('../common/regexp');
 

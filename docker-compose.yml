@@ -1,6 +1,7 @@
 api:
   build: .
   command: node index.js
+  user: root
   ports:
     - '4000:4000'
   links:

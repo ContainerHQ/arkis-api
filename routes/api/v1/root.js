@@ -39,7 +39,7 @@ router
     req.user.update({
       password: req.body.password
     })
-    .then(user => {
+    .then(() => {
       res.status(200).send();
     })
     .catch(err => {

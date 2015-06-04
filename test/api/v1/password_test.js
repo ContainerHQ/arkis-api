@@ -60,11 +60,11 @@ describe('PATCH /change_password', () => {
   });
 
   function expectPassword(user, password, done) {
-    return function(err, res) {
-      if (err) return done(err);
+    return function(err) {
+      if (err) { return done(err); }
 
       user.reload().then(user => {
-        expect(user.verifyPassword(password)).to.be.true
+        expect(user.verifyPassword(password)).to.be.true;
         done();
       }).catch(done);
     };

@@ -43,7 +43,7 @@ module.exports = {
     });
   },
 
-  down: function (queryInterface, DataTypes) {
+  down: function (queryInterface) {
     queryInterface.dropTable('Users');
   }
 };

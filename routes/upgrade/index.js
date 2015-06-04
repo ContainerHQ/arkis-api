@@ -1,5 +1,4 @@
-var url = require('url'),
-  express = require('express'),
+var express = require('express'),
   middlewares = require('../../middlewares'),
   docker = require('./docker');
 

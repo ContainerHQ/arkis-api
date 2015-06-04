@@ -1,5 +1,4 @@
-var _ = require('lodash'),
-  passport = require('passport'),
+var passport = require('passport'),
   LocalStrategy = require('passport-local').Strategy,
   JwtStrategy = require('passport-jwt').Strategy,
   GitHubStrategy = require('passport-github2').Strategy,
