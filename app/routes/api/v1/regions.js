@@ -1,5 +1,5 @@
 var express = require('express'),
-    handler = require('../../common/handler');
+  handler = require('../../common/handler');
 
 let router = express.Router();
 

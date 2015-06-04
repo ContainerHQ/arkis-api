@@ -1,12 +1,12 @@
 var express = require('express'),
-  passport = require('passport');
+  passport = require('passport'),
+  handler = require('../../common/handler');
 
 let router = express.Router();
 
 router
 .get('/profile', passport.authenticate('jwt', { session: false }),
   (req, res) => {
-    // Should send the profile
     res.send(req.user);
   }
 )
@@ -24,28 +24,32 @@ router
 )
 
 .get('/request_password', passport.authenticate('jwt', { session: false }),
-  (req, res) => {
-    res.send(req.user);
-  }
+  handler.notYetImplemented
 )
 .patch('/change_password', passport.authenticate('jwt', { session: false }),
   (req, res) => {
-    if (!req.user.verifyPassword(req.body.old_password)) {
+    if (!req.user.verifyPassword(req.body.current_password)) {
       return res.status(401).send();
     }
-    if (req.body.password !== req.body.password_confirmation) {
-      return res.status(400).send();
+    if (req.body.new_password !== req.body.new_password_confirmation) {
+      return res.status(400).send({
+        errors: [{
+          message: "password confirmation doesn't match password",
+          type: 'mismatch Violation',
+          path: 'password_confirmation',
+          value: null
+        }]
+      });
     }
     req.user.update({
-      password: req.body.password
+      password: req.body.new_password
     })
     .then(() => {
       res.status(200).send();
     })
     .catch(err => {
-      res.status(400).send(err.errors);
+      res.status(400).json({ errors: err.errors });
     });
-    // { errors: err.errors } ?
   }
 )
 .post('/login', passport.authenticate('local', { session: false }),
@@ -57,12 +61,7 @@ router
 )
 .get('/auth/github', passport.authenticate('github'))
 .get('/auth/github/callback', passport.authenticate('github'),
-  (req, res) => {
-    let status = req.user.created ? 201 : 200;
-
-    res.status(status).send({ token: req.user.token });
-  }
+  handler.notYetImplemented
 );
-// TODO: Avoid code duplication here !
 
 module.exports = router;
