@@ -20,7 +20,7 @@ describe('PATCH /change_password', () => {
     .field('password', NEW_PASSWORD)
     .field('password_confirmation', NEW_PASSWORD)
     .expect(200)
-    .end(validatePassword(user, NEW_PASSWORD, done));
+    .end(expectPassword(user, NEW_PASSWORD, done));
   });
 
   context('with incorrect old password', () => {
@@ -31,19 +31,18 @@ describe('PATCH /change_password', () => {
       .field('password', NEW_PASSWORD)
       .field('password_confirmation', NEW_PASSWORD)
       .expect(401)
-      .end(validatePassword(user, OLD_PASSWORD, done));
+      .end(expectPassword(user, OLD_PASSWORD, done));
     });
   });
 
-  context('with incorrect password confirmation', () => {
+  context('with invalid password confirmation', () => {
     it('returns a bad request status', (done) => {
       api
       .changePassword(user)
       .field('old_password', OLD_PASSWORD)
       .field('password', NEW_PASSWORD)
-      .field('password_confirmation', OLD_PASSWORD)
       .expect(400)
-      .end(validatePassword(user, OLD_PASSWORD, done));
+      .end(expectPassword(user, OLD_PASSWORD, done));
     });
   });
 
@@ -60,7 +59,7 @@ describe('PATCH /change_password', () => {
     });
   });
 
-  function validatePassword(user, password, done) {
+  function expectPassword(user, password, done) {
     return function(err, res) {
       if (err) return done(err);
 

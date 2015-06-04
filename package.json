@@ -47,8 +47,8 @@
   "devDependencies": {
     "chai": "2.2.x",
     "chai-as-promised": "5.0.x",
-    "factory-girl": "^1.5.0",
-    "factory-girl-sequelize": "^1.0.0",
+    "factory-girl": "1.5.x",
+    "factory-girl-sequelize": "1.0.x",
     "mocha": "2.2.x",
     "nodemon": "1.3.x",
     "rewire": "2.3.x",

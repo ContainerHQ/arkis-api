@@ -1,57 +1,75 @@
 'use strict';
 
-var User = require('../../models').User;
-
-const VALID_ATTRIBUTES = { email: 'max@furyroad.ui', password: 'allm8yMax' };
-
 describe('User Model', () => {
   db.sync();
 
   describe('validations', () => {
+    it('succeed with valid attributes', () => {
+      let user = factory.buildSync('user');
+
+      expect(user.save()).to.be.fulfilled;
+    });
+
     it('fail without email', () => {
-      expect(User.create({password:'password'})).to.be.rejected;
+      let user = factory.buildSync('user', { email: '' });
+
+      expect(user.save()).to.be.rejected;
     });
 
     it('fail without password', () => {
-      expect(User.create({email:'adrien@gmail.com'})).to.be.rejected;
+      let user = factory.buildSync('user', { password: '' });
+
+      expect(user.save()).to.be.rejected;
     });
 
     it('fail with a too short password', () => {
-      expect(User.create({email:'adrien@gmail.com', password: 'a'})).to.be.rejected;
+      let user = factory.buildSync('user', { password: _.repeat('*', 5) });
+
+      expect(user.save()).to.be.rejected;
     });
 
     it('fail with a too long password', () => {
-      let password = _.repeat('*', 129);
+      let user = factory.buildSync('user', { password: _.repeat('*', 129) });
 
-      expect(User.create({email:'adrien@gmail.com', password: password})).to.be.rejected;
+      expect(user.save()).to.be.rejected;
     });
 
-    it('fail with already taken email', () => {
-      expect(User.create(VALID_ATTRIBUTES)).to.be.fulfilled;
-      expect(User.create(VALID_ATTRIBUTES)).to.be.rejected;
-    });
+    context('when email is already taken', () => {
+      beforeEach(() => {
+        return factory.buildSync('user').save();
+      });
 
-    it('succeed with valid attributes', () => {
-      expect(User.create(VALID_ATTRIBUTES)).to.be.fulfilled;
+      it('fail', () => {
+        let user = factory.buildSync('user');
+
+        expect(user.save()).to.be.rejected;
+      });
     });
   });
 
   describe('afterCreate', () => {
-    it('has a json web token', () => {
-      expect(User.create(VALID_ATTRIBUTES)).to.eventually.satisfy(has.validJWT);
+    let user;
+
+    beforeEach(() => {
+      user = factory.buildSync('user');
     });
 
+    it('has a json web token', () => {
+      expect(user.save()).to.eventually.satisfy(has.validJWT);
+    });
 
     it('has a hash password', () => {
-      expect(User.create(VALID_ATTRIBUTES)).to.eventually.satisfy(has.hashPassword(VALID_ATTRIBUTES.password));
+      expect(user.save())
+        .to.eventually.satisfy(has.hashPassword(user.password));
     });
   });
 
   describe('afterUpdate', () => {
-    let user;
+    let user, password;
 
     beforeEach(() => {
-      user = User.build(VALID_ATTRIBUTES);
+      user = factory.buildSync('user');
+      password = user.password;
       return user.save();
     });
     /*
@@ -62,7 +80,7 @@ describe('User Model', () => {
     context('without a new password', () => {
       it('has the same hash password', () => {
         expect(user.update({ email: 'azert@gmail.com' }))
-          .to.eventually.satisfy(has.hashPassword(VALID_ATTRIBUTES.password));
+          .to.eventually.satisfy(has.hashPassword(password));
       });
     });
 
@@ -77,22 +95,26 @@ describe('User Model', () => {
   });
 
   describe('#verifyPassword()', () => {
-    let user;
+    let user, password;
 
+    /*
+     * The original user password must be kept before hashing.
+     */
     beforeEach(() => {
-      user = User.build(VALID_ATTRIBUTES);
+      user = factory.buildSync('user');
+      password = user.password;
       return user.save();
     });
 
     context('when compared password is identical', () => {
       it('returns true', () => {
-        expect(user.verifyPassword(VALID_ATTRIBUTES.password)).to.be.true;
+        expect(user.verifyPassword(password)).to.be.true;
       });
     });
 
     context('when compared password is different', () => {
       it('returns false', () => {
-        expect(user.verifyPassword(`${VALID_ATTRIBUTES.password}*`)).to.be.false;
+        expect(user.verifyPassword('')).to.be.false;
       });
     });
   });
