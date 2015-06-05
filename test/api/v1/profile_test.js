@@ -15,7 +15,15 @@ describe('/profile', () => {
       api
       .profile(user)
       .expect(200)
-      .end(done);
+      .end((err, res) => {
+        user.getProfile().then(profile => {
+          profile.dataValues.created_at = profile.dataValues.created_at.toISOString();
+          profile.dataValues.updated_at = profile.dataValues.updated_at.toISOString();
+
+          expect(res.body.profile).to.deep.equal(profile.dataValues);
+          done();
+        }).catch(done);
+      });
     });
 
     context('when API token is incorrect', () => {

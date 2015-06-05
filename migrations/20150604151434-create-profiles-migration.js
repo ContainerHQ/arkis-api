@@ -11,10 +11,10 @@ module.exports = {
       fullname: {
         type: DataTypes.STRING,
         allowNull: true,
-        defaultValue: true,
+        defaultValue: null,
         validate: { len: [6, 128] }
       },
-      userId: {
+      user_id: {
         type: DataTypes.INTEGER,
         references: {
           model: 'Users',

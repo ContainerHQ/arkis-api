@@ -7,7 +7,7 @@ describe('User Model', () => {
     it('succeed with valid attributes', () => {
       let user = factory.buildSync('user');
 
-      return expect(user.save()).to.be.fulfilled;
+      return expect(user.save()).to.be.rejected;
     });
 
     it('fail without email', () => {
@@ -70,7 +70,7 @@ describe('User Model', () => {
     });
 
     it('has a profile', (done) => {
-      user.save()
+      return user.save()
       .then(user => {
         return user.getProfile();
       })

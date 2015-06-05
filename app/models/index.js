@@ -12,6 +12,8 @@ if (env === 'test') {
   config.logging = false;
 }
 
+config.define = { underscored: true };
+
 let sequelize = new Sequelize(
   config.database,
   config.username,

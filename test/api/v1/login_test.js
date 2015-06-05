@@ -9,6 +9,10 @@ describe('POST /login', () => {
     user = factory.buildSync('user');
   });
 
+  /*
+   * We should also ensure that the user is created.
+   *
+   */
   it('registers a new user', (done) => {
     api
     .login(user)

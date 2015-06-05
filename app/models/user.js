@@ -4,7 +4,7 @@ var _ = require('lodash'),
   secrets = require('../../config/secrets');
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('User', {
+  let User = sequelize.define('User', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -57,6 +57,11 @@ module.exports = function(sequelize, DataTypes) {
         return this.token = jwt.verify(token, secrets.jwt);
       }
     },
+    classMethods: {
+      associate: function(models) {
+        User.hasOne(models.Profile);
+      }
+    },
     hooks: {
       beforeCreate: function(user, options, done) {
         user.hashPassword();
@@ -68,8 +73,12 @@ module.exports = function(sequelize, DataTypes) {
           user.hashPassword();
         }
         done(null, user);
+      },
+      afterCreate: function(user, options) {
+        return user.createProfile();
       }
     }
   });
+  return User;
 };
 

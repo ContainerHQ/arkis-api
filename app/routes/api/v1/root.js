@@ -1,24 +1,28 @@
 var express = require('express'),
   passport = require('passport'),
   handler = require('../../common/handler'),
-  User = require('../../../models').User;
+  User = require('../../../models').User,
+  Profile = require('../../../models').Profile;
 
 let router = express.Router();
 
 router
 .post('/login', (req, res) => {
-  User
-  .findOrCreate({
-    where: { email: req.body.email },
-    defaults: { password: req.body.password }
-  })
-  .spread((user, created) => {
-    if (created || user.verifyPassword(req.body.password)) {
-      let status = created ? 201 : 200;
+  let created = false;
 
-      return res.status(status).send({ token: user.token });
+  User.findOne({ email: req.body.email })
+  .then(user => {
+    created = user === null;
+    return user || User.create(req.body);
+  })
+  .then(user => {
+    if (!created && !user.verifyPassword(req.body.password)) {
+      return res.status(401).send();
     }
-    return res.status(401).send();
+
+    let statusCode = created ? 201 : 200;
+
+    res.status(statusCode).send({ token: user.token });
   })
   .catch(err => {
     res.status(400).json({ errors: err.errors });
@@ -45,23 +49,27 @@ router
     password: req.body.new_password
   })
   .then(() => {
-    res.status(200).send();
+    res.status(204).send();
   })
   .catch(err => {
     res.status(400).json({ errors: err.errors });
   });
 })
-.get('/request_password', handler.notYetImplemented)
 .delete('/cancel_account', (req, res) => {
   req.user.destroy()
-  .then(()  => { res.status(200).send(); })
+  .then(()  => { res.status(204).send(); })
   .catch(() => { res.status(500).send(); });
 })
 .get('/profile', (req, res) => {
-  res.send(req.user);
+  req.user.getProfile().then(profile => {
+    res.status(200).send({ profile: profile });
+  })
+  .catch(err => {
+    res.status(500).send({ errors: err.errors });
+  });
 })
-.post('/profile', (req, res) => {
-  res.status(200).send();
-})
+.post('/profile', handler.notYetImplemented)
+
+.get('/request_password', handler.notYetImplemented)
 
 module.exports = router;

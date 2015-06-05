@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = function(sequelize, DataTypes) {
-  let Profile = sequelize.define('Profile', {
+  return sequelize.define('Profile', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -10,14 +10,8 @@ module.exports = function(sequelize, DataTypes) {
     fullname: {
       type: DataTypes.STRING,
       allowNull: true,
-      defaultValue: true,
+      defaultValue: null,
       validate: { len: [6, 128] }
-    },
-/*    classMethods: {*/
-      //associate: function(models) {
-        //Profile.belongsTo(models.User);
-      //}
-    /*}*/
+    }
   });
-  return Profile;
 };
