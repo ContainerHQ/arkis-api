@@ -13,11 +13,11 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: true,
       validate: { len: [6, 128] }
     },
-    classMethods: {
-      associate: function(models) {
-        Profile.belongsTo(models.User);
-      }
-    }
+/*    classMethods: {*/
+      //associate: function(models) {
+        //Profile.belongsTo(models.User);
+      //}
+    /*}*/
   });
   return Profile;
 };

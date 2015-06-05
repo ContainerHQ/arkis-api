@@ -18,7 +18,7 @@ describe('PATCH /change_password', () => {
     .changePassword(user)
     .field('current_password', currentPassword)
     .field('new_password', NEW_PASSWORD)
-    .field('new_password_confirmation', NEW_PASSWORD)
+    .field('password_confirmation', NEW_PASSWORD)
     .expect(200)
     .end((err, res) => {
       expect(res.body.errors).not.to.exist;
@@ -34,7 +34,7 @@ describe('PATCH /change_password', () => {
       .changePassword(user)
       .field('current_password', `${currentPassword}*`)
       .field('new_password', NEW_PASSWORD)
-      .field('new_password_confirmation', NEW_PASSWORD)
+      .field('password_confirmation', NEW_PASSWORD)
       .expect(401)
       .end((err, res) => {
         expect(res.body.errors).not.to.exist;

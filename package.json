@@ -38,7 +38,6 @@
     "passport": "0.2.x",
     "passport-github2": "0.1.x",
     "passport-jwt": "1.1.x",
-    "passport-local": "1.0.x",
     "pg": "4.3.x",
     "pg-hstore": "2.3.x",
     "sequelize": "3.1.x"

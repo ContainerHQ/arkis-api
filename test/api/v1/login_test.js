@@ -47,7 +47,11 @@ describe('POST /login', () => {
     it('responds with a bad request status', (done) => {
       api
       .login()
-      .expect(400, {}, done);
+      .expect(400)
+      .end((err, res) => {
+        expect(res.body.errors).to.exist;
+        done();
+      });
     });
   });
 });
