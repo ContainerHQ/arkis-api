@@ -10,13 +10,13 @@ describe('User Model', () => {
       return expect(user.save()).to.be.fulfilled;
     });
 
-    it('fail without email', () => {
+    it('fail without email address', () => {
       let user = factory.buildSync('user', { email: '' });
 
       return expect(user.save()).to.be.rejected;
     });
 
-    it('fail with invalid email', () => {
+    it('fail with invalid email address', () => {
       let user = factory.buildSync('user', { email: 'max@furyroad' });
 
       return expect(user.save()).to.be.rejected;
@@ -40,7 +40,7 @@ describe('User Model', () => {
       return expect(user.save()).to.be.rejected;
     });
 
-    context('when email is already taken', () => {
+    context('when email address is already taken', () => {
       beforeEach(() => {
         return factory.buildSync('user').save();
       });
@@ -60,7 +60,7 @@ describe('User Model', () => {
       user = factory.buildSync('user');
     });
 
-    it('has a json web token', () => {
+    it('has a json web token including its email address', () => {
       return expect(user.save()).to.eventually.satisfy(has.validJWT);
     });
 
@@ -69,27 +69,25 @@ describe('User Model', () => {
         .to.eventually.satisfy(has.hashPassword(user.password));
     });
 
-    it('has a profile', (done) => {
-      user.save()
-      .then(user => {
+    it('has a profile', () => {
+      return expect(user.save().then(user => {
         return user.getProfile();
-      })
-      .then(profile => {
-        expect(profile).to.exist;
-        done();
-      })
-      .catch(done);
+      })).to.eventually.exist;
     });
   });
 
   describe('afterUpdate', () => {
     let user, password;
 
+    /*
+     * The original user password must be kept before hashing.
+     */
     beforeEach(() => {
       user = factory.buildSync('user');
       password = user.password;
       return user.save();
     });
+
     /*
      * We must unsure that the password is not hashed
      * again when the password property is not modified.
@@ -115,9 +113,6 @@ describe('User Model', () => {
   describe('#verifyPassword()', () => {
     let user, password;
 
-    /*
-     * The original user password must be kept before hashing.
-     */
     beforeEach(() => {
       user = factory.buildSync('user');
       password = user.password;
