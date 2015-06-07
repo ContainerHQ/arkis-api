@@ -63,14 +63,39 @@ describe('POST /login', () => {
     });
   });
 
+  context('with forbidden attributes', () => {
+    let attributes = ['provider', 'provider_id'];
+
+    it('these attributes are filtered', (done) => {
+      let login = api.login(user);
+
+      attributes.forEach(attribute => {
+        login = login.field(attribute, '*');
+      });
+
+      login
+      .expect(200)
+      .end((err, res) => {
+        User.findOne({ where: user })
+        .then(user => {
+          attributes.forEach(attribute => {
+            expect(user[attribute]).not.to.exist;
+          });
+          done();
+        }).catch(done);
+      });
+    });
+  });
+
   context('with invalid attributes', () => {
     it('responds with a bad request status', (done) => {
       api
       .login()
       .expect(400)
       .end((err, res) => {
-        expect(res.body.errors).to.exist;
-        done();
+        expect(User.create())
+          .to.be.rejectedWith(res.body.errors)
+          .notify(done);
       });
     });
   });

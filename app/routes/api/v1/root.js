@@ -13,7 +13,7 @@ router
   User.findOne({ email: req.body.email })
   .then(user => {
     created = user === null;
-    return user || User.create(req.body);
+    return user || User.create(req.body, { fields: ['email', 'password'] });
   })
   .then(user => {
     if (!created && !user.verifyPassword(req.body.password)) {
@@ -68,8 +68,8 @@ router
     res.status(500).send({ errors: err.errors });
   });
 })
-.post('/profile', handler.notYetImplemented)
-
+.patch('/profile', handler.notYetImplemented)
+.post('/new_token', handler.notYetImplemented)
 .get('/request_password', handler.notYetImplemented)
 
 module.exports = router;

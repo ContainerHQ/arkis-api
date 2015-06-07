@@ -39,7 +39,7 @@ describe('/profile', () => {
     });
   });
 
-  describe('POST', () => {
+  describe('PATCH', () => {
     it('updates the user profile', () => {
 
     });

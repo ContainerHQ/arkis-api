@@ -22,8 +22,8 @@ describe('PATCH /change_password', () => {
     .expect(204)
     .end((err, res) => {
       expect(user.reload())
-        .to.eventually.satisfy(has.hashPassword(NEW_PASSWORD));
-      done();
+        .to.eventually.satisfy(has.hashPassword(NEW_PASSWORD))
+        .notify(done);
     });
   });
 
@@ -36,10 +36,9 @@ describe('PATCH /change_password', () => {
       .field('password_confirmation', NEW_PASSWORD)
       .expect(401)
       .end((err, res) => {
-        expect(res.body.errors).not.to.exist;
         expect(user.reload())
-          .to.eventually.satisfy(has.hashPassword(currentPassword));
-       done();
+          .to.eventually.satisfy(has.hashPassword(currentPassword))
+          .notify(done);
       });
     });
   });
@@ -54,8 +53,8 @@ describe('PATCH /change_password', () => {
       .end((err, res) => {
         expect(res.body.errors).to.exist;
         expect(user.reload())
-          .to.eventually.satisfy(has.hashPassword(currentPassword));
-        done();
+          .to.eventually.satisfy(has.hashPassword(currentPassword))
+          .notify(done);
       });
     });
   });
@@ -67,10 +66,9 @@ describe('PATCH /change_password', () => {
       .field('current_password', currentPassword)
       .expect(400)
       .end((err, res) => {
-        expect(res.body.errors).to.exist;
-        expect(user.reload())
-          .to.eventually.satisfy(has.hashPassword(currentPassword));
-        done();
+        user.password = null;
+
+        expect(user.save()).to.be.rejectedWith(res.body.errors).notify(done);
       });
     });
   });
