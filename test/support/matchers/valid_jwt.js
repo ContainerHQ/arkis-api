@@ -8,9 +8,9 @@ var jwt = require('jsonwebtoken'),
  * the secret key.
  *
  */
-module.exports = function(model) {
-  let payload = jwt.decode(model.token);
+module.exports = function(user) {
+  let payload = jwt.decode(user.token);
 
-  return model.email === payload.email
-    && jwt.verify(model.token, secrets.jwt);
+  return user.email === payload.email
+    && jwt.verify(user.token, secrets.jwt);
 };
