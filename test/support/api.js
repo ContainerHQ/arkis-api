@@ -35,5 +35,10 @@ module.exports = {
     return request(app)
     .delete(`${ROUTE}/cancel_account`)
     .set('Authorization', `JWT ${user.token}`);
+  },
+  newToken: function(user) {
+    return request(app)
+    .patch(`${ROUTE}/new_token`)
+    .set('Authorization', `JWT ${user.token}`);
   }
 };

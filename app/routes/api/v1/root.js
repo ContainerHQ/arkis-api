@@ -79,7 +79,16 @@ router
     res.status(400).send({ errors: err.errors });
   });
 })
-.post('/new_token', handler.notYetImplemented)
+.patch('/new_token', (req, res) => {
+  req.user.revokeToken();
+  req.user.createToken();
+
+  req.user.save().then(user => {
+    res.status(200).send({ token: user.token });
+  }).catch(err => {
+    res.status(500).send({ errors: err.errors });
+  });
+})
 .get('/request_password', handler.notYetImplemented)
 
 module.exports = router;
