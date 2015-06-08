@@ -40,6 +40,12 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: null,
       unique: true
     },
+    token_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      defaultValue: DataTypes.UUIDV1,
+      unique: true
+    },
   }, {
     instanceMethods: {
       hashPassword: function() {
@@ -48,18 +54,31 @@ module.exports = function(sequelize, DataTypes) {
       verifyPassword: function(password) {
         return bcrypt.compareSync(password, this.password);
       },
-      createToken: function() {
-        let infos = _.pick(this.toJSON(), 'email');
 
-        this.token = jwt.sign(infos, secrets.jwt);
+      /*
+       * The encoded jwt token includes a unique universal identifier,
+       * changing this identifier invalidates the token.
+       *
+       * This really simplify the token revokation if a user is destroyed
+       * (in this scenario, a deleted user carries its token uuid to
+       * programming heaven.
+       *
+       */
+      createToken: function() {
+        let payload = _.merge(_.pick(this.toJSON(), 'email'),
+          { jit: this.token_id }
+        );
+
+        this.token = jwt.sign(payload, secrets.jwt);
       },
-      verifyToken: function() {
-        return this.token = jwt.verify(token, secrets.jwt);
+
+      revokeToken: function() {
+        this.token_id = sequelize.Utils.toDefaultValue(DataTypes.UUIDV1());
       }
     },
     classMethods: {
       associate: function(models) {
-        User.hasOne(models.Profile);
+        User.hasOne(models.Profile, { onDelete: 'cascade' });
       }
     },
     hooks: {

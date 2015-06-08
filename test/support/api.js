@@ -16,14 +16,24 @@ module.exports = {
     return request(app)
     .get(`${ROUTE}/auth/github`);
   },
-  profile: function(user) {
+  getProfile: function(user) {
     return request(app)
     .get(`${ROUTE}/profile`)
+    .set('Authorization', `JWT ${user.token}`);
+  },
+  updateProfile: function(user) {
+    return request(app)
+    .patch(`${ROUTE}/profile`)
     .set('Authorization', `JWT ${user.token}`);
   },
   changePassword: function(user) {
     return request(app)
     .patch(`${ROUTE}/change_password`)
+    .set('Authorization', `JWT ${user.token}`);
+  },
+  cancelAccount: function(user) {
+    return request(app)
+    .delete(`${ROUTE}/cancel_account`)
     .set('Authorization', `JWT ${user.token}`);
   }
 };

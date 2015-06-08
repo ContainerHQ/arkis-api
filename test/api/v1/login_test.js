@@ -13,7 +13,7 @@ describe('POST /login', () => {
    *
    */
   beforeEach(() => {
-    user = factory.buildSync('user');
+    user = factory.buildSync('user', { jit: null });
   });
 
   it('registers a new user and returns its token', (done) => {
@@ -21,16 +21,14 @@ describe('POST /login', () => {
     .login(user)
     .expect(201)
     .end((err, res) => {
-      if (err) { done(err); }
+      if (err) { return done(err); }
       /*
        * Retrieve the newly created user.
        *
        */
-      User.findOne({ where: user })
-      .then(user => {
-        expect(res.body.token).to.equal(user.token);
-        done();
-      }).catch(done);
+      expect(User.findOne({ where: user }))
+        .to.eventually.have.property('token', res.body.token)
+        .notify(done);
     });
   });
 
@@ -64,35 +62,40 @@ describe('POST /login', () => {
   });
 
   context('with forbidden attributes', () => {
-    let attributes = ['provider', 'provider_id'];
+    let attributes;
+
+    beforeEach(() => {
+      attributes = _.difference(user.attributes, ['email', 'password']);
+    });
 
     it('these attributes are filtered', (done) => {
-      let login = api.login(user);
-
-      attributes.forEach(attribute => {
-        login = login.field(attribute, '*');
-      });
-
-      login
-      .expect(200)
+      addAttributesTo(api.login(user), attributes)
+      .expect(201)
       .end((err, res) => {
-        User.findOne({ where: user })
-        .then(user => {
-          attributes.forEach(attribute => {
-            expect(user[attribute]).not.to.exist;
-          });
-          done();
-        }).catch(done);
+        if (err) { return done(err); }
+
+        expect(User.findOne({ where: user }))
+          .to.eventually.satisfy(has.beenFiltered(attributes))
+          .notify(done);
       });
     });
   });
 
+  function addAttributesTo(action, attributes) {
+    attributes.forEach(attribute => {
+      action = action.field(attribute, '*');
+    });
+    return action;
+  }
+
   context('with invalid attributes', () => {
-    it('responds with a bad request status', (done) => {
+    it('responds with a bad request status and errors', (done) => {
       api
       .login()
       .expect(400)
       .end((err, res) => {
+        if (err) { return done(err); }
+
         expect(User.create())
           .to.be.rejectedWith(res.body.errors)
           .notify(done);

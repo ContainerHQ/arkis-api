@@ -13,16 +13,17 @@ describe('/profile', () => {
   describe('GET', () => {
     it('returns the user profile', (done) => {
       api
-      .profile(user)
+      .getProfile(user)
       .expect(200)
       .end((err, res) => {
-        user.getProfile().then(profile => {
-          profile.dataValues.created_at = profile.dataValues.created_at.toISOString();
-          profile.dataValues.updated_at = profile.dataValues.updated_at.toISOString();
+        if (err) { return done(err); }
 
-          expect(res.body.profile).to.deep.equal(profile.dataValues);
-          done();
-        }).catch(done);
+        let profile = format.timestamps(res.body.profile);
+
+        expect(user.getProfile())
+          .to.eventually.have.property('dataValues')
+          .that.deep.equals(profile)
+          .notify(done);
       });
     });
 
@@ -33,15 +34,27 @@ describe('/profile', () => {
 
       it('returns an unauthorized status', (done) => {
         api
-        .profile(user)
+        .getProfile(user)
         .expect(401, {}, done);
       });
     });
   });
 
   describe('PATCH', () => {
-    it('updates the user profile', () => {
+    it('updates the user profile', (done) => {
+      let fullname = 'Uther Lightbringer';
 
+      api
+      .updateProfile(user)
+      .field('fullname', fullname)
+      .expect(204)
+      .end((err, res) => {
+        if (err) { return done(err); }
+
+        expect(user.getProfile())
+          .to.eventually.have.property('fullname', fullname)
+          .notify(done);
+      });
     });
   });
 });

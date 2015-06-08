@@ -1,5 +1,7 @@
 'use strict';
 
+var Profile = require('../../app/models').Profile;
+
 describe('User Model', () => {
   db.sync();
 
@@ -110,6 +112,23 @@ describe('User Model', () => {
     });
   });
 
+  describe('afterDestroy', () => {
+    let user;
+
+    beforeEach(() => {
+      user = factory.buildSync('user');
+
+      return user.save()
+      .then(user => {
+        return user.destroy();
+      });
+    });
+
+    it('removes the user profile', () => {
+      expect(Profile.count()).to.eventually.equal(0);
+    });
+  });
+
   describe('#verifyPassword()', () => {
     let user, password;
 
@@ -129,6 +148,21 @@ describe('User Model', () => {
       it('returns false', () => {
         expect(user.verifyPassword('')).to.be.false;
       });
+    });
+  });
+
+  describe('#revokeToken()', () => {
+    let user;
+
+    beforeEach(() => {
+      user = factory.buildSync('user');
+      return user.save();
+    });
+
+    it('revokes the user token', () => {
+      user.revokeToken();
+
+      return expect(user.save()).to.eventually.not.satisfy(has.validJWT);
     });
   });
 });

@@ -9,6 +9,9 @@ passport
   User
   .findOne(payload)
   .then(user => {
+    if (payload.jit !== user.token_id) {
+      return done(null, false);
+    }
     done(null, user);
   })
   .catch(done);

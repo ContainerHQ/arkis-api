@@ -68,7 +68,17 @@ router
     res.status(500).send({ errors: err.errors });
   });
 })
-.patch('/profile', handler.notYetImplemented)
+.patch('/profile', (req, res) => {
+  req.user.getProfile().then(profile => {
+    return profile.update(req.body);
+  })
+  .then(profile => {
+    res.status(204).send();
+  })
+  .catch(err => {
+    res.status(400).send({ errors: err.errors });
+  });
+})
 .post('/new_token', handler.notYetImplemented)
 .get('/request_password', handler.notYetImplemented)
 

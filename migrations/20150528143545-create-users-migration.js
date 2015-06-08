@@ -38,6 +38,12 @@ module.exports = {
         defaultValue: null,
         unique: true
       },
+      token_id: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        defaultValue: DataTypes.UUIDV1,
+        unique: true
+      },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE
     });
