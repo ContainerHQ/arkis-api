@@ -29,7 +29,8 @@ describe('/profile', () => {
 
     context('when API token is incorrect', () => {
       beforeEach(() => {
-        user.token += '*';
+        user.revokeToken();
+        return user.save();
       });
 
       it('returns an unauthorized status', (done) => {
