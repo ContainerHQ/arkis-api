@@ -28,19 +28,9 @@ if (!!process.env.GITHUB_CLIENT_ID && !!process.env.GITHUB_SECRET_KEY) {
     clientSecret: process.env.GITHUB_SECRET_KEY
   },
   (accessToken, refreshToken, profile, done) => {
-    User.findOrCreate({
-      where: { email: profile.emails[0].value },
-      defaults: {
-        provider: profile.provider,
-        provider_id: profile.id
-      }
-    })
-    .spread((user, created) => {
-      user.created = created;
-
-      done(null, user);
-    })
-    .catch(done);
+    let user = User.build({ email: 'azerty@gmail.com', password: 'decembre99' });
+    console.log('uiij');
+    done(null, user);
   }));
 }
 

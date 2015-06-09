@@ -7,10 +7,10 @@ describe('GET /auth/github', () => {
     api
     .authGitHub()
     .expect(302)
+    .expect('location', new RegExp(`^${GITHUB_LOGIN_ROUTE}`))
     .end((err, res) => {
-      console.log(res);
+      console.log(res.headers.location);
       done(err);
     });
-    //.expect('location', new RegExp(`^${GITHUB_LOGIN_ROUTE}`), done);
   });
 });

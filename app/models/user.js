@@ -71,7 +71,6 @@ module.exports = function(sequelize, DataTypes) {
 
         this.token = jwt.sign(payload, secrets.jwt);
       },
-
       revokeToken: function() {
         this.token_id = sequelize.Utils.toDefaultValue(DataTypes.UUIDV1());
       }

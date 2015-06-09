@@ -11,9 +11,15 @@ describe('POST /auth/login', () => {
    * We need a non save user in order to login
    * with the original password (before hashing).
    *
+   * We also must ensure that our created user is not the first
+   * available in the database (User.findOne without
+   * parameters will retrieve the first user by default, therefore
+   * with only one user we can't be sure that this endpoint retrieve
+   * the targeted user).
    */
-  beforeEach(() => {
-    user = factory.buildSync('user', { jit: null });
+  beforeEach(done => {
+    user = factory.buildSync('user');
+    factory.create('user', { email: `another.${user.email}` }, done);
   });
 
   it('registers a new user and returns its token', (done) => {
@@ -26,8 +32,9 @@ describe('POST /auth/login', () => {
        * Retrieve the newly created user.
        *
        */
-      expect(User.findOne({ where: user }))
-        .to.eventually.have.property('token', res.body.token)
+      expect(User.findOne({ where: { email: user.email } }))
+        .to.eventually.have.property('token', res.body.token).and
+        .not.to.be.null
         .notify(done);
     });
   });
@@ -65,7 +72,9 @@ describe('POST /auth/login', () => {
     let attributes;
 
     beforeEach(() => {
-      attributes = _.difference(user.attributes, ['email', 'password']);
+      attributes = _.difference(user.attributes,
+        ['email', 'password', 'token', 'token_id', 'created_at', 'updated_at']
+      );
     });
 
     it('these attributes are filtered', (done) => {
@@ -74,7 +83,7 @@ describe('POST /auth/login', () => {
       .end((err, res) => {
         if (err) { return done(err); }
 
-        expect(User.findOne({ where: user }))
+        expect(User.findOne({ where: { email: user.email } }))
           .to.eventually.satisfy(has.beenFiltered(attributes))
           .notify(done);
       });
