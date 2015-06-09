@@ -50,6 +50,7 @@
     "mocha": "2.2.x",
     "rewire": "2.3.x",
     "sinon": "1.14.x",
+    "sinon-chai": "2.8.x",
     "supertest": "1.0.x"
   }
 }

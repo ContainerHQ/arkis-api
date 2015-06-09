@@ -1,8 +1,10 @@
-var express = require('express');
+var express = require('express'),
+  errorHandler = require('../../middlewares').errorHandler;
 
 let router = express.Router();
 
 router
-.use('/v1', require('./v1'));
+.use('/v1', require('./v1'))
+.use(errorHandler);
 
 module.exports = router;

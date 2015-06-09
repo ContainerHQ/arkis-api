@@ -1,22 +1,18 @@
 var express = require('express'),
-  handler = require('../../common/handler');
+  handler = require('../../../shared/handler'),
+  errors = require('../../../shared/errors');
 
 let router = express.Router();
 
 router
-.patch('/change_password', (req, res) => {
+.patch('/change_password', (req, res, next) => {
   if (!req.user.verifyPassword(req.body.current_password)) {
-    return res.status(401).send();
+    return next(new errors.UnauthorizedError());
   }
   if (req.body.new_password !== req.body.password_confirmation) {
-    return res.status(400).send({
-      errors: [{
-        message: "password confirmation doesn't match password",
-        type: 'mismatch Violation',
-        path: 'password_confirmation',
-        value: req.body.password_confirmation
-      }]
-    });
+    return next(new errors.MismatchError('password_confirmation',
+      req.body.password_confirmation
+    ));
   }
   req.user.update({
     password: req.body.new_password
@@ -24,43 +20,35 @@ router
   .then(() => {
     res.status(204).send();
   })
-  .catch(err => {
-    res.status(400).json({ errors: err.errors });
-  });
+  .catch(next);
 })
-.delete('/cancel_account', (req, res) => {
+.delete('/cancel_account', (req, res, next) => {
   req.user.destroy()
-  .then(()  => { res.status(204).send(); })
-  .catch(() => { res.status(500).send(); });
+  .then(() => { res.status(204).send(); })
+  .catch(next);
 })
-.get('/profile', (req, res) => {
+.get('/profile', (req, res, next) => {
   req.user.getProfile().then(profile => {
-    res.status(200).send({ profile: profile });
+    res.send({ profile: profile });
   })
-  .catch(err => {
-    res.status(500).send({ errors: err.errors });
-  });
+  .catch(next);
 })
-.patch('/profile', (req, res) => {
+.patch('/profile', (req, res, next) => {
   req.user.getProfile().then(profile => {
     return profile.update(req.body);
   })
   .then(profile => {
     res.status(204).send();
   })
-  .catch(err => {
-    res.status(400).send({ errors: err.errors });
-  });
+  .catch(next);
 })
-.patch('/new_token', (req, res) => {
+.patch('/new_token', (req, res, next) => {
   req.user.revokeToken();
   req.user.createToken();
 
   req.user.save().then(user => {
-    res.status(200).send({ token: user.token });
-  }).catch(err => {
-    res.status(500).send({ errors: err.errors });
-  });
+    res.send({ token: user.token });
+  }).catch(next);
 })
 .get('/request_password', handler.notYetImplemented)
 

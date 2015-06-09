@@ -1,6 +1,7 @@
 var express = require('express'),
   passport = require('passport'),
-  handler = require('../../common/handler'),
+  handler = require('../../../shared/handler'),
+  errors = require('../../../shared/errors'),
   User = require('../../../models').User;
 
 let router = express.Router();
@@ -8,7 +9,7 @@ let router = express.Router();
 const CREATE_FILTER = { fields: ['email', 'password', 'token', 'token_id'] };
 
 router
-.post('/login', (req, res) => {
+.post('/login', (req, res, next) => {
   let created = false;
 
   User.findOne({ where: { email: req.body.email } })
@@ -18,16 +19,14 @@ router
   })
   .then(user => {
     if (!created && !user.verifyPassword(req.body.password)) {
-      return res.status(401).send();
+      throw new errors.UnauthorizedError();
     }
 
     let statusCode = created ? 201 : 200;
 
     res.status(statusCode).send({ token: user.token });
   })
-  .catch(err => {
-    res.status(400).json({ errors: err.errors });
-  });
+  .catch(next);
 })
 
 .get('/github', passport.authenticate('github'))

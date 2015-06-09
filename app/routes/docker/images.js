@@ -1,6 +1,6 @@
 var express = require('express'),
-  handler = require('../common/handler'),
-  regexp  = require('../common/regexp');
+  handler = require('../../shared/handler'),
+  regexp  = require('../../shared/regexp');
 
 let router = express.Router();
 
