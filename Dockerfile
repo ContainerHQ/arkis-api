@@ -13,6 +13,13 @@ ENV APP /docker-proxy
 # Add user exec.
 RUN useradd dev
 
+# Copy package.json into the image.
+COPY package.json $APP/
+
+# npm install inside app's location:
+# node_modules directory is included in the .dockerignore file.
+RUN cd $APP && npm install
+
 # Everything up to here was cached. This includes
 # the npm install, unless package.json changed.
 COPY . $APP
