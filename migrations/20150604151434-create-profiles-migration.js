@@ -2,7 +2,7 @@
 
 module.exports = {
   up: function (queryInterface, DataTypes) {
-    queryInterface.createTable('Profiles', {
+    return queryInterface.createTable('Profiles', {
       id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
