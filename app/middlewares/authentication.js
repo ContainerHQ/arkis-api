@@ -20,7 +20,6 @@ passport
   clientID: process.env.GITHUB_CLIENT_ID || '*',
   clientSecret: process.env.GITHUB_SECRET_KEY || '*'
 }, (accessToken, refreshToken, profile, done) => {
-  console.log(profile);
   let user = User.build({ email: 'azerty@gmail.com', password: 'decembre99' });
 
   let defaults = {
@@ -28,8 +27,6 @@ passport
     provider_id: profile.id,
     email: profile.emails[0].value
   };
-
-  console.log(defaults);
   done(null, user);
 }));
 

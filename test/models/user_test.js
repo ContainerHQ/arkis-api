@@ -117,15 +117,20 @@ describe('User Model', () => {
 
     beforeEach(() => {
       user = factory.buildSync('user');
-
-      return user.save()
-      .then(user => {
-        return user.destroy();
-      });
+      return user.save();
     });
 
     it('removes the user profile', () => {
-      expect(Profile.count()).to.eventually.equal(0);
+      let profileId;
+
+      return expect(
+        user.getProfile().then(profile => {
+          profileId = profile.id
+          return user.destroy();
+        }).then(() => {
+          return Profile.findById(profileId);
+        })
+      ).to.be.fulfilled.and.to.eventually.be.null;
     });
   });
 

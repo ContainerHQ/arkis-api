@@ -11,15 +11,9 @@ describe('POST /auth/login', () => {
    * We need a non save user in order to login
    * with the original password (before hashing).
    *
-   * We also must ensure that our created user is not the first
-   * available in the database (User.findOne without
-   * parameters will retrieve the first user by default, therefore
-   * with only one user we can't be sure that this endpoint retrieve
-   * the targeted user).
    */
-  beforeEach(done => {
+  beforeEach(() => {
     user = factory.buildSync('user');
-    factory.create('user', { email: `another.${user.email}` }, done);
   });
 
   it('registers a new user and returns its token', (done) => {

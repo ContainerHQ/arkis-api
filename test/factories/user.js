@@ -7,4 +7,9 @@ module.exports = function(factory) {
     email: 'max@furyroad.io',
     password: 'allm8tyMax'
   });
+
+  factory.define('defaultUser', User, {
+    email: 'default@arkis.io',
+    password: 'allm8tyMax'
+  });
 };

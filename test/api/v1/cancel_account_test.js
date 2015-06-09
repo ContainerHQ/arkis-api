@@ -19,7 +19,7 @@ describe('DELETE /cancel_account', () => {
     .end((err, res) => {
       if (err) { return done(err); }
 
-      expect(User.findOne({ where: user }))
+      expect(User.findOne({ where: { email: user.email } }))
         .to.eventually.be.null
         .notify(done);
     });
