@@ -2,18 +2,26 @@ FROM node:0.12.2
 
 ENV APP /docker-proxy
 
-# Copy package.json into the image.
-COPY package.json $APP/
+# Install dev tools
+RUN npm install -g \
+    sequelize-cli \
+    nodemon \
+    jshint
 
-# Add babel cache file.
-RUN touch $APP/.babel.json
+ENV APP /docker-proxy
 
-# npm install inside app's location.
-RUN cd $APP && npm install
+# Add user exec.
+RUN useradd dev
 
 # Everything up to here was cached. This includes
 # the npm install, unless package.json changed.
 COPY . $APP
+
+# Change app's files owner.
+RUN chown -R dev:dev $APP
+
+# Switch to user dev
+USER dev
 
 # Set the final working dir to the app's location.
 WORKDIR $APP

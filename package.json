@@ -4,7 +4,7 @@
   "description": "A docker remote API proxy",
   "main": "index.js",
   "scripts": {
-    "test": "mocha",
+    "test": "./scripts/test.sh",
     "start": "nodemon --ignore tests/"
   },
   "repository": {
@@ -26,19 +26,30 @@
   },
   "dependencies": {
     "babel": "5.0.12",
+    "bcrypt": "0.8.x",
     "body-parser": "1.12.x",
     "cors": "2.6.x",
-    "dockerode": "2.1.2",
+    "dockerode": "2.1.x",
     "express": "4.12.x",
+    "jsonwebtoken": "5.0.x",
     "lodash": "3.6.x",
     "morgan": "1.5.x",
-    "multer": "0.1.x"
+    "multer": "0.1.x",
+    "passport": "0.2.x",
+    "passport-github2": "0.1.x",
+    "passport-jwt": "1.1.x",
+    "pg": "4.3.x",
+    "pg-hstore": "2.3.x",
+    "sequelize": "3.1.x"
   },
   "devDependencies": {
     "chai": "2.2.x",
+    "chai-as-promised": "5.0.x",
+    "factory-girl": "1.5.x",
+    "factory-girl-sequelize": "1.0.x",
     "mocha": "2.2.x",
-    "nodemon": "1.3.x",
     "rewire": "2.3.x",
-    "sinon": "1.14.x"
+    "sinon": "1.14.x",
+    "supertest": "1.0.x"
   }
 }

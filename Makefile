@@ -1,10 +1,10 @@
-.PHONY: all re clean build shell test up
+.PHONY: all re clean build shell test up detach
 
 compose := docker-compose
 
 all: detach
 
-re: build clean all
+re: clean build all
 
 clean:
 	$(compose) kill
@@ -20,7 +20,7 @@ test: build
 	$(compose) run api npm test
 
 up: build
-	$(compose) up api
+	$(compose) up
 
 detach:
-	$(compose) up -d api
+	$(compose) up -d

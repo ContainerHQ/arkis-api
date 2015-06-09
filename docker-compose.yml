@@ -1,28 +1,48 @@
 api:
   build: .
   command: node index.js
+  user: root
   ports:
     - '4000:4000'
+  links:
+    - 'db'
+    - 'dbtest'
   volumes:
     - '$DOCKER_CERT_PATH:/home/.docker'
     - '/var/run/docker.sock:/var/run/docker.sock'
-    - '.:/home/dev/docker-proxy'
+    - '.:/docker-proxy'
   environment:
     - DOCKER_CERT_PATH=/home/.docker
     - DOCKER_HOST
     - DOCKER_TLS_VERIFY
+    - GITHUB_CLIENT_ID
+    - GITHUB_SECRET_KEY
+
+db:
+  image: postgres:9.4.2
+  expose:
+    - '5432'
+  volumes:
+    - '/dockerproxy-db:/var/lib/postgresql/data'
+
+dbtest:
+  extends:
+    file: docker-compose.yml
+    service: db
+  volumes:
+    - '/dockerproxy-dbtest:/var/lib/postgresql/data'
 
 # TODO: use new docker-compose extend to
 # extend each client config from service test
 # and just replace build path.
-test:
-  build: test/clients/dockerode
-  links:
-    - api
-  environment:
-    - DOCKER_HOST=http://api
-    - DOCKER_PORT=4000
-  tty: true
+#test:
+  #build: test/clients/dockerode
+  #links:
+    #- api
+  #environment:
+    #- DOCKER_HOST=http://api
+    #- DOCKER_PORT=4000
+  #tty: true
 
 #cli:
   #build: test/clients/docker-cli
