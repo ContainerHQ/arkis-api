@@ -7,31 +7,30 @@ var passport = require('passport'),
 passport
 .use(new JwtStrategy({ secretOrKey: secrets.jwt }, (payload, done) => {
   User
-  .findOne(payload)
+  .findOne({ where: { email: payload.email, token_id: payload.jit } })
   .then(user => {
-    if (payload.jit !== user.token_id) {
-      return done(null, false);
-    }
     done(null, user);
   })
   .catch(done);
-}));
+}))
+.use(new GitHubStrategy({
+  /*
+   * If not set, use fake credentials in order to avoid errors.
+   */
+  clientID: process.env.GITHUB_CLIENT_ID || '*',
+  clientSecret: process.env.GITHUB_SECRET_KEY || '*'
+}, (accessToken, refreshToken, profile, done) => {
+  console.log(profile);
+  let user = User.build({ email: 'azerty@gmail.com', password: 'decembre99' });
 
-/*
- * Add GitHub strategy only if application credentials are available.
- *
- */
-if (!!process.env.GITHUB_CLIENT_ID && !!process.env.GITHUB_SECRET_KEY) {
-  passport
-  .use(new GitHubStrategy({
-    clientID: process.env.GITHUB_CLIENT_ID,
-    clientSecret: process.env.GITHUB_SECRET_KEY
-  },
-  (accessToken, refreshToken, profile, done) => {
-    let user = User.build({ email: 'azerty@gmail.com', password: 'decembre99' });
-    console.log('uiij');
-    done(null, user);
-  }));
-}
+  let defaults = {
+    provider: 'github',
+    provider_id: profile.id,
+    email: profile.emails[0].value
+  };
+
+  console.log(defaults);
+  done(null, user);
+}));
 
 module.exports = passport;
