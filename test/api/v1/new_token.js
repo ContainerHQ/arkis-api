@@ -30,7 +30,7 @@ describe('PATCH /new_token', () => {
     });
   });
 
-  it('revokes the previous token', () => {
+  it('revokes the previous token', (done) => {
     api
     .newToken(user)
     .expect(200)
