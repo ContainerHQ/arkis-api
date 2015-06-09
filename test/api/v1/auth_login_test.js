@@ -2,7 +2,7 @@
 
 var User = require('../../../app/models').User;
 
-describe('POST /login', () => {
+describe('POST /auth/login', () => {
   db.sync();
 
   let user;

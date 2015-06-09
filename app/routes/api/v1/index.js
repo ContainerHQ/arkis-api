@@ -1,10 +1,14 @@
-var express = require('express');
+var express = require('express'),
+  passport = require('passport');
 
 let router = express.Router();
 
 router
-.use('/', require('./root'))
 .use('/auth', require('./auth'))
+
+.use(passport.authenticate('jwt', { session: false }))
+
+.use('/', require('./root'))
 .use('/clusters', require('./clusters'))
 .use('/node_sizes', require('./node_sizes'))
 .use('/nodes', require('./nodes'))

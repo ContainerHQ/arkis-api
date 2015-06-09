@@ -9,8 +9,6 @@ RUN npm install -g \
     nodemon \
     jshint
 
-ENV APP /docker-proxy
-
 # Add user exec.
 RUN useradd dev
 

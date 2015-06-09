@@ -8,7 +8,7 @@ const ROUTE = '/api/v1';
 module.exports = {
   login: function(user={}) {
     return request(app)
-    .post(`${ROUTE}/login`)
+    .post(`${ROUTE}/auth/login`)
     .field('email', user.email || '')
     .field('password', user.password || '');
   },
