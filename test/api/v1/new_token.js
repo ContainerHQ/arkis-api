@@ -10,7 +10,7 @@ describe('PATCH /new_token', () => {
     return user.save();
   });
 
-  it('returns a new token', (done) => {
+  it('returns a new token', done => {
     api
     .newToken(user)
     .expect(200)
@@ -30,7 +30,7 @@ describe('PATCH /new_token', () => {
     });
   });
 
-  it('revokes the previous token', (done) => {
+  it('revokes the previous token', done => {
     api
     .newToken(user)
     .expect(200)

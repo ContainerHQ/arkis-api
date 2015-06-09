@@ -16,7 +16,7 @@ describe('POST /auth/login', () => {
     user = factory.buildSync('user');
   });
 
-  it('registers a new user and returns its token', (done) => {
+  it('registers a new user and returns its token', done => {
     api
     .login(user)
     .expect(201)
@@ -43,7 +43,7 @@ describe('POST /auth/login', () => {
       });
     });
 
-    it('returns the user token', (done) => {
+    it('returns the user token', done => {
       api
       .login(user)
       .expect(200, { token: userToken }, done);
@@ -54,7 +54,7 @@ describe('POST /auth/login', () => {
         user.password += '*';
       });
 
-      it('responds with an unauthorized status', (done) => {
+      it('responds with an unauthorized status', done => {
         api
         .login(user)
         .expect(401, {}, done);
@@ -71,7 +71,7 @@ describe('POST /auth/login', () => {
       );
     });
 
-    it('these attributes are filtered', (done) => {
+    it('these attributes are filtered', done => {
       addAttributesTo(api.login(user), attributes)
       .expect(201)
       .end((err, res) => {
@@ -92,7 +92,7 @@ describe('POST /auth/login', () => {
   }
 
   context('with invalid attributes', () => {
-    it('responds with a bad request status and errors', (done) => {
+    it('responds with a bad request status and errors', done => {
       api
       .login()
       .expect(400)

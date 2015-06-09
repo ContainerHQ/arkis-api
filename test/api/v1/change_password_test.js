@@ -13,7 +13,7 @@ describe('PATCH /change_password', () => {
     return user.save();
   });
 
-  it('updates the user password', (done) => {
+  it('updates the user password', done => {
     api
     .changePassword(user)
     .field('current_password', currentPassword)
@@ -30,7 +30,7 @@ describe('PATCH /change_password', () => {
   });
 
   context('with incorrect current password', () => {
-    it('returns an unauthorized status', (done) => {
+    it('returns an unauthorized status', done => {
       api
       .changePassword(user)
       .field('current_password', `${currentPassword}*`)
@@ -48,7 +48,7 @@ describe('PATCH /change_password', () => {
   });
 
   context('with invalid password confirmation', () => {
-    it('returns a bad request status with errors', (done) => {
+    it('returns a bad request status with errors', done => {
       api
       .changePassword(user)
       .field('current_password', currentPassword)
@@ -66,7 +66,7 @@ describe('PATCH /change_password', () => {
   });
 
   context('with invalid password', () => {
-    it('returns a bad request status and errors', (done) => {
+    it('returns a bad request status and errors', done => {
       api
       .changePassword(user)
       .field('current_password', currentPassword)

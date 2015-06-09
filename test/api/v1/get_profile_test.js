@@ -10,7 +10,7 @@ describe('GET /profile', () => {
     return user.save();
   });
 
-  it('returns the user profile', (done) => {
+  it('returns the user profile', done => {
     api
     .getProfile(user)
     .expect(200)
@@ -32,7 +32,7 @@ describe('GET /profile', () => {
       return user.save();
     });
 
-    it('returns an unauthorized status', (done) => {
+    it('returns an unauthorized status', done => {
       api
       .getProfile(user)
       .expect(401, {}, done);

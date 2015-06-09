@@ -12,7 +12,7 @@ describe('DELETE /cancel_account', () => {
     return user.save();
   });
 
-  it('destroys the user account', (done) => {
+  it('destroys the user account', done => {
     api
     .cancelAccount(user)
     .expect(204)

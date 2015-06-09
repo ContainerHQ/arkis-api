@@ -10,7 +10,7 @@ var sequelize = require('../../app/models').sequelize;
  * the targeted user. Therefore we must ensure that we always a default user
  * in the database.
  *
- * */
+ */
 module.exports.sync = function(done) {
   beforeEach(done => {
     sequelize.sync({force: true}).then(() => {

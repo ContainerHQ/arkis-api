@@ -10,7 +10,7 @@ describe('PATCH /profile', () => {
     return user.save();
   });
 
-  it('updates the user profile', (done) => {
+  it('updates the user profile', done => {
     let fullname = 'Uther Lightbringer';
 
     api
