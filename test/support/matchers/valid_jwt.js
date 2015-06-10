@@ -12,7 +12,6 @@ var jwt = require('jsonwebtoken'),
 module.exports = function(user) {
   let payload = jwt.decode(user.token);
 
-  console.log(payload);
   return jwt.verify(user.token, secrets.jwt)
     && user.id === payload.user_id
     && user.token_id === payload.jit

@@ -5,6 +5,14 @@ var express = require('express'),
 let router = express.Router();
 
 router
+.get('/new_token', (req, res, next) => {
+  req.user.revokeToken();
+  req.user.generateToken();
+
+  req.user.save().then(user => {
+    res.send({ token: user.token });
+  }).catch(next);
+})
 .patch('/change_password', (req, res, next) => {
   if (!req.user.verifyPassword(req.body.current_password)) {
     return next(new errors.UnauthorizedError());
@@ -51,14 +59,6 @@ router
     res.status(200).send({ profile: profile });
   })
   .catch(next);
-})
-.patch('/new_token', (req, res, next) => {
-  req.user.revokeToken();
-  req.user.generateToken();
-
-  req.user.save().then(user => {
-    res.send({ token: user.token });
-  }).catch(next);
 })
 .get('/request_password', handler.notYetImplemented)
 

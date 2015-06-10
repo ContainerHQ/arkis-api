@@ -43,7 +43,7 @@ module.exports = {
   },
   newToken: function(user) {
     return request(app)
-    .patch(`${ROUTE}/new_token`)
+    .get(`${ROUTE}/new_token`)
     .set('Authorization', `JWT ${user.token}`);
   },
   callWithAttributes: function(attributes, reference, action) {

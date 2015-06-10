@@ -1,6 +1,6 @@
 'use strict';
 
-describe('PATCH /new_token', () => {
+describe('GET /new_token', () => {
   db.sync();
 
   let user;

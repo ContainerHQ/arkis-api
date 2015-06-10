@@ -8,18 +8,18 @@ module.exports = {
         primaryKey: true,
         autoIncrement: true
       },
-      fullname: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        defaultValue: null,
-        validate: { len: [0, 128] }
-      },
       user_id: {
         type: DataTypes.INTEGER,
         references: {
           model: 'Users',
           key: 'id'
         }
+      },
+      fullname: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+        validate: { len: [0, 128] }
       },
       created_at: DataTypes.DATE,
       updated_at: DataTypes.DATE
