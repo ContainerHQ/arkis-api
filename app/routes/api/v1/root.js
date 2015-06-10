@@ -38,7 +38,7 @@ router
     return profile.update(req.body);
   })
   .then(profile => {
-    res.status(204).send();
+    res.status(200).send({ profile: profile });
   })
   .catch(next);
 })

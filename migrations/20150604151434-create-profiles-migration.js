@@ -12,7 +12,7 @@ module.exports = {
         type: DataTypes.STRING,
         allowNull: true,
         defaultValue: null,
-        validate: { len: [6, 128] }
+        validate: { len: [0, 128] }
       },
       user_id: {
         type: DataTypes.INTEGER,

@@ -31,6 +31,11 @@ module.exports = {
     .patch(`${ROUTE}/change_password`)
     .set('Authorization', `JWT ${user.token}`);
   },
+  changeEmail: function(user) {
+    return request(app)
+    .patch(`${ROUTE}/change_email`)
+    .set('Authorization', `JWT ${user.token}`);
+  },
   cancelAccount: function(user) {
     return request(app)
     .delete(`${ROUTE}/cancel_account`)

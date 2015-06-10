@@ -27,6 +27,8 @@ passport
     provider_id: profile.id,
     email: profile.emails[0].value
   };
+  // update profile with infos (fullname etc)
+  // whitelist parameters on creation (user)
   done(null, user);
 }));
 

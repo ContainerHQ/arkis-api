@@ -11,7 +11,11 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: true,
       defaultValue: null,
-      validate: { len: [6, 128] }
+      validate: { len: [0, 128] }
     }
+  // This must be compatible with github validations
+  // > size
+  //
+  // Autocomplete profile
   });
 };
