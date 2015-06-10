@@ -14,8 +14,9 @@ router
       req.body.password_confirmation
     ));
   }
-  req.user.update(req.body)
-  .then(() => {
+  req.user.update({
+    password: req.body.password
+  }).then(() => {
     res.status(204).send();
   })
   .catch(next);
@@ -24,8 +25,9 @@ router
   if (!req.user.verifyPassword(req.body.current_password)) {
     return next(new errors.UnauthorizedError());
   }
-  req.user.update(req.body, { fields: ['email'] })
-  .then(() => {
+  req.user.update({
+    email: req.body.email
+  }).then(() => {
     res.status(204).send();
   })
   .catch(next);

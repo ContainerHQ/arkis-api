@@ -52,7 +52,6 @@ describe('PATCH /change_email', () => {
       api
       .changeEmail(user)
       .field('current_password', currentPassword)
-      .field('email', '*')
       .expect(400)
       .end((err, res) => {
         if (err) { return done(err); }

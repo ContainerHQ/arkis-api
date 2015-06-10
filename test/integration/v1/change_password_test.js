@@ -2,8 +2,7 @@
 
 var User = require('../../../app/models').User;
 
-const NEW_PASSWORD     = 'asOPJkl,',
-      INVALID_PASSWORD = '*';
+const NEW_PASSWORD = 'asOPJkl,';
 
 describe('PATCH /change_password', () => {
   db.sync();
@@ -73,8 +72,6 @@ describe('PATCH /change_password', () => {
       api
       .changePassword(user)
       .field('current_password', currentPassword)
-      .field('password', INVALID_PASSWORD)
-      .field('password_confirmation', INVALID_PASSWORD)
       .expect(400)
       .end((err, res) => {
         if (err) { return done(err); }
@@ -112,12 +109,5 @@ describe('PATCH /change_password', () => {
           .notify(done);
       });
     });
-
-    function withAttributes(action, attributes, reference) {
-      attributes.forEach(attribute => {
-        action = action.field(attribute, reference.dataValues[attribute]);
-      });
-      return action;
-    }
   });
 });
