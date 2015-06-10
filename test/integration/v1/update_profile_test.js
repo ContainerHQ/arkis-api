@@ -1,6 +1,6 @@
 'use strict';
 
-describe('PATCH /profile', () => {
+describe('PATCH /account/profile', () => {
   db.sync();
 
   let user;

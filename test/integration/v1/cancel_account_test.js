@@ -2,7 +2,7 @@
 
 var User = require('../../../app/models').User;
 
-describe('DELETE /cancel_account', () => {
+describe('DELETE /account/cancel', () => {
   db.sync();
 
   let user;

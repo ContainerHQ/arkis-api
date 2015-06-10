@@ -40,7 +40,7 @@ router
   })
   .catch(next);
 })
-.delete('/cancel_account', (req, res, next) => {
+.delete('/cancel', (req, res, next) => {
   req.user.destroy()
   .then(() => { res.status(204).send(); })
   .catch(next);

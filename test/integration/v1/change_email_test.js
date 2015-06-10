@@ -4,7 +4,7 @@ var User = require('../../../app/models').User;
 
 const NEW_EMAIL = 'new.email@arkis.io';
 
-describe('PATCH /change_email', () => {
+describe('PATCH /account/change_email', () => {
   db.sync();
 
   let user, currentEmail, currentPassword;

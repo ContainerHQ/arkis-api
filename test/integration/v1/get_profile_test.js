@@ -1,6 +1,6 @@
 'use strict';
 
-describe('GET /profile', () => {
+describe('GET /account/profile', () => {
   db.sync();
 
   let user;

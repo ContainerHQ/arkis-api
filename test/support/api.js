@@ -18,32 +18,32 @@ module.exports = {
   },
   getProfile: function(user) {
     return request(app)
-    .get(`${ROUTE}/profile`)
+    .get(`${ROUTE}/account/profile`)
     .set('Authorization', `JWT ${user.token}`);
   },
   updateProfile: function(user) {
     return request(app)
-    .patch(`${ROUTE}/profile`)
+    .patch(`${ROUTE}/account/profile`)
     .set('Authorization', `JWT ${user.token}`);
   },
   changePassword: function(user) {
     return request(app)
-    .patch(`${ROUTE}/change_password`)
+    .patch(`${ROUTE}/account/change_password`)
     .set('Authorization', `JWT ${user.token}`);
   },
   changeEmail: function(user) {
     return request(app)
-    .patch(`${ROUTE}/change_email`)
+    .patch(`${ROUTE}/account/change_email`)
     .set('Authorization', `JWT ${user.token}`);
   },
   cancelAccount: function(user) {
     return request(app)
-    .delete(`${ROUTE}/cancel_account`)
+    .delete(`${ROUTE}/account/cancel`)
     .set('Authorization', `JWT ${user.token}`);
   },
   newToken: function(user) {
     return request(app)
-    .get(`${ROUTE}/new_token`)
+    .get(`${ROUTE}/account/new_token`)
     .set('Authorization', `JWT ${user.token}`);
   },
   callWithAttributes: function(attributes, reference, action) {

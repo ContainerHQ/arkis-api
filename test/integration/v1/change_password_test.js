@@ -4,7 +4,7 @@ var User = require('../../../app/models').User;
 
 const NEW_PASSWORD = 'asOPJkl,';
 
-describe('PATCH /change_password', () => {
+describe('PATCH /account/change_password', () => {
   db.sync();
 
   let user, currentPassword;
