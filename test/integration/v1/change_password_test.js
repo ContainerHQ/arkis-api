@@ -7,19 +7,19 @@ const NEW_PASSWORD = 'asOPJkl,';
 describe('PATCH /account/change_password', () => {
   db.sync();
 
-  let user, currentPassword;
+  let user, oldPassword;
 
   beforeEach(() => {
     user = factory.buildSync('user');
-    currentPassword = user.password;
+    oldPassword = user.password;
     return user.save();
   });
 
   it('updates the user password', done => {
     api
     .changePassword(user)
-    .field('current_password', currentPassword)
-    .field('password', NEW_PASSWORD)
+    .field('old_password', oldPassword)
+    .field('new_password', NEW_PASSWORD)
     .field('password_confirmation', NEW_PASSWORD)
     .expect(204)
     .end((err, res) => {
@@ -31,19 +31,19 @@ describe('PATCH /account/change_password', () => {
     });
   });
 
-  context('with incorrect current password', () => {
+  context('with incorrect old password', () => {
     it('returns an unauthorized status', done => {
       api
       .changePassword(user)
-      .field('current_password', `${currentPassword}*`)
-      .field('password', NEW_PASSWORD)
+      .field('old_password', `${oldPassword}*`)
+      .field('new_password', NEW_PASSWORD)
       .field('password_confirmation', NEW_PASSWORD)
       .expect(401)
       .end((err, res) => {
         if (err) { return done(err); }
 
         expect(user.reload())
-          .to.eventually.satisfy(has.hashPassword(currentPassword))
+          .to.eventually.satisfy(has.hashPassword(oldPassword))
           .notify(done);
       });
     });
@@ -53,15 +53,15 @@ describe('PATCH /account/change_password', () => {
     it('returns a bad request status with errors', done => {
       api
       .changePassword(user)
-      .field('current_password', currentPassword)
-      .field('password', NEW_PASSWORD)
+      .field('old_password', oldPassword)
+      .field('new_password', NEW_PASSWORD)
       .expect(400)
       .end((err, res) => {
         if (err) { return done(err); }
 
         expect(res.body.errors).to.exist;
         expect(user.reload())
-          .to.eventually.satisfy(has.hashPassword(currentPassword))
+          .to.eventually.satisfy(has.hashPassword(oldPassword))
           .notify(done);
       });
     });
@@ -71,7 +71,7 @@ describe('PATCH /account/change_password', () => {
     it('returns a bad request status and errors', done => {
       api
       .changePassword(user)
-      .field('current_password', currentPassword)
+      .field('old_password', oldPassword)
       .expect(400)
       .end((err, res) => {
         if (err) { return done(err); }
@@ -97,8 +97,8 @@ describe('PATCH /account/change_password', () => {
       api.callWithAttributes(attributes, reference,
         api.changePassword(user)
       )
-      .field('current_password', currentPassword)
-      .field('password', NEW_PASSWORD)
+      .field('old_password', oldPassword)
+      .field('new_password', NEW_PASSWORD)
       .field('password_confirmation', NEW_PASSWORD)
       .expect(204)
       .end((err, res) => {

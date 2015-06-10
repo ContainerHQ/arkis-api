@@ -7,19 +7,19 @@ const NEW_EMAIL = 'new.email@arkis.io';
 describe('PATCH /account/change_email', () => {
   db.sync();
 
-  let user, currentEmail, currentPassword;
+  let user, oldEmail, password;
 
   beforeEach(() => {
     user = factory.buildSync('user');
-    currentEmail = user.currentEmail;
-    currentPassword = user.password;
+    oldEmail = user.oldEmail;
+    password = user.password;
     return user.save();
   });
 
   it('updates the user email', done => {
     api
     .changeEmail(user)
-    .field('current_password', currentPassword)
+    .field('password', password)
     .field('email', NEW_EMAIL)
     .expect(204)
     .end((err, res) => {
@@ -35,13 +35,13 @@ describe('PATCH /account/change_email', () => {
     it('returns an unauthorized status', done => {
       api
       .changeEmail(user)
-      .field('current_password', `${currentPassword}*`)
+      .field('password', `${password}*`)
       .expect(401)
       .end((err, res) => {
         if (err) { return done(err); }
 
         expect(user.reload())
-          .to.eventually.have.property('email', currentEmail)
+          .to.eventually.have.property('email', oldEmail)
           .notify(done);
       });
     });
@@ -51,13 +51,13 @@ describe('PATCH /account/change_email', () => {
     it('returns a bad request status and errors', done => {
       api
       .changeEmail(user)
-      .field('current_password', currentPassword)
+      .field('password', password)
       .expect(400)
       .end((err, res) => {
         if (err) { return done(err); }
 
         expect(user.reload())
-          .to.eventually.have.property('email', currentEmail)
+          .to.eventually.have.property('email', oldEmail)
           .notify(done);
       });
     });
@@ -66,9 +66,14 @@ describe('PATCH /account/change_email', () => {
   context('with forbidden attributes', () => {
     let attributes, reference;
 
+    /*
+     * The password can be ignored here, we already ensure
+     * that the password field is used to verify the user
+     * password.
+     */
     beforeEach(() => {
       attributes = _.difference(user.attributes,
-        ['id', 'email', 'created_at', 'updated_at']
+        ['id', 'email', 'password', 'created_at', 'updated_at']
       );
       reference = factory.buildSync('forbiddenUser');
     });
@@ -77,7 +82,7 @@ describe('PATCH /account/change_email', () => {
       api.callWithAttributes(attributes, reference,
         api.changeEmail(user)
       )
-      .field('current_password', currentPassword)
+      .field('password', password)
       .field('email', NEW_EMAIL)
       .expect(204)
       .end((err, res) => {
