@@ -62,7 +62,7 @@ describe('User Model', () => {
       user = factory.buildSync('user');
     });
 
-    it('has a json web token including its email address', () => {
+    it('has a valid json web token', () => {
       return expect(user.save()).to.eventually.satisfy(has.validJWT);
     });
 

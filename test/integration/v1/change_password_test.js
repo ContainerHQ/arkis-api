@@ -1,6 +1,9 @@
 'use strict';
 
-const NEW_PASSWORD = 'asOPJkl,';
+var User = require('../../../app/models').User;
+
+const NEW_PASSWORD     = 'asOPJkl,',
+      INVALID_PASSWORD = '*';
 
 describe('PATCH /change_password', () => {
   db.sync();
@@ -17,7 +20,7 @@ describe('PATCH /change_password', () => {
     api
     .changePassword(user)
     .field('current_password', currentPassword)
-    .field('new_password', NEW_PASSWORD)
+    .field('password', NEW_PASSWORD)
     .field('password_confirmation', NEW_PASSWORD)
     .expect(204)
     .end((err, res) => {
@@ -34,7 +37,7 @@ describe('PATCH /change_password', () => {
       api
       .changePassword(user)
       .field('current_password', `${currentPassword}*`)
-      .field('new_password', NEW_PASSWORD)
+      .field('password', NEW_PASSWORD)
       .field('password_confirmation', NEW_PASSWORD)
       .expect(401)
       .end((err, res) => {
@@ -52,7 +55,7 @@ describe('PATCH /change_password', () => {
       api
       .changePassword(user)
       .field('current_password', currentPassword)
-      .field('new_password', NEW_PASSWORD)
+      .field('password', NEW_PASSWORD)
       .expect(400)
       .end((err, res) => {
         if (err) { return done(err); }
@@ -70,6 +73,8 @@ describe('PATCH /change_password', () => {
       api
       .changePassword(user)
       .field('current_password', currentPassword)
+      .field('password', INVALID_PASSWORD)
+      .field('password_confirmation', INVALID_PASSWORD)
       .expect(400)
       .end((err, res) => {
         if (err) { return done(err); }
@@ -79,5 +84,40 @@ describe('PATCH /change_password', () => {
         expect(user.save()).to.be.rejectedWith(res.body.errors).notify(done);
       });
     });
+  });
+
+  context('with forbidden attributes', () => {
+    let attributes, reference;
+
+    beforeEach(() => {
+      attributes = _.difference(user.attributes,
+        ['id', 'password', 'created_at', 'updated_at']
+      );
+      reference = factory.buildSync('forbiddenUser');
+    });
+
+    it('these attributes are filtered', done => {
+      api.callWithAttributes(attributes, reference,
+        api.changePassword(user)
+      )
+      .field('current_password', currentPassword)
+      .field('password', NEW_PASSWORD)
+      .field('password_confirmation', NEW_PASSWORD)
+      .expect(204)
+      .end((err, res) => {
+        if (err) { return done(err); }
+
+        expect(User.findById(user.id))
+          .to.eventually.satisfy(has.beenFiltered(user, attributes))
+          .notify(done);
+      });
+    });
+
+    function withAttributes(action, attributes, reference) {
+      attributes.forEach(attribute => {
+        action = action.field(attribute, reference.dataValues[attribute]);
+      });
+      return action;
+    }
   });
 });

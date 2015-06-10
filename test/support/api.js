@@ -45,5 +45,11 @@ module.exports = {
     return request(app)
     .patch(`${ROUTE}/new_token`)
     .set('Authorization', `JWT ${user.token}`);
+  },
+  callWithAttributes: function(attributes, reference, action) {
+    attributes.forEach(attribute => {
+      action = action.field(attribute, reference.dataValues[attribute]);
+    });
+    return action;
   }
 };

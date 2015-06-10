@@ -63,33 +63,29 @@ describe('POST /auth/login', () => {
   });
 
   context('with forbidden attributes', () => {
-    let attributes;
+    let attributes, reference;
 
     beforeEach(() => {
       attributes = _.difference(user.attributes,
-        ['email', 'password', 'token', 'token_id', 'created_at', 'updated_at']
+        ['id', 'email', 'password', 'token', 'token_id', 'created_at', 'updated_at']
       );
+      reference = factory.buildSync('forbiddenUser');
     });
 
     it('these attributes are filtered', done => {
-      addAttributesTo(api.login(user), attributes)
+      api.callWithAttributes(attributes, reference,
+        api.login(user)
+      )
       .expect(201)
       .end((err, res) => {
         if (err) { return done(err); }
 
         expect(User.findOne({ where: { email: user.email } }))
-          .to.eventually.satisfy(has.beenFiltered(attributes))
+          .to.eventually.satisfy(has.beenFiltered(user, attributes))
           .notify(done);
       });
     });
   });
-
-  function addAttributesTo(action, attributes) {
-    attributes.forEach(attribute => {
-      action = action.field(attribute, '*');
-    });
-    return action;
-  }
 
   context('with invalid attributes', () => {
     it('responds with a bad request status and errors', done => {

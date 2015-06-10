@@ -48,13 +48,13 @@ module.exports = function(sequelize, DataTypes) {
     },
   }, {
     instanceMethods: {
-      hashPassword: function() {
-        this.password = bcrypt.hashSync(this.password, 10);
-      },
       verifyPassword: function(password) {
         return bcrypt.compareSync(password, this.password);
       },
 
+      hashPassword: function() {
+        this.password = bcrypt.hashSync(this.password, 10);
+      },
       /*
        * The encoded jwt token includes a unique universal identifier,
        * changing this identifier invalidates the token.
@@ -64,10 +64,8 @@ module.exports = function(sequelize, DataTypes) {
        * programming heaven.
        *
        */
-      createToken: function() {
-        let payload = _.merge(_.pick(this.toJSON(), 'email'),
-          { jit: this.token_id }
-        );
+      generateToken: function() {
+        let payload = { user_id: this.id, jit: this.token_id };
 
         this.token = jwt.sign(payload, secrets.jwt);
       },
@@ -83,7 +81,6 @@ module.exports = function(sequelize, DataTypes) {
     hooks: {
       beforeCreate: function(user, options, done) {
         user.hashPassword();
-        user.createToken();
         done(null, user);
       },
       beforeUpdate: function(user, options, done) {
@@ -93,10 +90,14 @@ module.exports = function(sequelize, DataTypes) {
         done(null, user);
       },
       afterCreate: function(user, options) {
-        return user.createProfile();
+        user.generateToken();
+
+        return user.createProfile()
+        .then(() => {
+          return user.update({ token: user.token });
+        });
       }
     }
   });
   return User;
 };
-
