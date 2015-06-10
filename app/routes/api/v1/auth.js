@@ -1,7 +1,7 @@
 var express = require('express'),
   passport = require('passport'),
-  handler = require('../../../shared/handler'),
-  errors = require('../../../shared/errors'),
+  handler = require('../../shared/handler'),
+  errors = require('../../shared/errors'),
   User = require('../../../models').User;
 
 let router = express.Router();

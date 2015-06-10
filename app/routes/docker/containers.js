@@ -1,6 +1,6 @@
 var _ = require('lodash'),
   express = require('express'),
-  handler = require('../../shared/handler');
+  handler = require('../shared/handler');
 
 let router = express.Router();
 

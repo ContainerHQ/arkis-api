@@ -1,5 +1,5 @@
 var express = require('express'),
-  handler = require('../../shared/handler'),
+  handler = require('../shared/handler'),
   middlewares = require('../../middlewares');
 
 let router = express.Router();
