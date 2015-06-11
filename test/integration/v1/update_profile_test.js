@@ -13,7 +13,7 @@ describe('PATCH /account/profile', () => {
   it('updates the user profile', done => {
     let fullname = 'Uther Lightbringer';
 
-    api.account.updateProfile(user)
+    api.account(user).updateProfile()
     .field('fullname', fullname)
     .expect(200)
     .end((err, res) => {

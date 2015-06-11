@@ -20,39 +20,41 @@ module.exports.auth = {
   }
 };
 
-module.exports.account = {
-  _ressource: 'account',
+module.exports.account = function(user) {
+  let ressource = 'account';
 
-  getProfile: function(user) {
-    return request(app)
-    .get(`${API_ROUTE}/${this._ressource}/profile`)
-    .set('Authorization', `JWT ${user.token}`);
-  },
-  updateProfile: function(user) {
-    return request(app)
-    .patch(`${API_ROUTE}/${this._ressource}/profile`)
-    .set('Authorization', `JWT ${user.token}`);
-  },
-  changePassword: function(user) {
-    return request(app)
-    .patch(`${API_ROUTE}/${this._ressource}/change_password`)
-    .set('Authorization', `JWT ${user.token}`);
-  },
-  changeEmail: function(user) {
-    return request(app)
-    .patch(`${API_ROUTE}/${this._ressource}/change_email`)
-    .set('Authorization', `JWT ${user.token}`);
-  },
-  cancel: function(user) {
-    return request(app)
-    .delete(`${API_ROUTE}/${this._ressource}/`)
-    .set('Authorization', `JWT ${user.token}`);
-  },
-  newToken: function(user) {
-    return request(app)
-    .get(`${API_ROUTE}/${this._ressource}/new_token`)
-    .set('Authorization', `JWT ${user.token}`);
-  }
+  return {
+    getProfile: function() {
+      return request(app)
+      .get(`${API_ROUTE}/${ressource}/profile`)
+      .set('Authorization', `JWT ${user.token}`);
+    },
+    updateProfile: function() {
+      return request(app)
+      .patch(`${API_ROUTE}/${ressource}/profile`)
+      .set('Authorization', `JWT ${user.token}`);
+    },
+    changePassword: function() {
+      return request(app)
+      .patch(`${API_ROUTE}/${ressource}/change_password`)
+      .set('Authorization', `JWT ${user.token}`);
+    },
+    changeEmail: function() {
+      return request(app)
+      .patch(`${API_ROUTE}/${ressource}/change_email`)
+      .set('Authorization', `JWT ${user.token}`);
+    },
+    cancel: function() {
+      return request(app)
+      .delete(`${API_ROUTE}/${ressource}/`)
+      .set('Authorization', `JWT ${user.token}`);
+    },
+    generateNewToken: function() {
+      return request(app)
+      .get(`${API_ROUTE}/${ressource}/new_token`)
+      .set('Authorization', `JWT ${user.token}`);
+    }
+  };
 };
 
 module.exports.callWithAttributes = function(attributes, reference, action) {

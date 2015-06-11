@@ -16,7 +16,7 @@ describe('PATCH /account/change_password', () => {
   });
 
   it('updates the user password', done => {
-    api.account.changePassword(user)
+    api.account(user).changePassword()
     .field('old_password', oldPassword)
     .field('new_password', NEW_PASSWORD)
     .field('new_password_confirmation', NEW_PASSWORD)
@@ -32,7 +32,7 @@ describe('PATCH /account/change_password', () => {
 
   context('with incorrect old password', () => {
     it('returns an unauthorized status', done => {
-      api.account.changePassword(user)
+      api.account(user).changePassword()
       .field('old_password', `${oldPassword}*`)
       .field('new_password', NEW_PASSWORD)
       .field('new_password_confirmation', NEW_PASSWORD)
@@ -49,7 +49,7 @@ describe('PATCH /account/change_password', () => {
 
   context('with invalid password confirmation', () => {
     it('returns a bad request status with errors', done => {
-      api.account.changePassword(user)
+      api.account(user).changePassword()
       .field('old_password', oldPassword)
       .field('new_password', NEW_PASSWORD)
       .expect(400)
@@ -66,7 +66,7 @@ describe('PATCH /account/change_password', () => {
 
   context('with invalid password', () => {
     it('returns a bad request status and errors', done => {
-      api.account.changePassword(user)
+      api.account(user).changePassword()
       .field('old_password', oldPassword)
       .expect(400)
       .end((err, res) => {
@@ -91,7 +91,7 @@ describe('PATCH /account/change_password', () => {
 
     it('these attributes are filtered', done => {
       api.callWithAttributes(attributes, reference,
-        api.account.changePassword(user)
+        api.account(user).changePassword()
       )
       .field('old_password', oldPassword)
       .field('new_password', NEW_PASSWORD)

@@ -13,7 +13,7 @@ describe('DELETE /account/cancel', () => {
   });
 
   it('destroys the user account', done => {
-    api.account.cancel(user)
+    api.account(user).cancel()
     .expect(204)
     .end((err, res) => {
       if (err) { return done(err); }

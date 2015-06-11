@@ -18,13 +18,15 @@ describe('GET /account/new_token', () => {
 
       let previousToken = user.token;
 
-      expect(user.reload())
-        .to.eventually.satisfy(has.validJWT).and
-        .to.eventually.have.property('token')
-          .that.equals(res.body.token).and
-          .that.not.equals(previousToken)
-        .notify(done);
-      });
+      user.reload().then(() => {
+        expect(user)
+          .to.satisfy(has.validJWT).and
+          .to.have.property('token')
+            .that.equals(res.body.token).and
+            .that.not.equals(previousToken);
+        done();
+      }).catch(done);
+    });
   });
 
   it('revokes the previous token', done => {
