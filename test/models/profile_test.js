@@ -10,16 +10,30 @@ describe('Profile Model', () => {
       expect(Profile.create()).to.be.fulfilled;
     });
 
+    it('succeed with empty attributes', () => {
+      let profile = factory.buildSync('emptyProfile');
+
+      expect(Profile.create()).to.be.fulfilled;
+    });
+
     it('succeed with valid attributes', done => {
       factory.create('profile', done);
     });
 
-    it('fails with a too short fullname', () => {
-      let profile = factory.buildSync('profile',
-        { fullname: _.repeat('*', 129) }
-      );
+    it('succeed with attributes at max size', done => {
+      factory.create('profileMaxSize', done);
+    });
 
-      expect(profile.save()).to.be.rejected;
+    ['fullname', 'company', 'location'].forEach(attribute => {
+      it(`fails with a too long ${attribute}`, () => {
+        let params = {};
+
+        params[attribute] = _.repeat('*', 65);
+
+        let profile = factory.buildSync('profile', params);
+
+        expect(profile.save()).to.be.rejected;
+      });
     });
   });
 });

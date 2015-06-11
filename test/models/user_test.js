@@ -12,6 +12,18 @@ describe('User Model', () => {
       return expect(user.save()).to.be.fulfilled;
     });
 
+    it('succeed with min size password', () => {
+      let user = factory.buildSync('user', { password: _.repeat('*', 6) });
+
+      return expect(user.save()).to.be.fulfilled;
+    });
+
+    it('succeed with max size password', () => {
+      let user = factory.buildSync('user', { password: _.repeat('*', 128) });
+
+      return expect(user.save()).to.be.fulfilled;
+    });
+
     it('fail without email address', () => {
       let user = factory.buildSync('user', { email: '' });
 
