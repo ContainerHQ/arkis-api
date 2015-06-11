@@ -35,6 +35,24 @@ describe('ErrorHandler Middleware', () => {
     });
   });
 
+  context('with a forbidden error', () => {
+    let err = new errors.ForbiddenError();
+
+    it('sends an forbidden status', done => {
+      errorHandler(err, {}, res, () => {
+        expect(res.status).to.have.been.calledWith(403);
+        done();
+      });
+    });
+
+    it('sends no errors', done => {
+      errorHandler(err, {}, res, () => {
+        expect(res.send).to.have.been.calledWith();
+        done();
+      });
+    });
+  });
+
   context('with an unauthorized error', () => {
     let err = new errors.UnauthorizedError();
 
@@ -52,6 +70,7 @@ describe('ErrorHandler Middleware', () => {
       });
     });
   });
+
 
   context('with any other error', () => {
     let err = new Error('whatever');

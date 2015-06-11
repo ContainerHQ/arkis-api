@@ -15,7 +15,7 @@ router
 })
 .patch('/change_password', (req, res, next) => {
   if (!req.user.verifyPassword(req.body.old_password)) {
-    return next(new errors.UnauthorizedError());
+    return next(new errors.ForbiddenError());
   }
   if (req.body.new_password !== req.body.new_password_confirmation) {
     return next(new errors.MismatchError('password_confirmation',
@@ -31,7 +31,7 @@ router
 })
 .patch('/change_email', (req, res, next) => {
   if (!req.user.verifyPassword(req.body.password)) {
-    return next(new errors.UnauthorizedError());
+    return next(new errors.ForbiddenError());
   }
   req.user.update({
     email: req.body.new_email

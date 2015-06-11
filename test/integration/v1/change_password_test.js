@@ -36,7 +36,7 @@ describe('PATCH /account/change_password', () => {
       .field('old_password', `${oldPassword}*`)
       .field('new_password', NEW_PASSWORD)
       .field('new_password_confirmation', NEW_PASSWORD)
-      .expect(401)
+      .expect(403)
       .end((err, res) => {
         if (err) { return done(err); }
 

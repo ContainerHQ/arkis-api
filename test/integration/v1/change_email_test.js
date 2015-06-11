@@ -34,7 +34,7 @@ describe('PATCH /account/change_email', () => {
     it('returns an unauthorized status', done => {
       api.account(user).changeEmail()
       .field('password', `${password}*`)
-      .expect(401)
+      .expect(403)
       .end((err, res) => {
         if (err) { return done(err); }
 
