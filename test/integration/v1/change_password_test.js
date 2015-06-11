@@ -19,7 +19,7 @@ describe('PATCH /account/change_password', () => {
     api
     .changePassword(user)
     .field('old_password', oldPassword)
-    .field('new_password', NEW_PASSWORD)
+    .field('password', NEW_PASSWORD)
     .field('password_confirmation', NEW_PASSWORD)
     .expect(204)
     .end((err, res) => {
@@ -36,7 +36,7 @@ describe('PATCH /account/change_password', () => {
       api
       .changePassword(user)
       .field('old_password', `${oldPassword}*`)
-      .field('new_password', NEW_PASSWORD)
+      .field('password', NEW_PASSWORD)
       .field('password_confirmation', NEW_PASSWORD)
       .expect(401)
       .end((err, res) => {
@@ -54,7 +54,7 @@ describe('PATCH /account/change_password', () => {
       api
       .changePassword(user)
       .field('old_password', oldPassword)
-      .field('new_password', NEW_PASSWORD)
+      .field('password', NEW_PASSWORD)
       .expect(400)
       .end((err, res) => {
         if (err) { return done(err); }
@@ -98,7 +98,7 @@ describe('PATCH /account/change_password', () => {
         api.changePassword(user)
       )
       .field('old_password', oldPassword)
-      .field('new_password', NEW_PASSWORD)
+      .field('password', NEW_PASSWORD)
       .field('password_confirmation', NEW_PASSWORD)
       .expect(204)
       .end((err, res) => {

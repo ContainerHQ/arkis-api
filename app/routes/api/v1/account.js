@@ -17,13 +17,13 @@ router
   if (!req.user.verifyPassword(req.body.old_password)) {
     return next(new errors.UnauthorizedError());
   }
-  if (req.body.new_password !== req.body.password_confirmation) {
+  if (req.body.password !== req.body.password_confirmation) {
     return next(new errors.MismatchError('password_confirmation',
       req.body.password_confirmation
     ));
   }
   req.user.update({
-    password: req.body.new_password
+    password: req.body.password
   }).then(() => {
     res.status(204).send();
   })
