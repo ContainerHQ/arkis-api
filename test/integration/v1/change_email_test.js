@@ -17,8 +17,7 @@ describe('PATCH /account/change_email', () => {
   });
 
   it('updates the user email', done => {
-    api
-    .changeEmail(user)
+    api.account.changeEmail(user)
     .field('password', password)
     .field('new_email', NEW_EMAIL)
     .expect(204)
@@ -33,8 +32,7 @@ describe('PATCH /account/change_email', () => {
 
   context('with incorrect current password', () => {
     it('returns an unauthorized status', done => {
-      api
-      .changeEmail(user)
+      api.account.changeEmail(user)
       .field('password', `${password}*`)
       .expect(401)
       .end((err, res) => {
@@ -49,8 +47,7 @@ describe('PATCH /account/change_email', () => {
 
   context('with invalid email address', () => {
     it('returns a bad request status and errors', done => {
-      api
-      .changeEmail(user)
+      api.account.changeEmail(user)
       .field('password', password)
       .expect(400)
       .end((err, res) => {
@@ -80,7 +77,7 @@ describe('PATCH /account/change_email', () => {
 
     it('these attributes are filtered', done => {
       api.callWithAttributes(attributes, reference,
-        api.changeEmail(user)
+        api.account.changeEmail(user)
       )
       .field('password', password)
       .field('new_email', NEW_EMAIL)

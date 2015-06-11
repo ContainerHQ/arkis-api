@@ -17,8 +17,7 @@ describe('POST /auth/login', () => {
   });
 
   it('registers a new user and returns its token', done => {
-    api
-    .login(user)
+    api.auth.login(user)
     .expect(201)
     .end((err, res) => {
       if (err) { return done(err); }
@@ -44,8 +43,7 @@ describe('POST /auth/login', () => {
     });
 
     it('returns the user token', done => {
-      api
-      .login(user)
+      api.auth.login(user)
       .expect(200, { token: userToken }, done);
     });
 
@@ -55,8 +53,7 @@ describe('POST /auth/login', () => {
       });
 
       it('responds with an unauthorized status', done => {
-        api
-        .login(user)
+        api.auth.login(user)
         .expect(401, {}, done);
       });
     });
@@ -74,7 +71,7 @@ describe('POST /auth/login', () => {
 
     it('these attributes are filtered', done => {
       api.callWithAttributes(attributes, reference,
-        api.login(user)
+        api.auth.login(user)
       )
       .expect(201)
       .end((err, res) => {
@@ -89,8 +86,7 @@ describe('POST /auth/login', () => {
 
   context('with invalid attributes', () => {
     it('responds with a bad request status and errors', done => {
-      api
-      .login()
+      api.auth.login()
       .expect(400)
       .end((err, res) => {
         if (err) { return done(err); }

@@ -11,8 +11,7 @@ describe('GET /account/profile', () => {
   });
 
   it('returns the user profile', done => {
-    api
-    .getProfile(user)
+    api.account.getProfile(user)
     .expect(200)
     .end((err, res) => {
       if (err) { return done(err); }
@@ -33,8 +32,7 @@ describe('GET /account/profile', () => {
     });
 
     it('returns an unauthorized status', done => {
-      api
-      .getProfile(user)
+      api.account.getProfile(user)
       .expect(401, {}, done);
     });
   });

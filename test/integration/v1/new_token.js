@@ -11,8 +11,7 @@ describe('GET /account/new_token', () => {
   });
 
   it('returns a new token', done => {
-    api
-    .newToken(user)
+    api.account.newToken(user)
     .expect(200)
     .end((err, res) => {
       if (err) { return done(err); }
@@ -31,14 +30,12 @@ describe('GET /account/new_token', () => {
   });
 
   it('revokes the previous token', done => {
-    api
-    .newToken(user)
+    api.account.newToken(user)
     .expect(200)
     .end((err, res) => {
       if (err) { return done(err); }
 
-      api
-      .newToken(user)
+      api.account.newToken(user)
       .expect(401, {}, done);
     });
   });

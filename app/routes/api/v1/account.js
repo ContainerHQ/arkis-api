@@ -40,7 +40,7 @@ router
   })
   .catch(next);
 })
-.delete('/cancel', (req, res, next) => {
+.delete('/', (req, res, next) => {
   req.user.destroy()
   .then(() => { res.status(204).send(); })
   .catch(next);
