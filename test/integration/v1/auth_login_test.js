@@ -59,7 +59,7 @@ describe('POST /auth/login', () => {
     });
   });
 
-  context('with forbidden attributes', () => {
+  context('with blacklisted attributes', () => {
     let attributes, reference;
 
     beforeEach(() => {

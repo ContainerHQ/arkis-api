@@ -41,6 +41,9 @@ router
   .catch(next);
 })
 .delete('/', (req, res, next) => {
+  if (!req.user.verifyPassword(req.body.password)) {
+    return next(new errors.ForbiddenError());
+  }
   req.user.destroy()
   .then(() => { res.status(204).send(); })
   .catch(next);

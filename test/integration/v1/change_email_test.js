@@ -31,7 +31,7 @@ describe('PATCH /account/change_email', () => {
   });
 
   context('with incorrect current password', () => {
-    it('returns an unauthorized status', done => {
+    it('returns an forbidden status', done => {
       api.account(user).changeEmail()
       .field('password', `${password}*`)
       .expect(403)
@@ -60,7 +60,7 @@ describe('PATCH /account/change_email', () => {
     });
   });
 
-  context('with forbidden attributes', () => {
+  context('with blacklisted attributes', () => {
     let attributes, reference;
 
     /*

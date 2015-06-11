@@ -31,7 +31,7 @@ describe('PATCH /account/change_password', () => {
   });
 
   context('with incorrect old password', () => {
-    it('returns an unauthorized status', done => {
+    it('returns an forbidden status', done => {
       api.account(user).changePassword()
       .field('old_password', `${oldPassword}*`)
       .field('new_password', NEW_PASSWORD)
@@ -79,7 +79,7 @@ describe('PATCH /account/change_password', () => {
     });
   });
 
-  context('with forbidden attributes', () => {
+  context('with blacklisted attributes', () => {
     let attributes, reference;
 
     beforeEach(() => {
