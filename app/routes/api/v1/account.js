@@ -18,7 +18,7 @@ router
     return next(new errors.UnauthorizedError());
   }
   if (req.body.new_password !== req.body.new_password_confirmation) {
-    return next(new errors.MismatchError('new_password_confirmation',
+    return next(new errors.MismatchError('password_confirmation',
       req.body.new_password_confirmation
     ));
   }
@@ -34,7 +34,7 @@ router
     return next(new errors.UnauthorizedError());
   }
   req.user.update({
-    email: req.body.email
+    email: req.body.new_email
   }).then(() => {
     res.status(204).send();
   })

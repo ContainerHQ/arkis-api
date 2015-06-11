@@ -20,7 +20,7 @@ describe('PATCH /account/change_email', () => {
     api
     .changeEmail(user)
     .field('password', password)
-    .field('email', NEW_EMAIL)
+    .field('new_email', NEW_EMAIL)
     .expect(204)
     .end((err, res) => {
       if (err) { return done(err); }
@@ -83,7 +83,7 @@ describe('PATCH /account/change_email', () => {
         api.changeEmail(user)
       )
       .field('password', password)
-      .field('email', NEW_EMAIL)
+      .field('new_email', NEW_EMAIL)
       .expect(204)
       .end((err, res) => {
         if (err) { return done(err); }
