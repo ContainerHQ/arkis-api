@@ -13,14 +13,13 @@ describe('Profile Model', () => {
     it('succeed with valid attributes', done => {
       factory.create('profile', done);
     });
-  });
 
-  it('belongs to a user', done => {
-    factory.create('profile', (err, profile) => {
-      if (err) { return done(err); }
+    it('fails with a too short fullname', () => {
+      let profile = factory.buildSync('profile',
+        { fullname: _.repeat('*', 129) }
+      );
 
-      expect(profile.user_id).not.to.be.null;
-      done();
+      expect(profile.save()).to.be.rejected;
     });
   });
 });
