@@ -7,7 +7,7 @@ var passport = require('passport'),
 passport
 .use(new JwtStrategy({ secretOrKey: secrets.jwt }, (payload, done) => {
   User
-  .findOne({ where: { id: payload.user_id, token_id: payload.jit } })
+  .findOne({ where: { token_id: payload.jit } })
   .then(user => {
     done(null, user);
   })

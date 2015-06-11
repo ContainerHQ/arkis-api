@@ -65,7 +65,7 @@ module.exports = function(sequelize, DataTypes) {
        *
        */
       generateToken: function() {
-        let payload = { user_id: this.id, jit: this.token_id };
+        let payload = { jit: this.token_id };
 
         this.token = jwt.sign(payload, secrets.jwt);
       },
@@ -81,6 +81,7 @@ module.exports = function(sequelize, DataTypes) {
     hooks: {
       beforeCreate: function(user, options, done) {
         user.hashPassword();
+        user.generateToken();
         done(null, user);
       },
       beforeUpdate: function(user, options, done) {
@@ -90,12 +91,7 @@ module.exports = function(sequelize, DataTypes) {
         done(null, user);
       },
       afterCreate: function(user, options) {
-        user.generateToken();
-
-        return user.createProfile()
-        .then(() => {
-          return user.update({ token: user.token });
-        });
+        return user.createProfile();
       }
     }
   });
