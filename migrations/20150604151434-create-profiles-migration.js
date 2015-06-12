@@ -19,8 +19,22 @@ module.exports = {
         type: DataTypes.STRING,
         allowNull: true,
         defaultValue: null,
-        validate: { len: [0, 128] }
+        validate: { len: [0, 64] }
       },
+      company: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+        validate: { len: [0, 64] }
+      },
+
+      location: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+        validate: { len: [0, 64] }
+      },
+
       created_at: DataTypes.DATE,
       updated_at: DataTypes.DATE
     });
