@@ -22,16 +22,16 @@ passport
   clientID: process.env.GITHUB_CLIENT_ID || '*',
   clientSecret: process.env.GITHUB_SECRET_KEY || '*'
 }, (accessToken, refreshToken, profile, done) => {
-  let user = User.build({ email: 'azerty@gmail.com', password: 'decembre99' });
+/*  let user = User.build({ email: 'azerty@gmail.com', password: 'decembre99' });*/
 
-  let defaults = {
-    provider: 'github',
-    provider_id: profile.id,
-    email: profile.emails[0].value
-  };
+  //let defaults = {
+    //provider: 'github',
+    //provider_id: profile.id,
+    //email: profile.emails[0].value
+  /*};*/
   // update profile with infos (fullname etc)
   // whitelist parameters on creation (user)
-  done(null, user);
+  done(null, false);
 }));
 
 module.exports = passport;

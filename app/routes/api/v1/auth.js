@@ -2,7 +2,6 @@
 
 var express = require('express'),
   passport = require('passport'),
-  handler = require('../../shared/handler'),
   errors = require('../../shared/errors'),
   User = require('../../../models').User;
 
@@ -35,6 +34,7 @@ router
 .get('/github/callback', passport.authenticate('github', { session: false }),
   (req, res) => {
     console.log(req.headers);
+    res.status(200).send();
 });
 
 module.exports = router;

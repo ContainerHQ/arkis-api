@@ -67,6 +67,6 @@ router
   })
   .catch(next);
 })
-.get('/request_password', handler.notYetImplemented)
+.get('/request_password', handler.notYetImplemented);
 
 module.exports = router;

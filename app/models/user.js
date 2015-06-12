@@ -92,7 +92,7 @@ module.exports = function(sequelize, DataTypes) {
         }
         done(null, user);
       },
-      afterCreate: function(user, options) {
+      afterCreate: function(user) {
         return user.createProfile();
       }
     }
