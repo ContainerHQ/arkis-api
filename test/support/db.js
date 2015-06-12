@@ -2,8 +2,27 @@
 
 let models = require('../../app/models');
 
+const ENTITIES_TO_DESTROY = ['User', 'Profile'];
+
 /*
- * Drop manually database entries before each test.
+ * Generate a promise chain to delete database entities.
+ *
+ */
+module.exports.deleteAll = function(modelsName) {
+  let actions;
+
+  for (let modelName of modelsName) {
+    let action = models[modelName].destroy({ where: {} });
+
+    actions = action || action.then(() => {
+      return action;
+    });
+  }
+  return actions;
+}
+
+/*
+ * Setup database for testing.
  *
  * Sequelize.sync() is not using migrations. To ensure reproducibility
  * between the different environment, we are not using it and we must
@@ -15,16 +34,9 @@ let models = require('../../app/models');
  * in the database.
  *
  */
-
-const ALL = { where: {} };
-
 module.exports.sync = function(done) {
   beforeEach(done => {
-    models.User.destroy(ALL)
-    .then(() => {
-      return models.Profile.destroy(ALL)
-    })
-    .then(() => {
+    this.deleteAll(ENTITIES_TO_DESTROY).then(() => {
       factory.create('defaultUser', done);
     }).catch(done);
   });
