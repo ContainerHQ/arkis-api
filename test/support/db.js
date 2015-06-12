@@ -11,13 +11,13 @@ const ENTITIES_TO_DESTROY = ['User', 'Profile'];
 module.exports.deleteAll = function(modelsName) {
   let actions;
 
-  for (let modelName of modelsName) {
+  modelsName.forEach(modelName => {
     let action = models[modelName].destroy({ where: {} });
 
     actions = action || action.then(() => {
       return action;
     });
-  }
+  });
   return actions;
 }
 
