@@ -25,6 +25,10 @@ describe('GET /account/profile', () => {
     });
   });
 
+  /*
+   * This test ensure that our authentication through JWT
+   * verify that the token is not revoked.
+   */
   context('when API token is incorrect', () => {
     beforeEach(() => {
       user.revokeToken();

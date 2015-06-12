@@ -71,7 +71,6 @@ describe('ErrorHandler Middleware', () => {
     });
   });
 
-
   context('with any other error', () => {
     let err = new Error('whatever');
 
