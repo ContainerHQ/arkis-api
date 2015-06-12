@@ -1,5 +1,7 @@
 'use strict';
 
+const WHITELIST = ['fullname', 'location', 'company'];
+
 describe('PATCH /account/profile', () => {
   db.sync();
 
@@ -11,20 +13,22 @@ describe('PATCH /account/profile', () => {
   });
 
   it('updates the user profile', done => {
-    let fullname = 'Uther Lightbringer';
+    let reference = factory.buildSync('profile');
 
-    api.account(user).updateProfile()
-    .field('fullname', fullname)
+    api.callWithAttributes(WHITELIST, reference,
+      api.account(user).updateProfile()
+    )
     .expect(200)
     .end((err, res) => {
       if (err) { return done(err); }
 
       let profile = format.timestamps(res.body.profile);
 
+      expect(_.pick(profile, WHITELIST))
+        .to.deep.equal(_.pick(reference, WHITELIST));
       expect(user.getProfile())
         .to.eventually.have.property('dataValues')
-          .that.deep.equals(profile).and
-          .that.have.property('fullname', fullname)
+        .that.deep.equals(profile)
         .notify(done);
     });
   });
@@ -47,6 +51,27 @@ describe('PATCH /account/profile', () => {
         }))
         .to.be.rejectedWith(res.body.errors)
         .notify(done);
+      });
+    });
+  });
+
+  /*
+   * Verify that the user can't switch it's profile to
+   * another user. In order to do that we must ensure
+   * that we are providing a valid user_id, therefore
+   * we are using the id of the default user.
+   *
+   */
+  context('with blacklisted attributes', () => {
+    it('these attributes are filtered', done => {
+      api.account(user).updateProfile()
+      .field('user_id', 1)
+      .expect(200)
+      .end((err, res) => {
+        if (err) { return done(err); }
+
+        expect(user.getProfile()).not.to.eventually.be.null
+          .notify(done);
       });
     });
   });

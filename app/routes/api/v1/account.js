@@ -56,7 +56,9 @@ router
 })
 .patch('/profile', (req, res, next) => {
   req.user.getProfile().then(profile => {
-    return profile.update(req.body);
+    return profile.update(req.body,
+      { fields: ['fullname', 'location', 'company'] }
+    );
   })
   .then(profile => {
     res.status(200).send({ profile: profile });
