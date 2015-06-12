@@ -1,6 +1,6 @@
 'use strict';
 
-var _ = require('lodash'),
+let _ = require('lodash'),
   bcrypt = require('bcrypt'),
   jwt = require('jsonwebtoken'),
   secrets = require('../../config/secrets');

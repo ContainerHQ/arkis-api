@@ -1,6 +1,6 @@
 'use strict';
 
-var passport = require('passport'),
+let passport = require('passport'),
   JwtStrategy = require('passport-jwt').Strategy,
   GitHubStrategy = require('passport-github2').Strategy,
   User = require('../models').User,

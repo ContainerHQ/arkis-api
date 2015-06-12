@@ -1,6 +1,6 @@
 'use strict';
 
-var express = require('express'),
+let express = require('express'),
   passport = require('passport');
 
 let router = express.Router();

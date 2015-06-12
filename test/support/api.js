@@ -1,6 +1,6 @@
 'use strict';
 
-var request = require('supertest'),
+let request = require('supertest'),
   app = require('../../app');
 
 const API_ROUTE = '/api/v1';

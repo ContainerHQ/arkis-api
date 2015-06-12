@@ -1,6 +1,6 @@
 'use strict';
 
-var express = require('express'),
+let express = require('express'),
   errorHandler = require('../../middlewares').errorHandler;
 
 let router = express.Router();

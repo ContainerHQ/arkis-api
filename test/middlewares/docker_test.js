@@ -1,6 +1,6 @@
 'use strict';
 
-var docker = require('../../app/middlewares').docker;
+let docker = require('../../app/middlewares').docker;
 
 describe('Docker Middleware', () => {
   it('adds a docker client to the request object', done => {

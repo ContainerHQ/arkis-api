@@ -1,6 +1,6 @@
 'use strict';
 
-var User = require('../../app/models').User;
+let User = require('../../app/models').User;
 
 module.exports = function(factory) {
   factory.define('user', User, {

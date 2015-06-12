@@ -1,6 +1,6 @@
 'use strict';
 
-var sequelize = require('sequelize');
+let sequelize = require('sequelize');
 
 let error = module.exports = {};
 

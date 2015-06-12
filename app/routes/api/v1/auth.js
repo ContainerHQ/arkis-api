@@ -1,6 +1,6 @@
 'use strict';
 
-var express = require('express'),
+let express = require('express'),
   passport = require('passport'),
   errors = require('../../shared/errors'),
   User = require('../../../models').User;

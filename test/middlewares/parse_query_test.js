@@ -1,6 +1,6 @@
 'use strict';
 
-var parseQuery = require('../../app/middlewares').parseQuery;
+let parseQuery = require('../../app/middlewares').parseQuery;
 
 describe('ParseQuery Middleware', () => {
   it('returns the query string as an object', done => {

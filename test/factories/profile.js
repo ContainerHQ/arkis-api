@@ -1,6 +1,6 @@
 'use strict';
 
-var Profile = require('../../app/models').Profile;
+let Profile = require('../../app/models').Profile;
 
 module.exports = function(factory) {
   factory.define('profile', Profile, {

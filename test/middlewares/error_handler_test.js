@@ -1,6 +1,6 @@
 'use strict';
 
-var errors = require('../../app/routes/shared/errors'),
+let errors = require('../../app/routes/shared/errors'),
   errorHandler = rewire('../../app/middlewares/error_handler');
 
 const INTERNAL_SERVER_ERROR = errorHandler.__get__('INTERNAL_SERVER_ERROR');

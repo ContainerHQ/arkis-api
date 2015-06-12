@@ -1,6 +1,6 @@
 'use strict';
 
-var fs = require('fs'),
+let fs = require('fs'),
   path = require('path'),
   basename = path.basename(module.filename),
   factory = require('factory-girl'),

@@ -1,6 +1,6 @@
 'use strict';
 
-var User = require('../../../app/models').User;
+let User = require('../../../app/models').User;
 
 describe('DELETE /account/cancel', () => {
   db.sync();

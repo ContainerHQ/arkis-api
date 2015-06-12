@@ -1,6 +1,6 @@
 'use strict';
 
-var _ = require('lodash'),
+let _ = require('lodash'),
   express = require('express'),
   handler = require('../shared/handler');
 
