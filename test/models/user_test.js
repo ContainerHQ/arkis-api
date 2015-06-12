@@ -182,4 +182,20 @@ describe('User Model', () => {
       return expect(user.save()).to.eventually.not.satisfy(has.validJWT);
     });
   });
+
+  describe('#generateToken()', () => {
+    let user;
+
+    beforeEach(() => {
+      user = factory.buildSync('user');
+      return user.save();
+    });
+
+    it('adds a token to the user', () => {
+      user.revokeToken();
+      user.generateToken();
+
+      return expect(user.save()).to.eventually.satisfy(has.validJWT);
+    });
+  });
 });

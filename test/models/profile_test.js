@@ -7,13 +7,13 @@ describe('Profile Model', () => {
 
   describe('validations', () => {
     it('succeed without attributes', () => {
-      expect(Profile.create()).to.be.fulfilled;
+     return expect(Profile.create()).to.be.fulfilled;
     });
 
     it('succeed with empty attributes', () => {
       let profile = factory.buildSync('emptyProfile');
 
-      expect(Profile.create()).to.be.fulfilled;
+      return expect(Profile.create()).to.be.fulfilled;
     });
 
     it('succeed with valid attributes', done => {
@@ -32,7 +32,7 @@ describe('Profile Model', () => {
 
         let profile = factory.buildSync('profile', params);
 
-        expect(profile.save()).to.be.rejected;
+        return expect(profile.save()).to.be.rejected;
       });
     });
   });
