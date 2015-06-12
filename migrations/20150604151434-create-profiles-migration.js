@@ -13,7 +13,8 @@ module.exports = {
         references: {
           model: 'Users',
           key: 'id'
-        }
+        },
+        onDelete: 'CASCADE'
       },
       fullname: {
         type: DataTypes.STRING,
@@ -27,7 +28,6 @@ module.exports = {
         defaultValue: null,
         validate: { len: [0, 64] }
       },
-
       location: {
         type: DataTypes.STRING,
         allowNull: true,
