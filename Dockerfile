@@ -1,16 +1,15 @@
 FROM node:0.12.2
 
-ENV APP /docker-proxy
-ENV VENDOR /vendor
+ENV APP=/docker-proxy VENDOR=/vendor
 
-# Install dev tools
+# Add user exec.
+RUN useradd dev
+
+# Install cli tools
 RUN npm install -g \
     sequelize-cli \
     nodemon \
     jshint
-
-# Add user exec.
-RUN useradd dev
 
 # Copy package.json into the image.
 COPY package.json $VENDOR/
