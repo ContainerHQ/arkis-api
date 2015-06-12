@@ -12,7 +12,7 @@ router
   req.user.generateToken();
 
   req.user.save().then(user => {
-    res.send({ token: user.token });
+    res.json({ token: user.token });
   }).catch(next);
 })
 .patch('/change_password', (req, res, next) => {
@@ -27,7 +27,7 @@ router
   req.user.update({
     password: req.body.new_password
   }).then(() => {
-    res.status(204).send();
+    res.status(204).json();
   })
   .catch(next);
 })
@@ -38,7 +38,7 @@ router
   req.user.update({
     email: req.body.new_email
   }).then(() => {
-    res.status(204).send();
+    res.status(204).json();
   })
   .catch(next);
 })
@@ -47,7 +47,7 @@ router
     return next(new errors.ForbiddenError());
   }
   req.user.destroy()
-  .then(() => { res.status(204).send(); })
+  .then(() => { res.status(204).json(); })
   .catch(next);
 })
 .get('/request_password', handler.notYetImplemented)
@@ -55,7 +55,7 @@ router
 .route('/profile')
 .get((req, res, next) => {
   req.user.getProfile().then(profile => {
-    res.send({ profile: profile });
+    res.json({ profile: profile });
   })
   .catch(next);
 })
@@ -66,7 +66,7 @@ router
     );
   })
   .then(profile => {
-    res.status(200).send({ profile: profile });
+    res.status(200).json({ profile: profile });
   })
   .catch(next);
 });

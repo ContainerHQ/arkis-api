@@ -18,7 +18,7 @@ module.exports.docker = function(res, opts={}, callback=opts) {
      *
      */
     if (err) {
-      return res.status(err.statusCode).send(err.json);
+      return res.status(err.statusCode).json(err.json);
     }
 
     res.status(status);
@@ -43,7 +43,7 @@ module.exports.docker = function(res, opts={}, callback=opts) {
     if (_.isFunction(callback)) {
       data = callback(data) || data;
     }
-    res.send(data);
+    res.json(data);
   };
 };
 

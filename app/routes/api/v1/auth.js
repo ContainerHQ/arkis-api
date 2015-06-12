@@ -25,7 +25,7 @@ router
 
     let statusCode = created ? 201 : 200;
 
-    res.status(statusCode).send({ token: user.token });
+    res.status(statusCode).json({ token: user.token });
   })
   .catch(next);
 })
@@ -34,7 +34,7 @@ router
 .get('/github/callback', passport.authenticate('github', { session: false }),
   (req, res) => {
     console.log(req.headers);
-    res.status(200).send();
+    res.status(204).send();
 });
 
 module.exports = router;
