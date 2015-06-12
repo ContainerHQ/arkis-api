@@ -1,3 +1,5 @@
+'use strict';
+
 var express = require('express'),
   passport = require('passport'),
   handler = require('../../shared/handler'),

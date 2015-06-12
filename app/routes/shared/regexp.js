@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  *  Returns a route formated with a RegExp to be able
  *  to resolve paths like:

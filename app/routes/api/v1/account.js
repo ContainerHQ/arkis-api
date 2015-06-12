@@ -1,3 +1,5 @@
+'use strict';
+
 var express = require('express'),
   handler = require('../../shared/handler'),
   errors = require('../../shared/errors');

@@ -1,3 +1,5 @@
+'use strict';
+
 var _ = require('lodash'),
   bcrypt = require('bcrypt'),
   jwt = require('jsonwebtoken'),
