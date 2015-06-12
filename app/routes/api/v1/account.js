@@ -50,13 +50,16 @@ router
   .then(() => { res.status(204).send(); })
   .catch(next);
 })
-.get('/profile', (req, res, next) => {
+.get('/request_password', handler.notYetImplemented)
+
+.route('/profile')
+.get((req, res, next) => {
   req.user.getProfile().then(profile => {
     res.send({ profile: profile });
   })
   .catch(next);
 })
-.patch('/profile', (req, res, next) => {
+.patch((req, res, next) => {
   req.user.getProfile().then(profile => {
     return profile.update(req.body,
       { fields: ['fullname', 'location', 'company'] }
@@ -66,7 +69,6 @@ router
     res.status(200).send({ profile: profile });
   })
   .catch(next);
-})
-.get('/request_password', handler.notYetImplemented);
+});
 
 module.exports = router;
