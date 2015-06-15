@@ -24,9 +24,9 @@ module.exports.deleteAll = function(modelsName) {
 /*
  * Setup database for testing.
  *
- * Sequelize.sync() is not using migrations. To ensure reproducibility
- * between the different environment, we are not using it and we must
- * manually destroy every database entries between each test.
+ * Sequelize.sync() is not using migrations. To ensure reproductibility
+ * between environments, we are not using it and we must manually destroy
+ * every database entries between each test.
  *
  * User.findOne without parameters will retrieve the first user by default,
  * meaning that with only one user we can't be sure that our tests retrieve

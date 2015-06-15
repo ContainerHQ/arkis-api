@@ -62,8 +62,8 @@ module.exports = function(sequelize, DataTypes) {
        * changing this identifier invalidates the token.
        *
        * This really simplify the token revokation if a user is destroyed
-       * (in this scenario, a deleted user carries its token uuid to
-       * programming heaven.
+       * (in this case, a deleted user carries its token uuid to
+       * programming heaven).
        *
        */
       generateToken: function() {
@@ -87,6 +87,9 @@ module.exports = function(sequelize, DataTypes) {
         done(null, user);
       },
       beforeUpdate: function(user, options, done) {
+        /*
+         * If password is being updated.
+         */
         if (_.contains(options.fields, 'password')) {
           user.hashPassword();
         }
