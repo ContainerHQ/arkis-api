@@ -91,4 +91,11 @@ describe('PATCH /account/change_email', () => {
       });
     });
   });
+
+  context('when API token is incorrect', () => {
+    it('returns an unauthorized status', done => {
+      api.account().changeEmail()
+      .expect(401, {}, done);
+    });
+  });
 });

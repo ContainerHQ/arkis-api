@@ -40,4 +40,11 @@ describe('DELETE /account/cancel', () => {
       });
     });
   });
+
+  context('when API token is incorrect', () => {
+    it('returns an unauthorized status', done => {
+      api.account().cancel()
+      .expect(401, {}, done);
+    });
+  });
 });

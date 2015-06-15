@@ -56,11 +56,10 @@ describe('PATCH /account/profile', () => {
   });
 
   /*
-   * Verify that the user can't switch it's profile to
-   * another user. In order to do that we must ensure
-   * that we are providing a valid user_id, therefore
-   * we are using the id of the default user.
-   *
+   * Verify that the user can't change ownership of it's
+   * profile. In order to do that we must ensure that we
+   * are providing a valid user_id, therefore we are using
+   * the id of the default user.
    */
   context('with blacklisted attributes', () => {
     it('these attributes are filtered', done => {
@@ -73,6 +72,13 @@ describe('PATCH /account/profile', () => {
         expect(user.getProfile()).not.to.eventually.be.null
           .notify(done);
       });
+    });
+  });
+
+  context('when API token is incorrect', () => {
+    it('returns an unauthorized status', done => {
+      api.account().updateProfile()
+      .expect(401, {}, done);
     });
   });
 });

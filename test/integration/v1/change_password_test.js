@@ -106,4 +106,11 @@ describe('PATCH /account/change_password', () => {
       });
     });
   });
+
+  context('when API token is incorrect', () => {
+    it('returns an unauthorized status', done => {
+      api.account().changePassword()
+      .expect(401, {}, done);
+    });
+  });
 });

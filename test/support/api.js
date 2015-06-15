@@ -20,7 +20,7 @@ module.exports.auth = {
   }
 };
 
-module.exports.account = function(user) {
+module.exports.account = function(user={}) {
   let ressource = 'account';
 
   return {

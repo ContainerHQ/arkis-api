@@ -25,18 +25,9 @@ describe('GET /account/profile', () => {
     });
   });
 
-  /*
-   * This test ensure that our authentication through JWT
-   * verify that the token is not revoked.
-   */
   context('when API token is incorrect', () => {
-    beforeEach(() => {
-      user.revokeToken();
-      return user.save();
-    });
-
     it('returns an unauthorized status', done => {
-      api.account(user).getProfile()
+      api.account().getProfile()
       .expect(401, {}, done);
     });
   });
