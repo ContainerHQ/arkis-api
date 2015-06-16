@@ -31,7 +31,7 @@ describe('PATCH /account/change_password', () => {
   });
 
   context('with incorrect old password', () => {
-    it('returns an forbidden status', done => {
+    it('returns a forbidden status', done => {
       api.account(user).changePassword()
       .field('old_password', `${oldPassword}*`)
       .field('new_password', NEW_PASSWORD)
@@ -48,7 +48,7 @@ describe('PATCH /account/change_password', () => {
   });
 
   context('with invalid password confirmation', () => {
-    it('returns a bad request status with errors', done => {
+    it('returns a bad request status and validation errors', done => {
       api.account(user).changePassword()
       .field('old_password', oldPassword)
       .field('new_password', NEW_PASSWORD)
@@ -65,7 +65,7 @@ describe('PATCH /account/change_password', () => {
   });
 
   context('with invalid password', () => {
-    it('returns a bad request status and errors', done => {
+    it('returns a bad request status and validation errors', done => {
       api.account(user).changePassword()
       .field('old_password', oldPassword)
       .expect(400)

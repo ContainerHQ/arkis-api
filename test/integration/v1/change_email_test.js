@@ -31,7 +31,7 @@ describe('PATCH /account/change_email', () => {
   });
 
   context('with incorrect current password', () => {
-    it('returns an forbidden status', done => {
+    it('returns a forbidden status', done => {
       api.account(user).changeEmail()
       .field('password', `${password}*`)
       .expect(403)
@@ -46,7 +46,7 @@ describe('PATCH /account/change_email', () => {
   });
 
   context('with invalid email address', () => {
-    it('returns a bad request status and errors', done => {
+    it('returns a bad request status and validation errors', done => {
       api.account(user).changeEmail()
       .field('password', password)
       .expect(400)

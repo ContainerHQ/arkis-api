@@ -38,7 +38,7 @@ describe('ErrorHandler Middleware', () => {
   context('with a forbidden error', () => {
     let err = new errors.ForbiddenError();
 
-    it('sends an forbidden status', done => {
+    it('sends a forbidden status', done => {
       errorHandler(err, {}, res, () => {
         expect(res.status).to.have.been.calledWith(403);
         done();
@@ -74,14 +74,14 @@ describe('ErrorHandler Middleware', () => {
   context('with any other error', () => {
     let err = new Error('whatever');
 
-    it('sends an internal server error', done => {
+    it('sends an internal server error status', done => {
       errorHandler(err, {}, res, () => {
         expect(res.status).to.have.been.calledWith(500);
         done();
       });
     });
 
-    it('sends an internal server error ', done => {
+    it('sends an internal server error message', done => {
       errorHandler(err, {}, res, () => {
         expect(res.send)
           .to.have.been.calledWith({ error: INTERNAL_SERVER_ERROR });
