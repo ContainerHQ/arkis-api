@@ -34,7 +34,7 @@ describe('PATCH /account/profile', () => {
   });
 
   context('with invalid attributes', done => {
-    it('responds with a bad request status and errors', done => {
+    it('responds with a bad request status and validation errors', done => {
       let fullname = _.repeat('*', 65);
 
       api.account(user).updateProfile()

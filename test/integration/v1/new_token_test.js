@@ -37,4 +37,11 @@ describe('GET /account/new_token', () => {
       .expect(401, {}, done);
     });
   });
+
+  context('when API token is incorrect', () => {
+    it('returns an unauthorized status', done => {
+      api.account().generateNewToken()
+      .expect(401, {}, done);
+    });
+  });
 });
