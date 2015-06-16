@@ -146,6 +146,20 @@ describe('User Model', () => {
         })
       ).to.be.fulfilled.and.to.eventually.be.null;
     });
+
+    it.skip('removes the user clusters', () => {
+
+    });
+
+    /*
+     * Ensure the onDelete: 'cascade' with hooks: true
+     *
+     */
+    context.skip("when a user's cluster can't be deleted", () => {
+      it('fails to remove the user', () => {
+
+      });
+    });
   });
 
   describe('#verifyPassword()', () => {

@@ -27,7 +27,7 @@ passport
   //let defaults = {
     //provider: 'github',
     //provider_id: profile.id,
-    //email: profile.emails[0].value
+    //email: _.first(profile.emails).value
   /*};*/
   // update profile with infos (fullname etc)
   // whitelist parameters on creation (user)
