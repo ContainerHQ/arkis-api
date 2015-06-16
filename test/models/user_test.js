@@ -1,6 +1,6 @@
 'use strict';
 
-var Profile = require('../../app/models').Profile;
+let Profile = require('../../app/models').Profile;
 
 describe('User Model', () => {
   db.sync();
@@ -8,6 +8,18 @@ describe('User Model', () => {
   describe('validations', () => {
     it('succeed with valid attributes', () => {
       let user = factory.buildSync('user');
+
+      return expect(user.save()).to.be.fulfilled;
+    });
+
+    it('succeed with min size password', () => {
+      let user = factory.buildSync('user', { password: _.repeat('*', 6) });
+
+      return expect(user.save()).to.be.fulfilled;
+    });
+
+    it('succeed with max size password', () => {
+      let user = factory.buildSync('user', { password: _.repeat('*', 128) });
 
       return expect(user.save()).to.be.fulfilled;
     });
@@ -62,7 +74,7 @@ describe('User Model', () => {
       user = factory.buildSync('user');
     });
 
-    it('has a json web token including its email address', () => {
+    it('has a valid json web token', () => {
       return expect(user.save()).to.eventually.satisfy(has.validJWT);
     });
 
@@ -117,15 +129,20 @@ describe('User Model', () => {
 
     beforeEach(() => {
       user = factory.buildSync('user');
-
-      return user.save()
-      .then(user => {
-        return user.destroy();
-      });
+      return user.save();
     });
 
     it('removes the user profile', () => {
-      expect(Profile.count()).to.eventually.equal(0);
+      let profileId;
+
+      return expect(
+        user.getProfile().then(profile => {
+          profileId = profile.id
+          return user.destroy();
+        }).then(() => {
+          return Profile.findById(profileId);
+        })
+      ).to.be.fulfilled.and.to.eventually.be.null;
     });
   });
 
@@ -163,6 +180,22 @@ describe('User Model', () => {
       user.revokeToken();
 
       return expect(user.save()).to.eventually.not.satisfy(has.validJWT);
+    });
+  });
+
+  describe('#generateToken()', () => {
+    let user;
+
+    beforeEach(() => {
+      user = factory.buildSync('user');
+      return user.save();
+    });
+
+    it('adds a token to the user', () => {
+      user.revokeToken();
+      user.generateToken();
+
+      return expect(user.save()).to.eventually.satisfy(has.validJWT);
     });
   });
 });

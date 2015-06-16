@@ -1,5 +1,7 @@
-var express = require('express'),
-  handler = require('../common/handler');
+'use strict';
+
+let express = require('express'),
+  handler = require('../shared/handler');
 
 let router = express.Router();
 

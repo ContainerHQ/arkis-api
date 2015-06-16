@@ -1,6 +1,6 @@
 'use strict';
 
-var fs      = require('fs'),
+let fs      = require('fs'),
   path      = require('path'),
   Sequelize = require('sequelize'),
   basename  = path.basename(module.filename),

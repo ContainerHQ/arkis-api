@@ -1,4 +1,6 @@
-var _ = require('lodash'),
+'use strict';
+
+let _ = require('lodash'),
   bcrypt = require('bcrypt'),
   jwt = require('jsonwebtoken'),
   secrets = require('../../config/secrets');
@@ -48,30 +50,27 @@ module.exports = function(sequelize, DataTypes) {
     },
   }, {
     instanceMethods: {
-      hashPassword: function() {
-        this.password = bcrypt.hashSync(this.password, 10);
-      },
       verifyPassword: function(password) {
         return bcrypt.compareSync(password, this.password);
       },
 
+      hashPassword: function() {
+        this.password = bcrypt.hashSync(this.password, 10);
+      },
       /*
        * The encoded jwt token includes a unique universal identifier,
        * changing this identifier invalidates the token.
        *
        * This really simplify the token revokation if a user is destroyed
-       * (in this scenario, a deleted user carries its token uuid to
-       * programming heaven.
+       * (in this case, a deleted user carries its token uuid to
+       * programming heaven).
        *
        */
-      createToken: function() {
-        let payload = _.merge(_.pick(this.toJSON(), 'email'),
-          { jit: this.token_id }
-        );
+      generateToken: function() {
+        let payload = { jit: this.token_id };
 
         this.token = jwt.sign(payload, secrets.jwt);
       },
-
       revokeToken: function() {
         this.token_id = sequelize.Utils.toDefaultValue(DataTypes.UUIDV1());
       }
@@ -84,20 +83,22 @@ module.exports = function(sequelize, DataTypes) {
     hooks: {
       beforeCreate: function(user, options, done) {
         user.hashPassword();
-        user.createToken();
+        user.generateToken();
         done(null, user);
       },
       beforeUpdate: function(user, options, done) {
+        /*
+         * If password is being updated.
+         */
         if (_.contains(options.fields, 'password')) {
           user.hashPassword();
         }
         done(null, user);
       },
-      afterCreate: function(user, options) {
+      afterCreate: function(user) {
         return user.createProfile();
       }
     }
   });
   return User;
 };
-

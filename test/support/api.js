@@ -1,44 +1,65 @@
 'use strict';
 
-var request = require('supertest'),
+let request = require('supertest'),
   app = require('../../app');
 
-const ROUTE = '/api/v1';
+const API_ROUTE = '/api/v1';
 
-module.exports = {
+module.exports.auth = {
+  _ressource: 'auth',
+
   login: function(user={}) {
     return request(app)
-    .post(`${ROUTE}/login`)
+    .post(`${API_ROUTE}/${this._ressource}/login`)
     .field('email', user.email || '')
     .field('password', user.password || '');
   },
-  authGitHub: function() {
+  github: function() {
     return request(app)
-    .get(`${ROUTE}/auth/github`);
-  },
-  getProfile: function(user) {
-    return request(app)
-    .get(`${ROUTE}/profile`)
-    .set('Authorization', `JWT ${user.token}`);
-  },
-  updateProfile: function(user) {
-    return request(app)
-    .patch(`${ROUTE}/profile`)
-    .set('Authorization', `JWT ${user.token}`);
-  },
-  changePassword: function(user) {
-    return request(app)
-    .patch(`${ROUTE}/change_password`)
-    .set('Authorization', `JWT ${user.token}`);
-  },
-  cancelAccount: function(user) {
-    return request(app)
-    .delete(`${ROUTE}/cancel_account`)
-    .set('Authorization', `JWT ${user.token}`);
-  },
-  newToken: function(user) {
-    return request(app)
-    .patch(`${ROUTE}/new_token`)
-    .set('Authorization', `JWT ${user.token}`);
+    .get(`${API_ROUTE}/${this._ressource}/github`);
   }
+};
+
+module.exports.account = function(user={}) {
+  let ressource = 'account';
+
+  return {
+    getProfile: function() {
+      return request(app)
+      .get(`${API_ROUTE}/${ressource}/profile`)
+      .set('Authorization', `JWT ${user.token}`);
+    },
+    updateProfile: function() {
+      return request(app)
+      .patch(`${API_ROUTE}/${ressource}/profile`)
+      .set('Authorization', `JWT ${user.token}`);
+    },
+    changePassword: function() {
+      return request(app)
+      .patch(`${API_ROUTE}/${ressource}/change_password`)
+      .set('Authorization', `JWT ${user.token}`);
+    },
+    changeEmail: function() {
+      return request(app)
+      .patch(`${API_ROUTE}/${ressource}/change_email`)
+      .set('Authorization', `JWT ${user.token}`);
+    },
+    cancel: function() {
+      return request(app)
+      .delete(`${API_ROUTE}/${ressource}/`)
+      .set('Authorization', `JWT ${user.token}`);
+    },
+    generateNewToken: function() {
+      return request(app)
+      .get(`${API_ROUTE}/${ressource}/new_token`)
+      .set('Authorization', `JWT ${user.token}`);
+    }
+  };
+};
+
+module.exports.callWithAttributes = function(attributes, reference, action) {
+  attributes.forEach(attribute => {
+    action = action.field(attribute, reference.dataValues[attribute]);
+  });
+  return action;
 };

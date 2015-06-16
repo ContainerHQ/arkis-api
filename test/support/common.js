@@ -1,12 +1,16 @@
 'use strict';
 
-var chai = require('chai'),
-  chaiAsPromised = require('chai-as-promised');
+let chai = require('chai'),
+  chaiAsPromised = require('chai-as-promised'),
+  sinonChai = require('sinon-chai');
 
 chai.use(chaiAsPromised);
+chai.use(sinonChai);
 
 global.chai = chai;
 global.expect = chai.expect;
+global.sinon = require('sinon');
+global.rewire = require('rewire');
 global._ = require('lodash');
 global.db = require('./db');
 global.factory = require('../factories');

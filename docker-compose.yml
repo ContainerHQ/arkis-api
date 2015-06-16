@@ -30,7 +30,7 @@ dbtest:
     file: docker-compose.yml
     service: db
   volumes:
-    - '/dockerproxy-dbtest:/var/lib/postgresql/data'
+    - '/arkis-dbtest:/var/lib/postgresql/data'
 
 # TODO: use new docker-compose extend to
 # extend each client config from service test

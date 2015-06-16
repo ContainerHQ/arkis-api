@@ -1,4 +1,4 @@
-.PHONY: all re clean build shell test up detach
+.PHONY: all re clean build shell migrations-test test up detach
 
 compose := docker-compose
 
@@ -16,7 +16,10 @@ build:
 shell: build
 	$(compose) run --service-ports api /bin/bash
 
-test: build
+migrations-test:
+	$(compose) run api sequelize --env=test db:migrate
+
+test: build migrations-test
 	$(compose) run api npm test
 
 up: build

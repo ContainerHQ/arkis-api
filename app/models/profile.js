@@ -11,7 +11,19 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: true,
       defaultValue: null,
-      validate: { len: [6, 128] }
+      validate: { len: [0, 64] }
+    },
+    company: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
+      validate: { len: [0, 64] }
+    },
+    location: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
+      validate: { len: [0, 64] }
     }
   });
 };

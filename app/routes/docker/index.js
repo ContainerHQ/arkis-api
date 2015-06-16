@@ -1,4 +1,6 @@
-var express = require('express'),
+'use strict';
+
+let express = require('express'),
   middlewares = require('../../middlewares');
 
 let router = express.Router();

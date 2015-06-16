@@ -2,7 +2,7 @@
 
 module.exports = {
   up: function (queryInterface, DataTypes) {
-    queryInterface.createTable('Users', {
+    return queryInterface.createTable('Users', {
       id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -44,12 +44,12 @@ module.exports = {
         defaultValue: DataTypes.UUIDV1,
         unique: true
       },
-      createdAt: DataTypes.DATE,
-      updatedAt: DataTypes.DATE
+      created_at: DataTypes.DATE,
+      updated_at: DataTypes.DATE
     });
   },
 
   down: function (queryInterface) {
-    queryInterface.dropTable('Users');
+    return queryInterface.dropTable('Users');
   }
 };
