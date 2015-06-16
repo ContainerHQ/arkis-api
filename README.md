@@ -1,5 +1,5 @@
 # Docker Proxy
-[![Circle CI](https://circleci.com/gh/foliea/docker-proxy.svg?style=svg)](https://circleci.com/gh/foliea/docker-proxy)
+[![Circle CI](https://circleci.com/gh/ContainerHQ/arkis-api.svg?style=svg)](https://circleci.com/gh/ContainerHQ/arkis-api)
 
 Docker remote API Proxy.
 
