@@ -14,6 +14,7 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: null,
       validate: { len: [1, 64] }
     },
+    state: DataTypes.VIRTUAL,
     token: {
       type: DataTypes.TEXT,
       allowNull: true,
@@ -33,10 +34,8 @@ module.exports = function(sequelize, DataTypes) {
     }
   }, {
     getterMethods: {
-      state: function() {
-        return 'idle';
-      },
       state_message: function() {
+        //switch this.state
         return 'Create at least one node to work with this cluster';
       },
       containers_count: function() {
@@ -45,8 +44,36 @@ module.exports = function(sequelize, DataTypes) {
     },
     hooks: {
       beforeDestroy: function(cluster) {
-        console.log(cluster.state);
+        if (cluster.state === 'upgrading') {
+          return sequelize.Promise
+            .reject(`Can't delete a cluster in ${cluster.state} state`);
+        }
         return sequelize.Promise.resolve(cluster);
+      },
+      afterCreate: function(cluster) {
+        return cluster.updateState();
+      },
+      afterFind: function(cluster) {
+        if (!cluster) { return sequelize.Promise.resolve(); }
+
+        return cluster.updateState();
+      }
+    },
+    instanceMethods: {
+      updateState: function() {
+        if (this.nodes_count <= 0) {
+          this.state = 'idle';
+          return this;
+        }
+        return this.getNodes({ where: { state: 'upgrading' } })
+        .then(nodes => {
+          this.state = 'running';
+
+          if (nodes.length > 0) {
+           this.state = 'upgrading';
+          }
+          return this;
+        });
       }
     },
     classMethods: {

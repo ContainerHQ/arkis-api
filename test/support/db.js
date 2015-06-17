@@ -2,7 +2,7 @@
 
 let models = require('../../app/models');
 
-const ENTITIES_TO_DESTROY = ['User', 'Profile', 'Cluster'];
+const ENTITIES_TO_DESTROY = ['User', 'Profile', 'Cluster', 'Node'];
 
 /*
  * Generate a promise chain to delete database entities.

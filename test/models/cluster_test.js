@@ -89,12 +89,26 @@ describe('Cluster Model', () => {
       return cluster.save();
     });
 
+    it('has a state value set to idle', () => {
+      expect(cluster.state).to.equal('idle');
+    });
+
+    it('can be deleted', () => {
+      return expect(
+        cluster.destroy()
+        .then(() => {
+          return models.Cluster.findById(cluster.id);
+        })
+      ).to.be.fulfilled.and.to.eventually.to.be.null;
+    });
+
     context('adding a node to this cluster', () => {
       let nodesCount;
 
       beforeEach(() => {
         nodesCount = cluster.nodes_count;
 
+        // Use factory !
         return models.Node.create({ cluster_id: cluster.id })
         .then(() => {
           return cluster.reload();
@@ -105,34 +119,42 @@ describe('Cluster Model', () => {
         expect(cluster.nodes_count).to.equal(nodesCount + 1);
       });
     });
-  });
 
-  context.skip('when cluster is idle', () => {
-    it('can be deleted', () => {
-      return expect(
-        cluster.destroy()
-        .then(() => {
-          return models.Cluster.findById(cluster.id);
-        })
-      ).to.be.fulfilled.and.to.eventually.to.be.null;;
-    });
-  });
-
-  context.skip('when cluster is upgrading', () => {
-    let cluster;
-
-    beforeEach(() => {
-      cluster = factory.buildSync('upgradingCluster');
-      return cluster.save();
+    it('has a state value set to idle', () => {
+      expect(cluster.state).to.equal('idle');
     });
 
-    it("can't be deleted", () => {
-      return expect(
-        cluster.destroy()
-        .then(() => {
-          return models.Cluster.findById(cluster.id);
-        })
-      ).to.be.fulfilled.and.to.eventually.to.be.not.null;;
+    context('whith many running nodes', () => {
+      beforeEach(done => {
+        factory.createMany('node', { state: 'running', cluster_id: cluster.id }, 10, () => {
+          cluster.reload().then(() => { done(); }).catch(done);
+        });
+      });
+
+      it('has a state value set to runnning', () => {
+        expect(cluster.state).to.equal('running');
+      });
+
+      context('whith at list one node still upgrading', () => {
+        beforeEach(done => {
+          factory.create('node', { state: 'upgrading', cluster_id: cluster.id }, () => {
+            cluster.reload().then(() => { done(); }).catch(done);
+          });
+        });
+
+        it('has a state value set to upgrading', () => {
+          expect(cluster.state).to.equal('upgrading');
+        });
+
+        it("can't be deleted", () => {
+          return expect(
+            cluster.destroy()
+            .then(() => {
+              return models.Cluster.findById(cluster.id);
+            })
+          ).to.be.rejected;
+        });
+      });
     });
   });
 });

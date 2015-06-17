@@ -10,4 +10,9 @@ module.exports = function(factory) {
   factory.define('defaultCluster', Cluster, {
     name: 'default',
   });
+
+  factory.define('upgradingCluster', Cluster, {
+    name: 'upgrading',
+    nodes: factory.assocMany('upgradingNode', 5)
+  });
 };
