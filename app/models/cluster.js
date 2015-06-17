@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('Cluster', {
+  let Cluster = sequelize.define('Cluster', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -50,14 +50,13 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     classMethods: {
-      associate: function() {
-        //Cluster.hasMany(models.Node, {
-        //  onDelete: 'cascade',
-        //  counterCache: true
-        //});
-        //
-        //Test counterCache increase/decrease
+      associate: function(models) {
+        Cluster.hasMany(models.Node, {
+          onDelete: 'cascade',
+          counterCache: { as: 'nodes_count' }
+        });
       }
     }
   });
+  return Cluster;
 };

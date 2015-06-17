@@ -1,6 +1,6 @@
 'use strict';
 
-let Cluster = require('../../app/models').Cluster;
+let models = require('../../app/models');
 
 const DEFAULT_STRATEGY = 'spread',
       VALID_STRATEGIES = [DEFAULT_STRATEGY, 'binpack', 'random'];
@@ -79,6 +79,7 @@ describe('Cluster Model', () => {
       .to.eventually.have.property('strategy', DEFAULT_STRATEGY);
   });
 
+
   // Add tests for state
   context('afterCreate', () => {
     let cluster;
@@ -88,26 +89,50 @@ describe('Cluster Model', () => {
       return cluster.save();
     });
 
-    context('when cluster is idle', () => {
-      it('can be deleted', () => {
-        return expect(
-          cluster.destroy()
-          .then(() => {
-            return Cluster.findById(cluster.id);
-          })
-        ).to.be.fulfilled.and.to.eventually.to.be.null;;
+    context('adding a node to this cluster', () => {
+      let nodesCount;
+
+      beforeEach(() => {
+        nodesCount = cluster.nodes_count;
+
+        return models.Node.create({ cluster_id: cluster.id })
+        .then(() => {
+          return cluster.reload();
+        });
+      });
+
+      it('increases the node counter', () => {
+        expect(cluster.nodes_count).to.equal(nodesCount + 1);
       });
     });
+  });
 
-    context('when cluster is upgrading', () => {
-      it("can't be deleted", () => {
-        return expect(
-          cluster.destroy()
-          .then(() => {
-            return Cluster.findById(cluster.id);
-          })
-        ).to.be.fulfilled.and.to.eventually.to.be.not.null;;
-      });
+  context.skip('when cluster is idle', () => {
+    it('can be deleted', () => {
+      return expect(
+        cluster.destroy()
+        .then(() => {
+          return models.Cluster.findById(cluster.id);
+        })
+      ).to.be.fulfilled.and.to.eventually.to.be.null;;
+    });
+  });
+
+  context.skip('when cluster is upgrading', () => {
+    let cluster;
+
+    beforeEach(() => {
+      cluster = factory.buildSync('upgradingCluster');
+      return cluster.save();
+    });
+
+    it("can't be deleted", () => {
+      return expect(
+        cluster.destroy()
+        .then(() => {
+          return models.Cluster.findById(cluster.id);
+        })
+      ).to.be.fulfilled.and.to.eventually.to.be.not.null;;
     });
   });
 });
