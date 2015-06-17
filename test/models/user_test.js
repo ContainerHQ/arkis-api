@@ -94,7 +94,9 @@ describe('User Model', () => {
     let user, password;
 
     /*
-     * The original user password must be kept before hashing.
+     * The original user password must be kept to be sure
+     * that the password virtual field has not been updated
+     * during saving.
      */
     beforeEach(() => {
       user = factory.buildSync('user');

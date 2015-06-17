@@ -1,7 +1,6 @@
 'use strict';
 
-let _ = require('lodash'),
-  bcrypt = require('bcrypt'),
+let bcrypt = require('bcrypt'),
   jwt = require('jsonwebtoken'),
   secrets = require('../../config/secrets');
 
@@ -19,10 +18,27 @@ module.exports = function(sequelize, DataTypes) {
       unique: true,
       validate: { isEmail: true }
     },
-    password: {
+    password_hash: {
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: null,
+    },
+    password: {
+      type: DataTypes.VIRTUAL,
+      allowNull: false,
+      defaultValue: null,
+
+      set: function(password) {
+        /*
+         * We must ensure to hit password validations first and then
+         * that password_hash validations must never fail if the
+         * password validations already failed.
+         */
+        let hash = bcrypt.hashSync(password || '', 10);
+
+        this.setDataValue('password', password);
+        this.setDataValue('password_hash', hash);
+      },
       validate: { len: [6, 128] }
     },
     provider: {
@@ -51,14 +67,10 @@ module.exports = function(sequelize, DataTypes) {
   }, {
     instanceMethods: {
       verifyPassword: function(password) {
-        return bcrypt.compareSync(password, this.password);
+        return bcrypt.compareSync(password, this.password_hash);
       },
 
-      hashPassword: function() {
-        this.password = bcrypt.hashSync(this.password, 10);
-      },
-      /*
-       * The encoded jwt token includes a unique universal identifier,
+      /* The encoded jwt token includes a unique universal identifier,
        * changing this identifier invalidates the token.
        *
        * This really simplify the token revokation if a user is destroyed
@@ -82,17 +94,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     hooks: {
       beforeCreate: function(user, options, done) {
-        user.hashPassword();
         user.generateToken();
-        done(null, user);
-      },
-      beforeUpdate: function(user, options, done) {
-        /*
-         * If password is being updated.
-         */
-        if (_.contains(options.fields, 'password')) {
-          user.hashPassword();
-        }
         done(null, user);
       },
       afterCreate: function(user) {

@@ -59,12 +59,17 @@ describe('POST /auth/login', () => {
     });
   });
 
+  /*
+   * Before login, the tested user is not yet created.
+   * Therefore, Id field must be in the attributes
+   * whitelist.
+   */
   context('with blacklisted attributes', () => {
     let attributes, reference;
 
     beforeEach(() => {
       attributes = _.difference(user.attributes,
-        ['id', 'email', 'password', 'token', 'token_id', 'created_at', 'updated_at']
+        ['id', 'email', 'password', 'password_hash', 'token', 'token_id', 'created_at', 'updated_at']
       );
       reference = factory.buildSync('forbiddenUser');
     });
