@@ -61,7 +61,7 @@ describe('PATCH /account/change_email', () => {
   });
 
   context('with blacklisted attributes', () => {
-    let attributes, reference;
+    let attributes, form;
 
     /*
      * The password can be ignored here, we already ensure
@@ -72,13 +72,12 @@ describe('PATCH /account/change_email', () => {
       attributes = _.difference(user.attributes,
         ['id', 'email', 'password', 'created_at', 'updated_at']
       );
-      reference = factory.buildSync('forbiddenUser');
+      form = factory.buildSync('forbiddenUser').dataValues;
     });
 
     it('these attributes are filtered', done => {
-      api.callWithAttributes(attributes, reference,
-        api.account(user).changeEmail()
-      )
+      api.account(user).changeEmail()
+      .send(form)
       .field('password', password)
       .field('new_email', NEW_EMAIL)
       .expect(204)

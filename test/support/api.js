@@ -56,10 +56,3 @@ module.exports.account = function(user={}) {
     }
   };
 };
-
-module.exports.callWithAttributes = function(attributes, reference, action) {
-  attributes.forEach(attribute => {
-    action = action.field(attribute, reference.dataValues[attribute]);
-  });
-  return action;
-};

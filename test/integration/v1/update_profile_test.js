@@ -13,11 +13,10 @@ describe('PATCH /account/profile', () => {
   });
 
   it('updates the user profile', done => {
-    let reference = factory.buildSync('profile');
+    let form = factory.buildSync('profile').dataValues;
 
-    api.callWithAttributes(WHITELIST, reference,
-      api.account(user).updateProfile()
-    )
+    api.account(user).updateProfile()
+    .send(form)
     .expect(200)
     .end((err, res) => {
       if (err) { return done(err); }
@@ -25,7 +24,7 @@ describe('PATCH /account/profile', () => {
       let profile = format.timestamps(res.body.profile);
 
       expect(_.pick(profile, WHITELIST))
-        .to.deep.equal(_.pick(reference, WHITELIST));
+        .to.deep.equal(_.pick(form, WHITELIST));
       expect(user.getProfile())
         .to.eventually.have.property('dataValues')
         .that.deep.equals(profile)

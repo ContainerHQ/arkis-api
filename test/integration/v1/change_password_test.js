@@ -86,19 +86,18 @@ describe('PATCH /account/change_password', () => {
    * Therefore, the password_hash is added to the whitelist of this test.
    */
   context('with blacklisted attributes', () => {
-    let attributes, reference;
+    let attributes, form;
 
     beforeEach(() => {
       attributes = _.difference(user.attributes,
         ['id', 'password', 'password_hash', 'created_at', 'updated_at']
       );
-      reference = factory.buildSync('forbiddenUser');
+      form = factory.buildSync('forbiddenUser').dataValues;
     });
 
     it('these attributes are filtered', done => {
-      api.callWithAttributes(attributes, reference,
-        api.account(user).changePassword()
-      )
+      api.account(user).changePassword()
+      .send(form)
       .field('old_password', oldPassword)
       .field('new_password', NEW_PASSWORD)
       .field('new_password_confirmation', NEW_PASSWORD)
