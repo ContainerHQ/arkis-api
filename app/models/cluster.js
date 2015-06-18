@@ -1,5 +1,8 @@
 'use strict';
 
+let _ = require('lodash'),
+  machine = require('../../config/machine');
+
 module.exports = function(sequelize, DataTypes) {
   let Cluster = sequelize.define('Cluster', {
     id: {
@@ -28,7 +31,7 @@ module.exports = function(sequelize, DataTypes) {
       validate: {
         isIn: {
           args: [['spread', 'binpack', 'random']],
-          msg: 'Must be spread, binback or random'
+          msg: 'Must be spread, binpack or random'
         }
       }
     }
@@ -43,8 +46,11 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     hooks: {
+      beforeCreate: function(cluster) {
+        return cluster.initializeToken();
+      },
       beforeDestroy: function(cluster) {
-        if (cluster.state === 'upgrading') {
+        if (cluster.state === 'deploying') {
           return sequelize.Promise
             .reject(`Can't delete a cluster in ${cluster.state} state`);
         }
@@ -53,10 +59,25 @@ module.exports = function(sequelize, DataTypes) {
       afterCreate: function(cluster) {
         return cluster.updateState();
       },
-      afterFind: function(cluster) {
-        if (!cluster) { return sequelize.Promise.resolve(); }
+      afterFind: function(clusters) {
+        if (!clusters) { return sequelize.Promise.resolve(); }
 
-        return cluster.updateState();
+        /*
+         * afterFind receives either a single object or an array of object.
+         *
+         * In case of a single object and to avoid code duplication, this
+         * single object is map into an array.
+         */
+        if (!_.isArray(clusters)) {
+          clusters = [clusters];
+        }
+
+        let promises = [];
+
+        clusters.forEach(cluster => {
+          promises.push(cluster.updateState());
+        });
+        return Promise.all(promises);
       }
     },
     instanceMethods: {
@@ -65,13 +86,20 @@ module.exports = function(sequelize, DataTypes) {
           this.state = 'idle';
           return this;
         }
-        return this.getNodes({ where: { state: 'upgrading' } })
+        return this.getNodes({ where: { state: 'deploying' } })
         .then(nodes => {
           this.state = 'running';
 
           if (nodes.length > 0) {
-           this.state = 'upgrading';
+           this.state = 'deploying';
           }
+          return this;
+        });
+      },
+      initializeToken: function() {
+        return machine.createToken()
+        .then(token => {
+          this.token = token;
           return this;
         });
       }

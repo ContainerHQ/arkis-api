@@ -147,18 +147,26 @@ describe('User Model', () => {
       ).to.be.fulfilled.and.to.eventually.be.null;
     });
 
-    it.skip('removes the user clusters', () => {
-
-    });
-
-    /*
-     * Ensure the onDelete: 'cascade' with hooks: true
-     *
-     */
-    context.skip("when a user's cluster can't be deleted", () => {
-      it('fails to remove the user', () => {
-
+    context.skip('when user has at least one cluster', () => {
+      beforeEach(done => {
+        factory.createMany('cluster', { user_id: user.id }, 5, done);
       });
+
+      it('removes the user clusters', () => {
+        return expect(user.destroy()).to.be.fulfilled;
+        // TODO: Also checkout that these clusters are no longer in DB.
+      });
+
+      /*
+       * Ensure the onDelete: 'cascade' with hooks: true
+       */
+      context("when this cluster can't be deleted", () => {
+        it('fails to remove the user', () => {
+
+        });
+      });
+      // N.B. can't or fails to be deleted should be rejected
+      // and handled identically on the user model side.
     });
   });
 

@@ -2,23 +2,19 @@
 
 let models = require('../../app/models');
 
-const ENTITIES_TO_DESTROY = ['User', 'Profile', 'Cluster', 'Node'];
+const ENTITIES_TO_DESTROY = ['User', 'Profile', 'Cluster', 'Node'],
+      ALL = { where: {} };
 
 /*
  * Generate a promise chain to delete database entities.
- *
  */
 module.exports.deleteAll = function(modelsName) {
-  let actions;
+  let promises = [];
 
   modelsName.forEach(modelName => {
-    let action = models[modelName].destroy({ where: {} });
-
-    actions = action || action.then(() => {
-      return action;
-    });
+    promises.push(models[modelName].destroy(ALL));
   });
-  return actions;
+  return Promise.all(promises);
 }
 
 /*

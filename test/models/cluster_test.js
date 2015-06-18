@@ -89,8 +89,12 @@ describe('Cluster Model', () => {
       return cluster.save();
     });
 
-    it('has a state value set to idle', () => {
+    it('is in idle state', () => {
       expect(cluster.state).to.equal('idle');
+    });
+
+    it('has a token', () => {
+      expect(cluster.token).to.exist;
     });
 
     it('can be deleted', () => {
@@ -120,7 +124,7 @@ describe('Cluster Model', () => {
       });
     });
 
-    it('has a state value set to idle', () => {
+    it('is in idle state', () => {
       expect(cluster.state).to.equal('idle');
     });
 
@@ -131,19 +135,19 @@ describe('Cluster Model', () => {
         });
       });
 
-      it('has a state value set to runnning', () => {
+      it('is in runnning state', () => {
         expect(cluster.state).to.equal('running');
       });
 
-      context('whith at list one node still upgrading', () => {
+      context('whith at list one node still deploying', () => {
         beforeEach(done => {
-          factory.create('node', { state: 'upgrading', cluster_id: cluster.id }, () => {
+          factory.create('node', { state: 'deploying', cluster_id: cluster.id }, () => {
             cluster.reload().then(() => { done(); }).catch(done);
           });
         });
 
-        it('has a state value set to upgrading', () => {
-          expect(cluster.state).to.equal('upgrading');
+        it('is in deploying state', () => {
+          expect(cluster.state).to.equal('deploying');
         });
 
         it("can't be deleted", () => {
