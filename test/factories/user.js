@@ -16,6 +16,7 @@ module.exports = function(factory) {
   factory.define('forbiddenUser', User, {
     email: 'forbidden@arkis.io',
     password: 'azerty28',
+    password_hash: 'whatever',
     provider: 'whatever',
     provider_id: 23,
     token: 'azerty',

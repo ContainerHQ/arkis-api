@@ -7,7 +7,9 @@ let express = require('express'),
 
 let router = express.Router();
 
-const CREATE_FILTER = { fields: ['email', 'password', 'token', 'token_id'] };
+const CREATE_FILTER = { fields:
+  ['email', 'password', 'password_hash', 'token', 'token_id']
+};
 
 router
 .post('/login', (req, res, next) => {

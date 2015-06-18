@@ -15,11 +15,10 @@ module.exports = {
         unique: true,
         validate: { isEmail: true }
       },
-      password: {
+      password_hash: {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: null,
-        validate: { len: [6, 128] }
       },
       provider: {
         type: DataTypes.STRING,

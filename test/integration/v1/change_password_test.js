@@ -79,12 +79,18 @@ describe('PATCH /account/change_password', () => {
     });
   });
 
+  /*
+   * We can safely assume that if the password_hash is not filtered,
+   * the test wich ensure that the password has been changed won't work.
+   *
+   * Therefore, the password_hash is added to the whitelist of this test.
+   */
   context('with blacklisted attributes', () => {
     let attributes, reference;
 
     beforeEach(() => {
       attributes = _.difference(user.attributes,
-        ['id', 'password', 'created_at', 'updated_at']
+        ['id', 'password', 'password_hash', 'created_at', 'updated_at']
       );
       reference = factory.buildSync('forbiddenUser');
     });

@@ -25,7 +25,7 @@ router
     ));
   }
   req.user.update({
-    password: req.body.new_password
+    password: req.body.new_password,
   }).then(() => {
     res.status(204).json();
   })
