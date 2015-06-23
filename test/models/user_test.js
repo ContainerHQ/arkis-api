@@ -1,6 +1,6 @@
 'use strict';
 
-let Profile = require('../../app/models').Profile;
+let models = require('../../app/models');
 
 describe('User Model', () => {
   db.sync();
@@ -142,31 +142,49 @@ describe('User Model', () => {
           profileId = profile.id
           return user.destroy();
         }).then(() => {
-          return Profile.findById(profileId);
+          return models.Profile.findById(profileId);
         })
       ).to.be.fulfilled.and.to.eventually.be.null;
     });
 
-    context.skip('when user has at least one cluster', () => {
+    context('when user has at least one cluster', () => {
+      let clusters;
+
       beforeEach(done => {
-        factory.createMany('cluster', { user_id: user.id }, 5, done);
+        factory.createMany('cluster', { user_id: user.id }, 5,
+          (err, createdClusters) => {
+            if (err) { return done(err); }
+
+            clusters = createdClusters;
+            done();
+          }
+        );
       });
 
       it('removes the user clusters', () => {
-        return expect(user.destroy()).to.be.fulfilled;
-        // TODO: Also checkout that these clusters are no longer in DB.
+        let clusterIds = _.pluck(clusters, 'id');
+
+        return expect(
+          user.destroy().then(() => {
+            return models.Cluster.findAll({ where: { id: clusterIds } });
+          })
+        ).to.be.fulfilled.and.to.eventually.be.empty;
       });
 
       /*
        * Ensure the onDelete: 'cascade' with hooks: true
        */
-      context("when this cluster can't be deleted", () => {
-        it('fails to remove the user', () => {
+      context("when the user has a cluster that can't be deleted", () => {
+        beforeEach(done => {
+          let opts = { state: 'deploying', cluster_id: _.first(clusters).id };
 
+          factory.create('node', opts, done);
+        });
+
+        it('fails to remove the user', () => {
+          return expect(user.destroy()).to.be.rejected;
         });
       });
-      // N.B. can't or fails to be deleted should be rejected
-      // and handled identically on the user model side.
     });
   });
 
