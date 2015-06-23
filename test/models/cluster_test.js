@@ -189,17 +189,6 @@ describe('Cluster Model', () => {
               return expect(cluster.reload())
                 .to.eventually.have.property('state', state);
             });
-
-            // Upgrading shouldn't interrupt deletion
-            it("can't be deleted", () => {
-              return expect(
-                cluster.reload().then(() => {
-                  return cluster.destroy();
-                }).then(() => {
-                  return models.Cluster.findById(cluster.id);
-                })
-              ).to.be.rejected;
-            });
           });
         });
 

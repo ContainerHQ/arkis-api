@@ -170,21 +170,6 @@ describe('User Model', () => {
           })
         ).to.be.fulfilled.and.to.eventually.be.empty;
       });
-
-      /*
-       * Ensure the onDelete: 'cascade' with hooks: true
-       */
-      context("when the user has a cluster that can't be deleted", () => {
-        beforeEach(done => {
-          let opts = { state: 'deploying', cluster_id: _.first(clusters).id };
-
-          factory.create('node', opts, done);
-        });
-
-        it('fails to remove the user', () => {
-          return expect(user.destroy()).to.be.rejected;
-        });
-      });
     });
   });
 

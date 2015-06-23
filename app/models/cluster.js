@@ -47,15 +47,6 @@ module.exports = function(sequelize, DataTypes) {
       beforeCreate: function(cluster) {
         return cluster.initializeToken();
       },
-      beforeDestroy: function(cluster) {
-        switch (cluster.state) {
-          case 'deploying':
-          case 'upgrading':
-            return sequelize.Promise
-              .reject(`Can't delete a cluster in ${cluster.state} state`);
-        }
-        return sequelize.Promise.resolve(cluster);
-      },
       afterCreate: function(cluster) {
         return cluster.updateState();
       },

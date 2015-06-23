@@ -8,9 +8,4 @@ module.exports = function(factory) {
   factory.define('masterNode', Node, {
     master: true,
   });
-
-
-  factory.define('upgradingNode', Node, {
-    state: 'upgrading',
-  });
 };
