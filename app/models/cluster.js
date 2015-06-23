@@ -34,25 +34,25 @@ module.exports = function(sequelize, DataTypes) {
           msg: 'Must be spread, binpack or random'
         }
       }
-    }
+    },
+    containers_count: DataTypes.VIRTUAL
   }, {
     getterMethods: {
       state_message: function() {
         //switch this.state
         return 'Create at least one node to work with this cluster';
       },
-      containers_count: function() {
-        return 0;
-      }
     },
     hooks: {
       beforeCreate: function(cluster) {
         return cluster.initializeToken();
       },
       beforeDestroy: function(cluster) {
-        if (cluster.state === 'deploying') {
-          return sequelize.Promise
-            .reject(`Can't delete a cluster in ${cluster.state} state`);
+        switch (cluster.state) {
+          case 'deploying':
+          case 'upgrading':
+            return sequelize.Promise
+              .reject(`Can't delete a cluster in ${cluster.state} state`);
         }
         return sequelize.Promise.resolve(cluster);
       },
@@ -84,23 +84,44 @@ module.exports = function(sequelize, DataTypes) {
       updateState: function() {
         if (this.nodes_count <= 0) {
           this.state = 'idle';
-          return this;
+          return;
         }
-        return this.getNodes({ where: { state: 'deploying' } })
+        this.containers_count = 0;
+        return this.getNodes()
         .then(nodes => {
-          this.state = 'running';
+          let master = _.find(nodes, { master: true }) || {};
 
-          if (nodes.length > 0) {
-           this.state = 'deploying';
+          switch (master.state) {
+            case 'deploying':
+            case 'upgrading':
+            case 'starting':
+            case 'stopping':
+            case 'down':
+            case undefined:
+              this.state = 'unavailable';
+              return;
           }
-          return this;
+          let slave = _.find(nodes, node => {
+            if (node.state === 'deploying' || node.state === 'upgrading') {
+              return node;
+            }
+          });
+
+          if (slave) {
+            this.state = slave.state;
+            return;
+          }
+          slave = _.find(nodes, node => {
+            if (node.state === 'starting' || node.state === 'stopping' || node.state === 'down') {
+              return node;
+            }
+          });
+          this.state = slave ? 'partially_running' : 'running';
         });
       },
       initializeToken: function() {
-        return machine.createToken()
-        .then(token => {
+        return machine.createToken().then(token => {
           this.token = token;
-          return this;
         });
       }
     },

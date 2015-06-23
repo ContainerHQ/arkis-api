@@ -107,12 +107,11 @@ describe('Cluster Model', () => {
     });
 
     context('adding a node to this cluster', () => {
-      let nodesCount;
+      let previousNodesCount;
 
       beforeEach(() => {
-        nodesCount = cluster.nodes_count;
+        previousNodesCount = cluster.nodes_count;
 
-        // Use factory !
         return models.Node.create({ cluster_id: cluster.id })
         .then(() => {
           return cluster.reload();
@@ -120,43 +119,103 @@ describe('Cluster Model', () => {
       });
 
       it('increases the node counter', () => {
-        expect(cluster.nodes_count).to.equal(nodesCount + 1);
+        expect(cluster.nodes_count).to.equal(previousNodesCount + 1);
       });
     });
 
-    it('is in idle state', () => {
-      expect(cluster.state).to.equal('idle');
-    });
+    context('with only slave nodes', () => {
+      beforeEach(done => {
+        factory.createMany('node', { cluster_id: cluster.id }, 10, done);
+      });
+
+      it('is in unavailable state', () => {
+        return expect(cluster.reload())
+          .to.eventually.have.property('state', 'unavailable');
+      });
+
+      it('has no containers count', () => {
+        return expect(cluster.reload())
+          .to.eventually.have.property('containers_count', 0);
+      });
+    })
 
     context('whith many running nodes', () => {
       beforeEach(done => {
-        factory.createMany('node', { state: 'running', cluster_id: cluster.id }, 10, () => {
-          cluster.reload().then(() => { done(); }).catch(done);
+        let opts = { state: 'running', cluster_id: cluster.id };
+
+        factory.createMany('node', opts, 10, done);
+      });
+
+      ['deploying', 'upgrading', 'starting', 'stopping', 'down'].forEach(state => {
+        context(`with a master node still ${state}`, () => {
+          beforeEach(done => {
+            let opts = { state: state, cluster_id: cluster.id };
+
+            factory.create('masterNode', opts, done);
+          });
+
+          it('is in unavailable state', () => {
+            return expect(cluster.reload())
+              .to.eventually.have.property('state', 'unavailable');
+          });
         });
       });
 
-      it('is in runnning state', () => {
-        expect(cluster.state).to.equal('running');
-      });
-
-      context('whith at list one node still deploying', () => {
+      context('with a running master node', () => {
         beforeEach(done => {
-          factory.create('node', { state: 'deploying', cluster_id: cluster.id }, () => {
-            cluster.reload().then(() => { done(); }).catch(done);
+          let opts = { state: 'running', cluster_id: cluster.id };
+
+          factory.create('masterNode', opts, done);
+        });
+
+        it('is in runnning state', () => {
+          return expect(cluster.reload())
+            .to.eventually.have.property('state', 'running');
+        });
+
+        it('has a container count equal to its master containers count', () => {
+
+        });
+
+        ['deploying', 'upgrading'].forEach(state => {
+          context(`with a node still ${state}`, () => {
+            beforeEach(done => {
+              let opts = { state: state, cluster_id: cluster.id };
+
+              factory.create('node', opts, done);
+            });
+
+            it(`is in ${state} state`, () => {
+              return expect(cluster.reload())
+                .to.eventually.have.property('state', state);
+            });
+
+            // Upgrading shouldn't interrupt deletion
+            it("can't be deleted", () => {
+              return expect(
+                cluster.reload().then(() => {
+                  return cluster.destroy();
+                }).then(() => {
+                  return models.Cluster.findById(cluster.id);
+                })
+              ).to.be.rejected;
+            });
           });
         });
 
-        it('is in deploying state', () => {
-          expect(cluster.state).to.equal('deploying');
-        });
+        ['starting', 'stopping', 'down'].forEach(state => {
+          context(`with a node ${state}`, () => {
+            beforeEach(done => {
+              let opts = { state: state, cluster_id: cluster.id };
 
-        it("can't be deleted", () => {
-          return expect(
-            cluster.destroy()
-            .then(() => {
-              return models.Cluster.findById(cluster.id);
-            })
-          ).to.be.rejected;
+              factory.create('node', opts, done);
+            });
+
+            it(`is in partially_running state`, () => {
+              return expect(cluster.reload())
+                .to.eventually.have.property('state', 'partially_running');
+            });
+          });
         });
       });
     });

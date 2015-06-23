@@ -18,9 +18,17 @@ module.exports = {
         onDelete: 'CASCADE'
       },
       state: {
-        type: DataTypes.STRING,
+        type: DataTypes.ENUM,
         allowNull: false,
-        defaultValue: 'idle',
+        values: [
+         'deploying', 'upgrading', 'starting', 'running', 'stopping', 'down'
+        ],
+        defaultValue: 'deploying',
+      },
+      master: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
       },
 
       created_at: DataTypes.DATE,
