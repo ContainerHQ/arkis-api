@@ -79,8 +79,12 @@ describe('Cluster Model', () => {
       .to.eventually.have.property('strategy', DEFAULT_STRATEGY);
   });
 
+  context.skip('afterCreate', () => {
+    it('removes its nodes', () => {
 
-  // Add tests for state
+    });
+  });
+
   context('afterCreate', () => {
     let cluster;
 
@@ -173,7 +177,7 @@ describe('Cluster Model', () => {
             .to.eventually.have.property('state', 'running');
         });
 
-        it('has a container count equal to its master containers count', () => {
+        it.skip('has a container count equal to its master containers count', () => {
 
         });
 
