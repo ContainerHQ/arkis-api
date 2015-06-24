@@ -35,8 +35,12 @@ module.exports = function(sequelize, DataTypes) {
         }
       }
     },
+    nodes_count: DataTypes.VIRTUAL,
     containers_count: DataTypes.VIRTUAL
   }, {
+    defaultScope: {
+      order: [['id', 'ASC']]
+    },
     getterMethods: {
       state_message: function() {
         //switch this.state
@@ -73,13 +77,16 @@ module.exports = function(sequelize, DataTypes) {
     },
     instanceMethods: {
       updateState: function() {
-        if (this.nodes_count <= 0) {
-          this.state = 'idle';
-          return;
-        }
         this.containers_count = 0;
+
         return this.getNodes()
         .then(nodes => {
+          this.nodes_count = nodes.length;
+
+          if (this.nodes_count <= 0) {
+            this.state = 'idle';
+            return;
+          }
           let master = _.find(nodes, { master: true }) || {};
 
           switch (master.state) {
@@ -118,10 +125,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     classMethods: {
       associate: function(models) {
-        Cluster.hasMany(models.Node, {
-          onDelete: 'cascade',
-          counterCache: { as: 'nodes_count' }
-        });
+        Cluster.hasMany(models.Node, { onDelete: 'cascade'});
       }
     }
   });

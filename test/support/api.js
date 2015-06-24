@@ -66,9 +66,9 @@ module.exports.clusters = function(user={}) {
       .get(`${API_ROUTE}/${ressource}/${id}`)
       .set('Authorization', `JWT ${user.token}`);
     },
-    getAll: function() {
+    getAll: function(opts='') {
       return request(app)
-      .get(`${API_ROUTE}/${ressource}/`)
+      .get(`${API_ROUTE}/${ressource}${opts}`)
       .set('Authorization', `JWT ${user.token}`);
     },
     create: function() {

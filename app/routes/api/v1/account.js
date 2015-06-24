@@ -26,10 +26,7 @@ router
   }
   req.user.update({
     password: req.body.new_password,
-  }).then(() => {
-    res.status(204).json();
-  })
-  .catch(next);
+  }).then(handler.sendNoContent(res)).catch(next);
 })
 .patch('/change_email', (req, res, next) => {
   if (!req.user.verifyPassword(req.body.password)) {
@@ -37,18 +34,13 @@ router
   }
   req.user.update({
     email: req.body.new_email
-  }).then(() => {
-    res.status(204).json();
-  })
-  .catch(next);
+  }).then(handler.sendNoContent(res)).catch(next);
 })
 .delete('/', (req, res, next) => {
   if (!req.user.verifyPassword(req.body.password)) {
     return next(new errors.ForbiddenError());
   }
-  req.user.destroy()
-  .then(() => { res.status(204).json(); })
-  .catch(next);
+  req.user.destroy().then(handler.sendNoContent(res)).catch(next);
 })
 .get('/request_password', handler.notYetImplemented)
 
@@ -66,7 +58,7 @@ router
     );
   })
   .then(profile => {
-    res.status(200).json({ profile: profile });
+    res.json({ profile: profile });
   })
   .catch(next);
 });

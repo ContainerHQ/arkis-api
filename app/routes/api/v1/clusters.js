@@ -7,7 +7,26 @@ let _ = require('lodash'),
 let router = express.Router();
 
 router
-.get('/', handler.notYetImplemented)
+.get('/', (req, res, next) => {
+  req.user.getClusters({
+    limit: req.query.limit,
+    offset: (req.query.page || 0) * (req.query.limit || 0),
+    where: {
+      strategy: {
+        $like: req.query.strategy || '%'
+      }
+    }
+  }).then(clusters => {
+    /*
+     * State is a virtual field updated after instanciation,
+     * therefore it can't be in the db query.
+     */
+    if (!!req.query.state) {
+      clusters = _.select(clusters, 'state', req.query.state);
+    }
+    res.json({ clusters: clusters });
+  }).catch(next);
+})
 .post('/', handler.notYetImplemented)
 // req.user.addCluster();
 //
@@ -23,12 +42,10 @@ router
 })
 .route('/:id')
 .get((req, res) => {
-  res.status(200).json({ cluster: req.cluster });
+  res.json({ cluster: req.cluster });
 })
 .delete((req, res, next) => {
-  req.cluster.destroy().then(() => {
-    res.status(204).json();
-  }).catch(next);
+  req.cluster.destroy().then(handler.sendNoContent(res)).catch(next);
 });
 
 module.exports = router;

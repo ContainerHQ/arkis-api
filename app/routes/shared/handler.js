@@ -6,6 +6,12 @@ module.exports.notYetImplemented = function(req, res) {
   res.status(501).json('Not implemented.');
 };
 
+module.exports.sendNoContent = function(res) {
+  return function() {
+    res.status(204).json();
+  };
+};
+
 module.exports.docker = function(res, opts={}, callback=opts) {
   let stream = opts.stream || false,
     type = opts.type || 'application/json',

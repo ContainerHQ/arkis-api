@@ -35,7 +35,6 @@ module.exports = {
         defaultValue: 'spread',
         validate: { isIn: [['spread', 'binpack', 'random']] }
       },
-      nodes_count: DataTypes.INTEGER,
 
       created_at: DataTypes.DATE,
       updated_at: DataTypes.DATE
