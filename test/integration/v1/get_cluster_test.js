@@ -38,8 +38,14 @@ describe('GET /clusters/:id', () => {
       });
     });
 
-    it('returns a 404 error', done => {
+    it('returns a 404 not found', done => {
       api.clusters(defaultUser).get(cluster.id).expect(404, {}, done);
+    });
+  });
+
+  context('when the user specify an invalid cluster id', () => {
+    it('returns a 404 not found', done => {
+      api.clusters(user).get(0).expect(404, {}, done);
     });
   });
 

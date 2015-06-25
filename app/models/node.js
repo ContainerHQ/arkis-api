@@ -20,6 +20,20 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false
+    },
+    containers_count: DataTypes.VIRTUAL
+  }, {
+    hooks: {
+      afterFind: function(nodes) {
+        if (!nodes) { return sequelize.Promise.resolve(); }
+
+        if (!_.isArray(nodes)) {
+          nodes = [nodes];
+        }
+        nodes.forEach(node => {
+          node.containers_count = 2;
+        });
+      }
     }
   });
 };

@@ -40,7 +40,8 @@
     "passport-jwt": "1.1.x",
     "pg": "4.3.x",
     "pg-hstore": "2.3.x",
-    "sequelize": "3.1.x"
+    "sequelize": "3.1.x",
+    "validator": "3.40.x"
   },
   "devDependencies": {
     "chai": "2.2.x",

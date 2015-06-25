@@ -50,6 +50,12 @@ describe('DELETE /clusters/:id', () => {
     });
   });
 
+  context('when the user specify an invalid cluster id', () => {
+    it('returns ', done => {
+      api.clusters(user).delete('whatever').expect(404, {}, done);
+    });
+  });
+
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {
       api.clusters().delete(cluster.id).expect(401, {}, done);
