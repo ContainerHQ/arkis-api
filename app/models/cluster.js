@@ -96,9 +96,11 @@ module.exports = function(sequelize, DataTypes) {
             case 'stopping':
             case 'down':
             case undefined:
-              this.state = 'unavailable';
+              this.state = 'unreachable';
               return;
           }
+          this.containers_count = master.containers_count;
+
           let slave = _.find(nodes, node => {
             if (node.state === 'deploying' || node.state === 'upgrading') {
               return node;

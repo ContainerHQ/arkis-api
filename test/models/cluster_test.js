@@ -79,9 +79,29 @@ describe('Cluster Model', () => {
       .to.eventually.have.property('strategy', DEFAULT_STRATEGY);
   });
 
-  context.skip('afterCreate', () => {
-    it('removes its nodes', () => {
+  context('afterDestroy', () => {
+    let cluster, nodes;
 
+    beforeEach(done => {
+      factory.create('cluster', (err, clusterCreated) => {
+        cluster = clusterCreated;
+
+        factory.createMany('node', { cluster_id: cluster.id }, 10, (err, nodesCreated) => {
+          nodes = nodesCreated;
+          done(err);
+        });
+      });
+
+    });
+
+    it('removes its nodes', () => {
+      let nodesId = _.pluck(nodes, 'id');
+
+      return expect(
+        cluster.destroy().then(() => {
+          return models.Node.findAll({ where: { id: nodesId } });
+        })
+      ).to.be.fulfilled.and.to.eventually.be.empty;
     });
   });
 
@@ -132,9 +152,9 @@ describe('Cluster Model', () => {
         factory.createMany('node', { cluster_id: cluster.id }, 10, done);
       });
 
-      it('is in unavailable state', () => {
+      it('is unreachable', () => {
         return expect(cluster.reload())
-          .to.eventually.have.property('state', 'unavailable');
+          .to.eventually.have.property('state', 'unreachable');
       });
 
       it('has no containers count', () => {
@@ -158,18 +178,23 @@ describe('Cluster Model', () => {
             factory.create('masterNode', opts, done);
           });
 
-          it('is in unavailable state', () => {
+          it('is unreachable', () => {
             return expect(cluster.reload())
-              .to.eventually.have.property('state', 'unavailable');
+              .to.eventually.have.property('state', 'unreachable');
           });
         });
       });
 
       context('with a running master node', () => {
+        let master;
+
         beforeEach(done => {
           let opts = { state: 'running', cluster_id: cluster.id };
 
-          factory.create('masterNode', opts, done);
+          factory.create('masterNode', opts, (err, nodeCreated) => {
+            master = nodeCreated;
+            done(err);
+          });
         });
 
         it('is in runnning state', () => {
@@ -177,8 +202,9 @@ describe('Cluster Model', () => {
             .to.eventually.have.property('state', 'running');
         });
 
-        it.skip('has a container count equal to its master containers count', () => {
-
+        it('has a container count equal to its master containers count', () => {
+          return expect(cluster.reload())
+            .to.eventually.have.property('containers_count', master.containers_count);
         });
 
         ['deploying', 'upgrading'].forEach(state => {
