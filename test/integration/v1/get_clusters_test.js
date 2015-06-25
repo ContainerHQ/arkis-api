@@ -78,9 +78,31 @@ describe('GET /clusters/:id', () => {
           if (err) { return done(err); }
 
           let clusters = format.allTimestamps(res.body.clusters),
-            strategyFilter = { where: { strategy: { $like: strategy } } };
+            filter = { where: { strategy: { $like: strategy } } };
 
-          expect(user.getClusters(strategyFilter).then(format.allToJSON))
+          expect(user.getClusters(filter).then(format.allToJSON))
+            .to.eventually.deep.equal(clusters).notify(done);
+        });
+      });
+    });
+
+    context('when user filters by name', () => {
+      let name = 'filter-production';
+
+      beforeEach(done => {
+        let opts = { name: name, user_id: user.id };
+
+        factory.createMany('cluster', opts, 3, done);
+      });
+
+      it('retrieves only user clusters with the same name', done => {
+        api.clusters(user).getAll(`?name=${name}`).end((err, res) => {
+          if (err) { return done(err); }
+
+          let clusters = format.allTimestamps(res.body.clusters),
+            filter = { where: { name: { $like: name } } };
+
+          expect(user.getClusters(filter).then(format.allToJSON))
             .to.eventually.deep.equal(clusters).notify(done);
         });
       });

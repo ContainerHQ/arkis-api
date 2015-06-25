@@ -15,6 +15,9 @@ router
     where: {
       strategy: {
         $like: req.query.strategy || '%'
+      },
+      name: {
+        $like: req.query.name || '%'
       }
     }
   }).then(clusters => {
