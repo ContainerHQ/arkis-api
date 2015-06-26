@@ -1,10 +1,13 @@
 'use strict';
 
-let express = require('express'),
+let _ = require('lodash'),
+  express = require('express'),
   handler = require('../../shared/handler'),
   errors = require('../../shared/errors');
 
 let router = express.Router();
+
+const PROFILE_PARAMS = ['fullname', 'location', 'company'];
 
 router
 .get('/new_token', (req, res, next) => {
@@ -53,9 +56,7 @@ router
 })
 .patch((req, res, next) => {
   req.user.getProfile().then(profile => {
-    return profile.update(req.body,
-      { fields: ['fullname', 'location', 'company'] }
-    );
+    return profile.update(_.pick(req.body, PROFILE_PARAMS));
   })
   .then(profile => {
     res.json({ profile: profile });

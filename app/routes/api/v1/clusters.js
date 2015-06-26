@@ -8,7 +8,7 @@ let _ = require('lodash'),
 
 let router = express.Router();
 
-const CREATE_FILTER = ['name', 'strategy', 'token'];
+const CLUSTER_PARAMS = ['name', 'strategy', 'token'];
 
 router
 .get('/', (req, res, next) => {
@@ -35,14 +35,7 @@ router
   }).catch(next);
 })
 .post('/', (req, res, next) => {
-  /*
-   * There is a bug in sequelize that allow an UUID to be set
-   * even for a primary key. Therefore we must remove it from
-   * the payload first.
-   *
-   * See https://github.com/sequelize/sequelize/issues/3275.
-   */
-  Cluster.create(_.omit(req.body, 'id'), { fields: CREATE_FILTER })
+  Cluster.create(_.pick(req.body, CLUSTER_PARAMS))
   .then(cluster => {
     return req.user.addCluster(cluster);
   }).then(cluster => {

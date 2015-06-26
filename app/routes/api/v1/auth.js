@@ -7,9 +7,7 @@ let express = require('express'),
 
 let router = express.Router();
 
-const CREATE_FILTER = { fields:
-  ['email', 'password', 'password_hash', 'token', 'token_id']
-};
+const USER_PARAMS = ['email', 'password'];
 
 router
 .post('/login', (req, res, next) => {
@@ -18,7 +16,7 @@ router
   User.findOne({ where: { email: req.body.email } })
   .then(user => {
     created = user === null;
-    return user || User.create(req.body, CREATE_FILTER);
+    return user || User.create(_.pick(req.body, USER_PARAMS));
   })
   .then(user => {
     if (!created && !user.verifyPassword(req.body.password)) {
