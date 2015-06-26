@@ -2,7 +2,6 @@
 
 let express = require('express'),
   passport = require('passport'),
-  errors = require('../../shared/errors'),
   User = require('../../../models').User;
 
 let router = express.Router();
@@ -20,7 +19,7 @@ router
   })
   .then(user => {
     if (!created && !user.verifyPassword(req.body.password)) {
-      throw new errors.UnauthorizedError();
+      return res.unauthorized();
     }
     let statusCode = created ? 201 : 200;
 

@@ -1,7 +1,6 @@
 'use strict';
 
-let express = require('express'),
-  handler = require('../shared/handler');
+let express = require('express');
 
 let router = express.Router();
 
@@ -11,13 +10,13 @@ router
   next();
 })
 .get('/:id/json', (req, res) => {
-  req.exec.inspect(handler.docker(res));
+  req.exec.inspect(res.docker());
 })
 .post('/:id/start', (req, res) => {
-  req.exec.start(req.body, handler.docker(res, {status: 200, stream: true}));
+  req.exec.start(req.body, res.docker({status: 200, stream: true}));
 })
 .post('/:id/resize', (req, res) => {
-  req.exec.resize(req.body, handler.docker(res, {status: 201}));
+  req.exec.resize(req.body, res.docker({status: 201}));
 });
 
 module.exports = router;

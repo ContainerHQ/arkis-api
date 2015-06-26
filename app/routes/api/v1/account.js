@@ -20,7 +20,7 @@ router
 })
 .patch('/change_password', (req, res, next) => {
   if (!req.user.verifyPassword(req.body.old_password)) {
-    return next(new errors.ForbiddenError());
+    return res.forbidden();
   }
   if (req.body.new_password !== req.body.new_password_confirmation) {
     return next(new errors.MismatchError('password_confirmation',
@@ -29,21 +29,21 @@ router
   }
   req.user.update({
     password: req.body.new_password,
-  }).then(handler.sendNoContent(res)).catch(next);
+  }).then(res.noContent).catch(next);
 })
 .patch('/change_email', (req, res, next) => {
   if (!req.user.verifyPassword(req.body.password)) {
-    return next(new errors.ForbiddenError());
+    return res.forbidden();
   }
   req.user.update({
     email: req.body.new_email
-  }).then(handler.sendNoContent(res)).catch(next);
+  }).then(res.noContent).catch(next);
 })
 .delete('/', (req, res, next) => {
   if (!req.user.verifyPassword(req.body.password)) {
-    return next(new errors.ForbiddenError());
+    return res.forbidden();
   }
-  req.user.destroy().then(handler.sendNoContent(res)).catch(next);
+  req.user.destroy().then(res.noContent).catch(next);
 })
 .get('/request_password', handler.notYetImplemented)
 

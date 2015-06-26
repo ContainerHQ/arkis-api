@@ -1,7 +1,6 @@
 'use strict';
 
 let express = require('express'),
-  handler = require('../shared/handler'),
   middlewares = require('../../middlewares');
 
 let router = express.Router();
@@ -11,12 +10,12 @@ router
 .post('/containers/:id/attach', (req, socket) => {
   req.docker
   .getContainer(req.params.id)
-  .attach(req.query, handler.hijack(socket));
+  .attach(req.query, socket.hijack());
 })
 .post('/exec/:id/start', (req, socket) => {
   req.docker
   .getExec(req.params.id)
-  .start(req.query, handler.hijack(socket));
+  .start(req.query, socket.hijack());
 });
 
 module.exports = router;

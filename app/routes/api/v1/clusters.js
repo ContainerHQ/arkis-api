@@ -3,7 +3,6 @@
 let _ = require('lodash'),
   express = require('express'),
   validator = require('validator'),
-  handler = require('../../shared/handler'),
   Cluster = require('../../../models').Cluster;
 
 let router = express.Router();
@@ -43,10 +42,10 @@ router
   }).catch(next);
 })
 .param('id', (req, res, next, id) => {
-  if (!validator.isUUID(id)) { return res.status(404).json(); }
+  if (!validator.isUUID(id)) { return res.notFound(); }
 
   req.user.getClusters({ where: { id: id } }).then(clusters => {
-    if (clusters.length === 0) { return res.status(404).json(); }
+    if (clusters.length === 0) { return res.notFound(); }
 
     req.cluster = _.first(clusters);
     next();
@@ -57,7 +56,7 @@ router
   res.json({ cluster: req.cluster });
 })
 .delete((req, res, next) => {
-  req.cluster.destroy().then(handler.sendNoContent(res)).catch(next);
+  req.cluster.destroy().then(res.noContent).catch(next);
 });
 
 module.exports = router;
