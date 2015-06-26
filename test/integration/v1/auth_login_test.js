@@ -22,8 +22,7 @@ describe('POST /auth/login', () => {
     .end((err, res) => {
       if (err) { return done(err); }
       /*
-       * Retrieve the newly created user.
-       *
+       * Retrieve the newly created user and verify the token.
        */
       expect(User.findOne({ where: { email: user.email } }))
         .to.eventually.have.property('token', res.body.token).and
@@ -68,9 +67,10 @@ describe('POST /auth/login', () => {
     let attributes, form;
 
     beforeEach(() => {
-      attributes = _.difference(user.attributes,
-        ['id', 'email', 'password', 'password_hash', 'token', 'token_id', 'created_at', 'updated_at']
-      );
+      attributes = _.difference(user.attributes, [
+        'id', 'email', 'password', 'password_hash',
+        'token', 'token_id', 'created_at', 'updated_at'
+      ]);
       form = factory.buildSync('forbiddenUser').dataValues;
     });
 

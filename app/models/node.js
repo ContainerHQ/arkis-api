@@ -33,6 +33,7 @@ module.exports = function(sequelize, DataTypes) {
         nodes.forEach(node => {
           node.containers_count = 2;
         });
+        // update state (ping the machine)
       }
     }
   });

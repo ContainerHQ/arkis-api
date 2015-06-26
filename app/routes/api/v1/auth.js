@@ -24,7 +24,6 @@ router
     if (!created && !user.verifyPassword(req.body.password)) {
       throw new errors.UnauthorizedError();
     }
-
     let statusCode = created ? 201 : 200;
 
     res.status(statusCode).json({ token: user.token });

@@ -5,7 +5,7 @@ let User = require('../../app/models').User;
 module.exports = function(factory) {
   factory.define('user', User, {
     email: 'max@furyroad.io',
-    password: 'allm8tyMax'
+    password: 'allm8tyMax',
   });
 
   factory.define('defaultUser', User, {
@@ -13,7 +13,14 @@ module.exports = function(factory) {
     password: 'allm8tyMax'
   });
 
+  /*
+   * Attribute id is specified with a non-integer to
+   * verify that the db is taking care of the primary
+   * key and is not taking into account of one specified
+   * in the user payload.
+   */
   factory.define('forbiddenUser', User, {
+    id: 'lol',
     email: 'forbidden@arkis.io',
     password: 'azerty28',
     password_hash: 'whatever',

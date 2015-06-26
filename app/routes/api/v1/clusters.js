@@ -3,9 +3,12 @@
 let _ = require('lodash'),
   express = require('express'),
   validator = require('validator'),
-  handler = require('../../shared/handler');
+  handler = require('../../shared/handler'),
+  Cluster = require('../../../models').Cluster;
 
 let router = express.Router();
+
+const CREATE_FILTER = ['name', 'strategy', 'token'];
 
 router
 .get('/', (req, res, next) => {
@@ -31,10 +34,21 @@ router
     res.json({ clusters: clusters });
   }).catch(next);
 })
-.post('/', handler.notYetImplemented)
-// req.user.addCluster();
-//
-//
+.post('/', (req, res, next) => {
+  /*
+   * There is a bug in sequelize that allow an UUID to be set
+   * even for a primary key. Therefore we must remove it from
+   * the payload first.
+   *
+   * See https://github.com/sequelize/sequelize/issues/3275.
+   */
+  Cluster.create(_.omit(req.body, 'id'), { fields: CREATE_FILTER })
+  .then(cluster => {
+    return req.user.addCluster(cluster);
+  }).then(cluster => {
+    res.status(201).json({ cluster: cluster });
+  }).catch(next);
+})
 .param('id', (req, res, next, id) => {
   if (!validator.isUUID(id)) { return res.status(404).json(); }
 

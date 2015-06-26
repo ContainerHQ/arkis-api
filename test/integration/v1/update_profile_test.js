@@ -23,11 +23,10 @@ describe('PATCH /account/profile', () => {
 
       let profile = format.timestamps(res.body.profile);
 
-      expect(_.pick(profile, WHITELIST))
-        .to.deep.equal(_.pick(form, WHITELIST));
       expect(user.getProfile())
         .to.eventually.have.property('dataValues')
         .that.deep.equals(profile)
+        .and.include(_.pick(form, WHITELIST))
         .notify(done);
     });
   });
@@ -54,15 +53,10 @@ describe('PATCH /account/profile', () => {
     });
   });
 
-  /*
-   * Verify that the user can't change ownership of it's
-   * profile. In order to do that we must ensure that we
-   * are providing a valid user_id, therefore we are using
-   * the id of the default user.
-   */
   context('with blacklisted attributes', () => {
     it('these attributes are filtered', done => {
       api.account(user).updateProfile()
+      .field('id', 'lol')
       .field('user_id', 1)
       .expect(200)
       .end((err, res) => {
