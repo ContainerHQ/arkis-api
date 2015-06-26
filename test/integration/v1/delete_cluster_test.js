@@ -15,7 +15,7 @@ describe('DELETE /clusters/:id', () => {
     });
   });
 
-  context('when the cluster exist for this user', () => {
+  context('when the targeted cluster belong to the user', () => {
     it('removes the cluster', done => {
       api.clusters(user).delete(cluster.id)
       .expect(204).end((err, res) => {
@@ -28,7 +28,7 @@ describe('DELETE /clusters/:id', () => {
     });
   });
 
-  context("when the cluster doesn't belong to the user", () => {
+  context("when the targeted cluster doesn't belong to the user", () => {
     let defaultUser;
 
     beforeEach(() => {
@@ -38,7 +38,7 @@ describe('DELETE /clusters/:id', () => {
       });
     });
 
-    it('returns a 404 error', done => {
+    it('returns a 404 not found', done => {
       api.clusters(defaultUser).delete(cluster.id)
       .expect(404).end((err, res) => {
         if (err) { return done(err); }
@@ -51,7 +51,7 @@ describe('DELETE /clusters/:id', () => {
   });
 
   context('when the user specify an invalid cluster id', () => {
-    it('returns ', done => {
+    it('returns a 404 not found ', done => {
       api.clusters(user).delete('whatever').expect(404, {}, done);
     });
   });

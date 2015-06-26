@@ -15,7 +15,7 @@ describe('GET /clusters/:id', () => {
     });
   });
 
-  context('when the cluster exist for this user', () => {
+  context('when the targeted cluster belong to the user', () => {
     it('retrieves the cluster informations', done => {
       api.clusters(user).get(cluster.id).expect(200).end((err, res) => {
         if (err) { return done(err); }
@@ -28,7 +28,7 @@ describe('GET /clusters/:id', () => {
     });
   });
 
-  context("when the cluster doesn't belong to the user", () => {
+  context("when the targeted cluster doesn't belong to the user", () => {
     let defaultUser;
 
     beforeEach(() => {

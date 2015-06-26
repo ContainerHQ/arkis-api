@@ -23,8 +23,9 @@ describe('POST /clusters/', () => {
       let cluster = format.timestamps(res.body.cluster);
 
       expect(
-        Cluster.findById(cluster.id).then(cluster => {
-          return cluster.toJSON();
+        user.getClusters({ where: { id: cluster.id } })
+        .then(clusters => {
+          return _.first(clusters).toJSON();
         })
       ).to.eventually.deep.equal(cluster)
        .and.include(
@@ -69,10 +70,12 @@ describe('POST /clusters/', () => {
         let expected = _.merge({ user_id: user.id },
           _.omit(form, attributes, 'id')
         );
-
-        expect(Cluster.findById(res.body.cluster.id))
-          .to.eventually.include(expected)
-          .notify(done);
+        expect(
+          user.getClusters({ where: { id: res.body.cluster.id } })
+          .then(clusters => {
+            return _.first(clusters).toJSON();
+          })
+        ).to.eventually.include(expected).notify(done);
       });
     });
   });
