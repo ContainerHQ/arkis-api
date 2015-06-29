@@ -1,9 +1,12 @@
 'use strict';
 
-let models = require('../../app/models');
+let moment = require('moment'),
+  models = require('../../app/models');
 
 const DEFAULT_STRATEGY = 'spread',
-      VALID_STRATEGIES = [DEFAULT_STRATEGY, 'binpack', 'random'];
+      VALID_STRATEGIES = [DEFAULT_STRATEGY, 'binpack', 'random'],
+      DEFAULT_STATE = 'empty',
+      VALID_STATES = [DEFAULT_STATE, 'deploying', 'upgrading', 'running'];
 
 describe('Cluster Model', () => {
   db.sync();
@@ -30,6 +33,14 @@ describe('Cluster Model', () => {
     VALID_STRATEGIES.forEach(strategy => {
       it(`succeeds with a ${strategy} strategy`, () => {
         let cluster = factory.buildSync('cluster', { strategy: strategy });
+
+        return expect(cluster.save()).to.be.fulfilled;
+      });
+    });
+
+    VALID_STATES.forEach(state => {
+      it(`succeeds with a ${state} last state`, () => {
+        let cluster = factory.buildSync('cluster', { last_state: state });
 
         return expect(cluster.save()).to.be.fulfilled;
       });
@@ -79,15 +90,22 @@ describe('Cluster Model', () => {
       .to.eventually.have.property('strategy', DEFAULT_STRATEGY);
   });
 
+  it('has a default state', () => {
+    let cluster = factory.buildSync('cluster');
+
+    return expect(cluster.save())
+      .to.eventually.have.property('state', DEFAULT_STATE);
+  });
+
   context('afterDestroy', () => {
-    let cluster, nodes;
+    let cluster, nodesId;
 
     beforeEach(done => {
       factory.create('cluster', (err, clusterCreated) => {
         cluster = clusterCreated;
 
-        factory.createMany('node', { cluster_id: cluster.id }, 10, (err, nodesCreated) => {
-          nodes = nodesCreated;
+        factory.createMany('node', { cluster_id: cluster.id }, 10, (err, nodes) => {
+          nodesId = _.pluck(nodes, 'id');
           done(err);
         });
       });
@@ -95,8 +113,6 @@ describe('Cluster Model', () => {
     });
 
     it('removes its nodes', () => {
-      let nodesId = _.pluck(nodes, 'id');
-
       return expect(
         cluster.destroy().then(() => {
           return models.Node.findAll({ where: { id: nodesId } });
@@ -113,10 +129,6 @@ describe('Cluster Model', () => {
       return cluster.save();
     });
 
-    it('is in idle state', () => {
-      expect(cluster.state).to.equal('idle');
-    });
-
     it('has a token', () => {
       expect(cluster.token).to.exist;
     });
@@ -127,7 +139,7 @@ describe('Cluster Model', () => {
         .then(() => {
           return models.Cluster.findById(cluster.id);
         })
-      ).to.be.fulfilled.and.to.eventually.to.be.null;
+      ).to.be.fulfilled.and.to.eventually.be.null;
     });
 
     context('adding a node to this cluster', () => {
@@ -146,97 +158,36 @@ describe('Cluster Model', () => {
         expect(cluster.nodes_count).to.equal(previousNodesCount + 1);
       });
     });
+  });
 
-    context('with only slave nodes', () => {
-      beforeEach(done => {
-        factory.createMany('node', { cluster_id: cluster.id }, 10, done);
+  context('when last ping is close enough', () => {
+    let cluster;
+
+    beforeEach(() => {
+      cluster = factory.buildSync('cluster', { last_state:'upgrading',
+        last_ping: moment()
       });
+      return cluster.save();
+    });
 
-      it('is unreachable', () => {
-        return expect(cluster.reload())
-          .to.eventually.have.property('state', 'unreachable');
+    it('has a state equals to its last state', () => {
+      expect(cluster.state).to.equal(cluster.last_state);
+    });
+  });
+
+  context('when last ping has expired', () => {
+    let cluster;
+
+     beforeEach(() => {
+      cluster = factory.buildSync('cluster', { last_state: 'deploying',
+        last_ping: moment().subtract(6, 'minutes')
       });
+      return cluster.save();
+    });
 
-      it('has no containers count', () => {
-        return expect(cluster.reload())
-          .to.eventually.have.property('containers_count', 0);
-      });
-    })
 
-    context('whith many running nodes', () => {
-      beforeEach(done => {
-        let opts = { state: 'running', cluster_id: cluster.id };
-
-        factory.createMany('node', opts, 10, done);
-      });
-
-      ['deploying', 'upgrading', 'starting', 'stopping', 'down'].forEach(state => {
-        context(`with a master node still ${state}`, () => {
-          beforeEach(done => {
-            let opts = { state: state, cluster_id: cluster.id };
-
-            factory.create('masterNode', opts, done);
-          });
-
-          it('is unreachable', () => {
-            return expect(cluster.reload())
-              .to.eventually.have.property('state', 'unreachable');
-          });
-        });
-      });
-
-      context('with a running master node', () => {
-        let master;
-
-        beforeEach(done => {
-          let opts = { state: 'running', cluster_id: cluster.id };
-
-          factory.create('masterNode', opts, (err, nodeCreated) => {
-            master = nodeCreated;
-            done(err);
-          });
-        });
-
-        it('is in runnning state', () => {
-          return expect(cluster.reload())
-            .to.eventually.have.property('state', 'running');
-        });
-
-        it('has a container count equal to its master containers count', () => {
-          return expect(cluster.reload())
-            .to.eventually.have.property('containers_count', master.containers_count);
-        });
-
-        ['deploying', 'upgrading'].forEach(state => {
-          context(`with a node still ${state}`, () => {
-            beforeEach(done => {
-              let opts = { state: state, cluster_id: cluster.id };
-
-              factory.create('node', opts, done);
-            });
-
-            it(`is in ${state} state`, () => {
-              return expect(cluster.reload())
-                .to.eventually.have.property('state', state);
-            });
-          });
-        });
-
-        ['starting', 'stopping', 'down'].forEach(state => {
-          context(`with a node ${state}`, () => {
-            beforeEach(done => {
-              let opts = { state: state, cluster_id: cluster.id };
-
-              factory.create('node', opts, done);
-            });
-
-            it(`is in partially_running state`, () => {
-              return expect(cluster.reload())
-                .to.eventually.have.property('state', 'partially_running');
-            });
-          });
-        });
-      });
+    it('is unreachable', () => {
+      expect(cluster.state).to.equal('unreachable');
     });
   });
 });

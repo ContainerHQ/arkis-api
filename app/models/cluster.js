@@ -1,6 +1,7 @@
 'use strict';
 
 let _ = require('lodash'),
+  moment = require('moment'),
   machine = require('../../config/machine');
 
 module.exports = function(sequelize, DataTypes) {
@@ -17,7 +18,6 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: null,
       validate: { len: [1, 64] }
     },
-    state: DataTypes.VIRTUAL,
     token: {
       type: DataTypes.TEXT,
       allowNull: true,
@@ -35,24 +35,51 @@ module.exports = function(sequelize, DataTypes) {
         }
       }
     },
-    nodes_count: DataTypes.VIRTUAL,
+    last_state: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'empty',
+      validate: { isIn: [['empty', 'deploying', 'upgrading', 'running']] }
+    },
+    last_ping: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null
+    },
     containers_count: DataTypes.VIRTUAL
   }, {
     defaultScope: {
       order: [['id', 'ASC']]
     },
     getterMethods: {
+      state: function() {
+        let lastPing = this.getDataValue('last_ping') || moment();
+
+        if (lastPing < moment().subtract(5, 'minutes')) {
+          return 'unreachable';
+        }
+        return this.getDataValue('last_state');
+      },
       state_message: function() {
-        //switch this.state
-        return 'Create at least one node to work with this cluster';
+        let state = this.getDataValue('state');
+
+        switch (state) {
+          case 'empty':
+            return 'Create at least one node to work with this cluster';
+          case 'unreachable':
+            return 'Master node unreachable';
+          case 'Deploying':
+            return 'One or more node(s) is deploying';
+          case 'Upgrading':
+            return 'One or more node(s) is upgrading';
+          case 'Running':
+            return 'Everything is deployed and running smoothly';
+        }
       },
     },
     hooks: {
       beforeCreate: function(cluster) {
         return cluster.initializeToken();
-      },
-      afterCreate: function(cluster) {
-        return cluster.updateState();
       },
       afterFind: function(clusters) {
         if (!clusters) { return sequelize.Promise.resolve(); }
@@ -69,56 +96,13 @@ module.exports = function(sequelize, DataTypes) {
 
         let promises = [];
 
-        clusters.forEach(cluster => {
-          promises.push(cluster.updateState());
+        clusters.forEach(() => {
+      //    promises.push(cluster.updateState());
         });
         return Promise.all(promises);
       }
     },
     instanceMethods: {
-      updateState: function() {
-        this.containers_count = 0;
-
-        return this.getNodes()
-        .then(nodes => {
-          this.nodes_count = nodes.length;
-
-          if (this.nodes_count <= 0) {
-            this.state = 'idle';
-            return;
-          }
-          let master = _.find(nodes, { master: true }) || {};
-
-          switch (master.state) {
-            case 'deploying':
-            case 'upgrading':
-            case 'starting':
-            case 'stopping':
-            case 'down':
-            case undefined:
-              this.state = 'unreachable';
-              return;
-          }
-          this.containers_count = master.containers_count;
-
-          let slave = _.find(nodes, node => {
-            if (node.state === 'deploying' || node.state === 'upgrading') {
-              return node;
-            }
-          });
-
-          if (slave) {
-            this.state = slave.state;
-            return;
-          }
-          slave = _.find(nodes, node => {
-            if (node.state === 'starting' || node.state === 'stopping' || node.state === 'down') {
-              return node;
-            }
-          });
-          this.state = slave ? 'partially_running' : 'running';
-        });
-      },
       initializeToken: function() {
         return machine.createToken().then(token => {
           this.token = token;
@@ -127,7 +111,10 @@ module.exports = function(sequelize, DataTypes) {
     },
     classMethods: {
       associate: function(models) {
-        Cluster.hasMany(models.Node, { onDelete: 'cascade'});
+        Cluster.hasMany(models.Node, {
+          onDelete: 'cascade',
+          counterCache: { as: 'nodes_count' }
+        });
       }
     }
   });

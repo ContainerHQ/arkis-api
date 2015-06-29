@@ -35,6 +35,18 @@ module.exports = {
         defaultValue: 'spread',
         validate: { isIn: [['spread', 'binpack', 'random']] }
       },
+      last_state: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'empty',
+        validate: { isIn: [['empty', 'deploying', 'upgrading', 'running']] }
+      },
+      last_ping: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: null
+      },
+      nodes_count: DataTypes.INTEGER,
 
       created_at: DataTypes.DATE,
       updated_at: DataTypes.DATE
