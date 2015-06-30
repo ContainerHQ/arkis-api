@@ -17,6 +17,7 @@ api:
     - DOCKER_TLS_VERIFY
     - GITHUB_CLIENT_ID
     - GITHUB_SECRET_KEY
+    - CODECLIMATE_REPO_TOKEN
 
 db:
   image: postgres:9.4.2
