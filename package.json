@@ -1,7 +1,7 @@
 {
-  "name": "docker-proxy",
+  "name": "arkis-api",
   "version": "0.1.0",
-  "description": "A docker remote API proxy",
+  "description": "Arkis API",
   "main": "index.js",
   "scripts": {
     "test": "./scripts/test.sh",
@@ -9,18 +9,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/foliea/docker-proxy.git"
+    "url": "https://github.com/ContainerHQ/arkis-api.git"
   },
   "keywords": [
     "docker",
-    "proxy"
+    "swarm",
+    "arkis",
+    "cloud"
   ],
   "author": "Adrien Folie <folie.adrien@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/foliea/docker-proxy/issues"
+    "url": "https://github.com/ContainerHQ/arkis-api/issues"
   },
-  "homepage": "https://github.com/foliea/docker-proxy",
+  "homepage": "https://github.com/ContainerHQ/arkis-api",
   "engines": {
     "node": "0.12.x"
   },
@@ -47,8 +49,10 @@
   "devDependencies": {
     "chai": "2.2.x",
     "chai-as-promised": "5.0.x",
+    "codeclimate-test-reporter": "0.1.x",
     "factory-girl": "1.5.x",
     "factory-girl-sequelize": "1.0.x",
+    "istanbul": "0.3.x",
     "mocha": "2.2.x",
     "rewire": "2.3.x",
     "sinon": "1.14.x",
