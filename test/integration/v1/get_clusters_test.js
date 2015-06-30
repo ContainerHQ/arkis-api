@@ -1,6 +1,6 @@
 'use strict';
 
-describe('GET /clusters/:id', () => {
+describe('GET /clusters/', () => {
   db.sync();
 
   let user;
@@ -11,14 +11,23 @@ describe('GET /clusters/:id', () => {
   });
 
   context('when user has no cluster', () => {
-    it('returns an empty cluster json array', done => {
-      api.clusters(user).getAll().expect(200, { clusters: [] }, done);
+    it('returns an empty cluster list', done => {
+      api.clusters(user).getAll().expect(200, {
+        meta: {
+          limit: 25,
+          offset: 0,
+          total_count: 0
+        },
+        clusters: []
+      }, done);
     });
   });
 
   context('when user has many clusters', () => {
+    let clusterCount = 10;
+
     beforeEach(done => {
-      factory.createMany('cluster', { user_id: user.id }, 10, done);
+      factory.createMany('cluster', { user_id: user.id }, clusterCount, done);
     });
 
     it('retrieves the user clusters', done => {
@@ -27,6 +36,11 @@ describe('GET /clusters/:id', () => {
 
         let clusters = format.allTimestamps(res.body.clusters);
 
+        expect(res.body.meta).to.deep.equal({
+          limit: 25,
+          offset: 0,
+          total_count: clusterCount
+        });
         expect(user.getClusters().then(format.allToJSON))
           .to.eventually.deep.equal(clusters).notify(done);
       });
@@ -41,25 +55,48 @@ describe('GET /clusters/:id', () => {
 
           let clusters = format.allTimestamps(res.body.clusters);
 
+          expect(res.body.meta).to.deep.equal({
+            limit: limit,
+            offset: 0,
+            total_count: clusterCount
+          });
           expect(user.getClusters().then(format.allToJSON).then(userClusters => {
             return _.slice(userClusters, 0, limit);
           })).to.eventually.deep.equal(clusters).notify(done);
         });
       });
+
+      context('with a negative limit', () => {
+        it('returns a bad request error', done => {
+          api.clusters(user).getAll('?limit=-1').expect(400).end(done);
+        });
+      });
     });
 
-    context('when user asks for a specific page of records', () => {
-      it('retrieves the specified page of cluster records', done => {
-        let limit = 3, page = 1;
+    context('when user asks for a specific offset of records', () => {
+      it('retrieves the specified an offset of cluster records', done => {
+        let limit = 3, offset = 3;
 
-        api.clusters(user).getAll(`?limit=${limit}&page=${page}`).end((err, res) => {
+        api.clusters(user).getAll(`?limit=${limit}&offset=${offset}`)
+        .end((err, res) => {
           if (err) { return done(err); }
 
           let clusters = format.allTimestamps(res.body.clusters);
 
+          expect(res.body.meta).to.deep.equal({
+            limit: limit,
+            offset: offset,
+            total_count: clusterCount
+          });
           expect(user.getClusters().then(format.allToJSON).then(userClusters => {
-            return _.slice(userClusters, limit * page, limit * (page + 1));
+            return _.slice(userClusters, offset, offset + limit);
           })).to.eventually.deep.equal(clusters).notify(done);
+        });
+      });
+
+      context('with a negative offset', () => {
+        it('returns a bad request error', done => {
+          api.clusters(user).getAll('?offset=-1').expect(400).end(done);
         });
       });
     });
@@ -96,7 +133,8 @@ describe('GET /clusters/:id', () => {
       });
 
       it('retrieves only user clusters with the same name', done => {
-        api.clusters(user).getAll(`?name=${name}`).end((err, res) => {
+        api.clusters(user).getAll(`?name=${name}`)
+        .end((err, res) => {
           if (err) { return done(err); }
 
           let clusters = format.allTimestamps(res.body.clusters),
@@ -108,40 +146,28 @@ describe('GET /clusters/:id', () => {
       });
     });
 
+    // test multiple state including a fake one
+
     context('when user filters by state', () => {
-      let state = 'upgrading';
-
       beforeEach(done => {
-        let clusterOpts = { user_id: user.id };
+        let opts = { user_id: user.id };
 
-        factory.createMany('cluster', clusterOpts, 6, (err, clusters) => {
-          clusters.forEach(cluster => {
-            let nodeOpts = { state: state, cluster_id: cluster.id }
-
-            factory.create('node', nodeOpts, err => {
-              if (err) { return done(err) }
-            });
-            factory.create('runningMasterNode', { cluster_id: cluster.id }, err => {
-              if (err) { return done(err) }
-            });
-          });
-          done(err);
-        });
+        factory.createMany('unreachableCluster', opts, 6, done);
       });
 
-      it('retrieves only user clusters with the same state', done => {
-        api.clusters(user).getAll(`?state=${state}`).end((err, res) => {
+      it('retrieves only user clusters with the state', done => {
+        api.clusters(user).getAll(`?state=unreachable`)
+        .end((err, res) => {
           if (err) { return done(err); }
 
-          let clusters = format.allTimestamps(res.body.clusters);
-
-          expect(user.getClusters().then(format.allToJSON).then(userClusters => {
-            return _.filter(userClusters, 'state', state);
-          })).to.eventually.deep.equal(clusters).notify(done);
+          console.log(res.body);
+          done();
         });
       });
     });
   });
+
+
 
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {

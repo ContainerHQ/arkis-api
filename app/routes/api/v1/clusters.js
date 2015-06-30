@@ -3,6 +3,7 @@
 let _ = require('lodash'),
   express = require('express'),
   validator = require('validator'),
+  errors = require('../../shared/errors'),
   Cluster = require('../../../models').Cluster;
 
 let router = express.Router();
@@ -11,10 +12,12 @@ const CLUSTER_PARAMS = ['name', 'strategy', 'token'];
 
 router
 .get('/', (req, res, next) => {
-  req.user.getClusters({
-    limit: req.query.limit,
-    offset: (req.query.page || 0) * (req.query.limit || 0),
+  let criterias = {
+    limit: parseInt(req.query.limit || 25),
+    offset: parseInt(req.query.offset || 0),
+    group: ['id'],
     where: {
+      user_id: req.user.id,
       strategy: {
         $like: req.query.strategy || '%'
       },
@@ -22,15 +25,25 @@ router
         $like: req.query.name || '%'
       }
     }
-  }).then(clusters => {
-    /*
-     * State is a virtual field updated after instanciation,
-     * therefore it can't be in the db query.
-     */
-    if (!!req.query.state) {
-      clusters = _.select(clusters, 'state', req.query.state);
+  };
+
+  ['limit', 'offset'].forEach(attribute => {
+    let value = criterias[attribute];
+
+    if (value < 0) {
+      next(new errors.PaginationError(attribute, value));
     }
-    res.json({ clusters: clusters });
+  });
+
+  Cluster
+  .scope('state', { method: ['state', req.query.state] })
+  .findAndCount(criterias).then(result => {
+    res.json({
+      meta: _.chain(criterias)
+             .pick(['limit', 'offset'])
+             .merge({ total_count: result.count.length }),
+      clusters: result.rows
+    });
   }).catch(next);
 })
 .post('/', (req, res, next) => {

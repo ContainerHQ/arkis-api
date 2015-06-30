@@ -64,23 +64,31 @@ describe('Cluster Model', () => {
       return expect(cluster.save()).to.be.rejected;
     });
 
-    it('fails with an empty strategy', () => {
-      let cluster = factory.buildSync('cluster', { strategy: '' });
+    ['strategy', 'last_state'].forEach(attribute => {
+      it(`fails with an empty ${attribute}`, () => {
+        let opts = {}
 
-      return expect(cluster.save()).to.be.rejected;
+        opts[attribute] = '';
+
+        return expect(factory.buildSync('cluster', opts).save()).to.be.rejected;
+      });
+
+      it(`fails with a null ${attribute}`, () => {
+        let opts = {}
+
+        opts[attribute] = null;
+
+        return expect(factory.buildSync('cluster', opts).save()).to.be.rejected;
+      });
+
+      it(`fails with an invalid ${attribute}`, () => {
+        let opts = {}
+
+        opts[attribute] = 'whatever';
+
+        return expect(factory.buildSync('cluster', opts).save()).to.be.rejected;
+      });
     });
-
-    it('fails with a null strategy', () => {
-      let cluster = factory.buildSync('cluster', { strategy: null });
-
-      return expect(cluster.save()).to.be.rejected;
-    })
-
-    it('fails with an invalid strategy', () => {
-      let cluster = factory.buildSync('cluster', { strategy: 'whatever' });
-
-      return expect(cluster.save()).to.be.rejected;
-    });;
   });
 
   it('has a default strategy', () => {
@@ -104,9 +112,10 @@ describe('Cluster Model', () => {
       factory.create('cluster', (err, clusterCreated) => {
         cluster = clusterCreated;
 
-        factory.createMany('node', { cluster_id: cluster.id }, 10, (err, nodes) => {
-          nodesId = _.pluck(nodes, 'id');
-          done(err);
+        factory.createMany('node', { cluster_id: cluster.id }, 10,
+          (err, nodes) => {
+            nodesId = _.pluck(nodes, 'id');
+            done(err);
         });
       });
 
@@ -164,7 +173,7 @@ describe('Cluster Model', () => {
     let cluster;
 
     beforeEach(() => {
-      cluster = factory.buildSync('cluster', { last_state:'upgrading',
+      cluster = factory.buildSync('cluster', { last_state:'running',
         last_ping: moment()
       });
       return cluster.save();
@@ -179,7 +188,7 @@ describe('Cluster Model', () => {
     let cluster;
 
      beforeEach(() => {
-      cluster = factory.buildSync('cluster', { last_state: 'deploying',
+      cluster = factory.buildSync('cluster', { last_state: 'running',
         last_ping: moment().subtract(6, 'minutes')
       });
       return cluster.save();

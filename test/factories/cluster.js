@@ -1,6 +1,7 @@
 'use strict';
 
-let Cluster = require('../../app/models').Cluster;
+let moment = require('moment'),
+  Cluster = require('../../app/models').Cluster;
 
 module.exports = function(factory) {
   factory.define('cluster', Cluster, {
@@ -9,6 +10,12 @@ module.exports = function(factory) {
 
   factory.define('defaultCluster', Cluster, {
     name: 'default',
+  });
+
+  factory.define('unreachableCluster', Cluster, {
+    name: 'unreachable',
+    last_state: 'running',
+    last_ping: moment().subtract(6, 'minutes')
   });
 
   /*

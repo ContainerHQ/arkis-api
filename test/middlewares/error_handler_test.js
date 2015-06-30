@@ -35,6 +35,24 @@ describe('ErrorHandler Middleware', () => {
     });
   });
 
+  context('with a pagination error', () => {
+    let err = new errors.PaginationError('limit', -5);
+
+    it('sends a bad request status', done => {
+      errorHandler(err, {}, res, () => {
+        expect(res.status).to.have.been.calledWith(400);
+        done();
+      });
+    });
+
+    it('sends a pagination error', done => {
+      errorHandler(err, {}, res, () => {
+        expect(res.json).to.have.been.calledWith({ error: err.message });
+        done();
+      });
+    });
+  });
+
   context('with any other error', () => {
     let err = new Error('whatever');
 
