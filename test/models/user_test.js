@@ -1,6 +1,6 @@
 'use strict';
 
-let Profile = require('../../app/models').Profile;
+let models = require('../../app/models');
 
 describe('User Model', () => {
   db.sync();
@@ -142,9 +142,34 @@ describe('User Model', () => {
           profileId = profile.id
           return user.destroy();
         }).then(() => {
-          return Profile.findById(profileId);
+          return models.Profile.findById(profileId);
         })
       ).to.be.fulfilled.and.to.eventually.be.null;
+    });
+
+    context('when user has at least one cluster', () => {
+      let clusters;
+
+      beforeEach(done => {
+        factory.createMany('cluster', { user_id: user.id }, 5,
+          (err, createdClusters) => {
+            if (err) { return done(err); }
+
+            clusters = createdClusters;
+            done();
+          }
+        );
+      });
+
+      it('removes the user clusters', () => {
+        let clusterIds = _.pluck(clusters, 'id');
+
+        return expect(
+          user.destroy().then(() => {
+            return models.Cluster.findAll({ where: { id: clusterIds } });
+          })
+        ).to.be.fulfilled.and.to.eventually.be.empty;
+      });
     });
   });
 

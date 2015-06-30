@@ -6,7 +6,7 @@ describe('Docker Middleware', () => {
   it('adds a docker client to the request object', done => {
     let req = {};
 
-    docker(req, null, () => {
+    docker(req, {}, () => {
       expect(req.docker).to.exist;
       done();
     });

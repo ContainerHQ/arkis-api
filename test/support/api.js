@@ -56,3 +56,30 @@ module.exports.account = function(user={}) {
     }
   };
 };
+
+module.exports.clusters = function(user={}) {
+  let ressource = 'clusters';
+
+  return {
+    get: function(id) {
+      return request(app)
+      .get(`${API_ROUTE}/${ressource}/${id}`)
+      .set('Authorization', `JWT ${user.token}`);
+    },
+    getAll: function(opts='') {
+      return request(app)
+      .get(`${API_ROUTE}/${ressource}${opts}`)
+      .set('Authorization', `JWT ${user.token}`);
+    },
+    create: function() {
+      return request(app)
+      .post(`${API_ROUTE}/${ressource}/`)
+      .set('Authorization', `JWT ${user.token}`);
+    },
+    delete: function(id) {
+      return request(app)
+      .delete(`${API_ROUTE}/${ressource}/${id}`)
+      .set('Authorization', `JWT ${user.token}`);
+    }
+  };
+};

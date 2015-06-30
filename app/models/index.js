@@ -27,7 +27,13 @@ fs
   return (file.indexOf('.') !== 0) && (file !== basename);
 })
 .forEach(function(file) {
-  let model = sequelize['import'](path.join(__dirname, file));
+  let filepath = path.join(__dirname, file);
+
+  if (!fs.lstatSync(filepath).isFile()) {
+    return;
+  }
+
+  let model = sequelize['import'](filepath);
 
   db[model.name] = model;
 });

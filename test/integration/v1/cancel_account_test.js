@@ -2,7 +2,7 @@
 
 let User = require('../../../app/models').User;
 
-describe('DELETE /account/cancel', () => {
+describe('DELETE /account/', () => {
   db.sync();
 
   let user, password;
@@ -35,7 +35,7 @@ describe('DELETE /account/cancel', () => {
         if (err) { return done(err); }
 
         expect(User.findOne({ where: { email: user.email } }))
-          .not.to.eventually.be.null
+          .to.eventually.be.not.null
           .notify(done);
       });
     });
@@ -43,8 +43,7 @@ describe('DELETE /account/cancel', () => {
 
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {
-      api.account().cancel()
-      .expect(401, {}, done);
+      api.account().cancel().expect(401, {}, done);
     });
   });
 });

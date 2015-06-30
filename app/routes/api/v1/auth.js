@@ -2,14 +2,11 @@
 
 let express = require('express'),
   passport = require('passport'),
-  errors = require('../../shared/errors'),
   User = require('../../../models').User;
 
 let router = express.Router();
 
-const CREATE_FILTER = { fields:
-  ['email', 'password', 'password_hash', 'token', 'token_id']
-};
+const USER_PARAMS = ['email', 'password'];
 
 router
 .post('/login', (req, res, next) => {
@@ -18,13 +15,12 @@ router
   User.findOne({ where: { email: req.body.email } })
   .then(user => {
     created = user === null;
-    return user || User.create(req.body, CREATE_FILTER);
+    return user || User.create(_.pick(req.body, USER_PARAMS));
   })
   .then(user => {
     if (!created && !user.verifyPassword(req.body.password)) {
-      throw new errors.UnauthorizedError();
+      return res.unauthorized();
     }
-
     let statusCode = created ? 201 : 200;
 
     res.status(statusCode).json({ token: user.token });

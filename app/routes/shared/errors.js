@@ -4,23 +4,7 @@ let sequelize = require('sequelize');
 
 let error = module.exports = {};
 
-const MISMATCH_TYPE     = 'mismatchViolation',
-      UNAUTHORIZED      = 'Unauthorized',
-      FORBIDDEN         = 'Forbidden';
-
-error.UnauthorizedError = class extends Error {
-  constructor(message=UNAUTHORIZED) {
-    super(message);
-    this.name = 'UnauthorizedError';
-  }
-};
-
-error.ForbiddenError = class extends Error {
-  constructor(message=FORBIDDEN) {
-    super(message);
-    this.name = 'ForbiddenError';
-  }
-};
+const MISMATCH_TYPE = 'mismatchViolation';
 
 error.MismatchError = class extends sequelize.ValidationError {
   constructor(key, value=null) {
@@ -35,5 +19,16 @@ error.MismatchError = class extends sequelize.ValidationError {
       path: key,
       value: value
     }];
+  }
+};
+
+const PAGINATION_MSG = 'Please provide a positive integer >= 0.';
+
+error.PaginationError = class extends Error {
+  constructor(attribute, value) {
+    super();
+
+    this.name = 'PaginationError';
+    this.message = `Invalid ${attribute} '${value}' provided. ${PAGINATION_MSG}`;
   }
 };

@@ -33,13 +33,13 @@ module.exports = {
       },
       token: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: false,
         defaultValue: null,
         unique: true
       },
       token_id: {
         type: DataTypes.UUID,
-        allowNull: true,
+        allowNull: false,
         defaultValue: DataTypes.UUIDV1,
         unique: true
       },

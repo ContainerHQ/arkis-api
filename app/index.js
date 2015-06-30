@@ -5,7 +5,7 @@ let express = require('express'),
   bodyParser = require('body-parser'),
   morgan = require('morgan'),
   multer = require('multer'),
-  auth = require('./middlewares/authentication'),
+  middlewares = require('./middlewares'),
   routes = require('./routes'),
   app = express();
 
@@ -16,7 +16,8 @@ app
 .use(bodyParser.json({ strict: false }))
 .use(bodyParser.urlencoded({ extended: true }))
 .use(multer())
-.use(auth.initialize())
+.use(middlewares.resHandler)
+.use(middlewares.authentication.initialize())
 .use('/', routes.docker)
 .use('/v:version', routes.docker)
 .use('/api', routes.api)
