@@ -1,5 +1,7 @@
 # Docker Proxy
 [![Circle CI](https://circleci.com/gh/ContainerHQ/arkis-api.svg?style=svg)](https://circleci.com/gh/ContainerHQ/arkis-api)
+[![Code Climate](https://codeclimate.com/github/ContainerHQ/arkis-api/badges/gpa.svg)](https://codeclimate.com/github/ContainerHQ/arkis-api)
+[![Test Coverage](https://codeclimate.com/github/ContainerHQ/arkis-api/badges/coverage.svg)](https://codeclimate.com/github/ContainerHQ/arkis-api/coverage)
 
 Docker remote API Proxy.
 
