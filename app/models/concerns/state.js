@@ -2,6 +2,11 @@
 
 let moment = require('moment');
 
+/*
+ * Ping expiration time (in minutes).
+ */
+const PING_EXPIRATION = 5;
+
 module.exports = function(DataTypes) {
   return {
     attributes: {
@@ -24,7 +29,7 @@ module.exports = function(DataTypes) {
             return { where: {
               last_state: 'running',
               last_ping: {
-                $lt: moment().subtract(5, 'minutes').toDate()
+                $lt: moment().subtract(PING_EXPIRATION, 'minutes').toDate()
               }
             }};
           }
@@ -39,7 +44,7 @@ module.exports = function(DataTypes) {
               lastState = this.getDataValue('last_state');
 
           if (lastState === 'running' &&
-              lastPing < moment().subtract(5, 'minutes')) {
+              lastPing < moment().subtract(PING_EXPIRATION, 'minutes')) {
             return 'unreachable';
           }
           return lastState;

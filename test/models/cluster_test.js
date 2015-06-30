@@ -169,34 +169,45 @@ describe('Cluster Model', () => {
     });
   });
 
-  context('when last ping is close enough', () => {
-    let cluster;
+  VALID_STATES.forEach(state => {
+    context(`when last state is equal to ${state}`, () => {
+      context('when last ping is recent', () => {
+        let cluster;
 
-    beforeEach(() => {
-      cluster = factory.buildSync('cluster', { last_state:'running',
-        last_ping: moment()
+        beforeEach(() => {
+          cluster = factory.buildSync('cluster', {
+            last_state: state,
+            last_ping: moment()
+          });
+          return cluster.save();
+        });
+
+        it(`has a state equals to ${state}`, () => {
+          expect(cluster.state).to.equal(state);
+        });
       });
-      return cluster.save();
-    });
 
-    it('has a state equals to its last state', () => {
-      expect(cluster.state).to.equal(cluster.last_state);
-    });
-  });
+      context('when last ping has expired', () => {
+        let cluster;
 
-  context('when last ping has expired', () => {
-    let cluster;
+         beforeEach(() => {
+          cluster = factory.buildSync('cluster', {
+            last_state: state,
+            last_ping: moment().subtract(6, 'minutes')
+          });
+          return cluster.save();
+        });
 
-     beforeEach(() => {
-      cluster = factory.buildSync('cluster', { last_state: 'running',
-        last_ping: moment().subtract(6, 'minutes')
+        if (state === 'running') {
+          it('is unreachable', () => {
+            expect(cluster.state).to.equal('unreachable');
+          });
+        } else {
+          it(`has a state equals to ${state}`, () => {
+            expect(cluster.state).to.equal(state);
+          });
+        }
       });
-      return cluster.save();
-    });
-
-
-    it('is unreachable', () => {
-      expect(cluster.state).to.equal('unreachable');
     });
   });
 });

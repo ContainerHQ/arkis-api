@@ -114,11 +114,10 @@ describe('GET /clusters/', () => {
         api.clusters(user).getAll(`?strategy=${strategy}`).end((err, res) => {
           if (err) { return done(err); }
 
-          let clusters = format.allTimestamps(res.body.clusters),
-            filter = { where: { strategy: { $like: strategy } } };
-
-          expect(user.getClusters(filter).then(format.allToJSON))
-            .to.eventually.deep.equal(clusters).notify(done);
+          expect(_.every(res.body.clusters, cluster => {
+            return cluster.strategy === strategy;
+          }));
+          done();
         });
       });
     });
@@ -137,16 +136,13 @@ describe('GET /clusters/', () => {
         .end((err, res) => {
           if (err) { return done(err); }
 
-          let clusters = format.allTimestamps(res.body.clusters),
-            filter = { where: { name: { $like: name } } };
-
-          expect(user.getClusters(filter).then(format.allToJSON))
-            .to.eventually.deep.equal(clusters).notify(done);
+          expect(_.every(res.body.clusters, cluster => {
+            return cluster.name === name;
+          }));
+          done();
         });
       });
     });
-
-    // test multiple state including a fake one
 
     context('when user filters by state', () => {
       beforeEach(done => {
@@ -155,19 +151,19 @@ describe('GET /clusters/', () => {
         factory.createMany('unreachableCluster', opts, 6, done);
       });
 
-      it('retrieves only user clusters with the state', done => {
+      it('retrieves only user clusters with the same state', done => {
         api.clusters(user).getAll(`?state=unreachable`)
         .end((err, res) => {
           if (err) { return done(err); }
 
-          console.log(res.body);
+          expect(_.every(res.body.clusters, cluster => {
+            return cluster.state === 'unreachable';
+          }));
           done();
         });
       });
     });
   });
-
-
 
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {

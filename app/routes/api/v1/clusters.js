@@ -36,7 +36,7 @@ router
   });
 
   Cluster
-  .scope('state', { method: ['state', req.query.state] })
+  .scope(['defaultScope', 'state'], { method: ['state', req.query.state] })
   .findAndCount(criterias).then(result => {
     res.json({
       meta: _.chain(criterias)
