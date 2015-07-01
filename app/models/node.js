@@ -1,5 +1,7 @@
 'use strict';
 
+let _ = require('lodash');
+
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('Node', {
     id: {
