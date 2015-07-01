@@ -1,6 +1,7 @@
 'use strict';
 
-let Profile = require('../../app/models').Profile;
+let _ = require('lodash'),
+  Profile = require('../../app/models').Profile;
 
 describe('Profile Model', () => {
   db.sync();

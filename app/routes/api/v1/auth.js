@@ -1,6 +1,7 @@
 'use strict';
 
-let express = require('express'),
+let _ = require('lodash'),
+  express = require('express'),
   passport = require('passport'),
   User = require('../../../models').User;
 

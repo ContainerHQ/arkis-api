@@ -1,6 +1,7 @@
 'use strict';
 
-let moment = require('moment'),
+let _ = require('lodash'),
+  moment = require('moment'),
   models = require('../../app/models');
 
 const DEFAULT_STRATEGY = 'spread',

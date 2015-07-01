@@ -1,5 +1,7 @@
 'use strict';
 
+let _ = require('lodash');
+
 const WHITELIST = ['fullname', 'location', 'company'];
 
 describe('PATCH /account/profile', () => {

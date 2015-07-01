@@ -1,6 +1,7 @@
 'use strict';
 
-let models = require('../../app/models');
+let _ = require('lodash'),
+  models = require('../../app/models');
 
 describe('User Model', () => {
   db.sync();

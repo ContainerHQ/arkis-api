@@ -1,6 +1,7 @@
 'use strict';
 
-let User = require('../../../app/models').User;
+let _ = require('lodash'),
+  User = require('../../../app/models').User;
 
 const NEW_PASSWORD = 'asOPJkl,';
 

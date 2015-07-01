@@ -1,5 +1,7 @@
 'use strict';
 
+let _ = require('lodash');
+
 const TIMESTAMPS = ['created_at', 'updated_at'];
 
 /*
