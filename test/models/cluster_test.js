@@ -2,15 +2,16 @@
 
 let _ = require('lodash'),
   moment = require('moment'),
-  models = require('../../app/models');
+  models = require('../../app/models'),
+  concerns = require('./concerns');
 
 const DEFAULT_STRATEGY = 'spread',
-      VALID_STRATEGIES = [DEFAULT_STRATEGY, 'binpack', 'random'],
-      DEFAULT_STATE = 'empty',
-      VALID_STATES = [DEFAULT_STATE, 'deploying', 'upgrading', 'running'];
+      VALID_STRATEGIES = [DEFAULT_STRATEGY, 'binpack', 'random'];
 
 describe('Cluster Model', () => {
   db.sync();
+
+  concerns.behavesAsAStateMachine('cluster');
 
   describe('validations', () => {
     it('succeeds with valid attributes', () => {
@@ -39,14 +40,6 @@ describe('Cluster Model', () => {
       });
     });
 
-    VALID_STATES.forEach(state => {
-      it(`succeeds with a ${state} last state`, () => {
-        let cluster = factory.buildSync('cluster', { last_state: state });
-
-        return expect(cluster.save()).to.be.fulfilled;
-      });
-    });
-
     it('fails without a name', () => {
       let cluster = factory.buildSync('cluster', { name: null });
 
@@ -65,30 +58,16 @@ describe('Cluster Model', () => {
       return expect(cluster.save()).to.be.rejected;
     });
 
-    ['strategy', 'last_state'].forEach(attribute => {
-      it(`fails with an empty ${attribute}`, () => {
-        let opts = {}
+     it('fails with an empty strategy', () => {
+      let cluster = factory.buildSync('cluster', { strategy: null });
 
-        opts[attribute] = '';
+      return expect(cluster.save()).to.be.rejected;
+    });
 
-        return expect(factory.buildSync('cluster', opts).save()).to.be.rejected;
-      });
+    it('fails with an invalid strategy', () => {
+      let cluster = factory.buildSync('cluster', { strategy: 'whatever' });
 
-      it(`fails with a null ${attribute}`, () => {
-        let opts = {}
-
-        opts[attribute] = null;
-
-        return expect(factory.buildSync('cluster', opts).save()).to.be.rejected;
-      });
-
-      it(`fails with an invalid ${attribute}`, () => {
-        let opts = {}
-
-        opts[attribute] = 'whatever';
-
-        return expect(factory.buildSync('cluster', opts).save()).to.be.rejected;
-      });
+      return expect(cluster.save()).to.be.rejected;
     });
   });
 
@@ -97,13 +76,6 @@ describe('Cluster Model', () => {
 
     return expect(cluster.save())
       .to.eventually.have.property('strategy', DEFAULT_STRATEGY);
-  });
-
-  it('has a default state', () => {
-    let cluster = factory.buildSync('cluster');
-
-    return expect(cluster.save())
-      .to.eventually.have.property('state', DEFAULT_STATE);
   });
 
   context('afterDestroy', () => {
@@ -158,56 +130,14 @@ describe('Cluster Model', () => {
       beforeEach(() => {
         previousNodesCount = cluster.nodes_count;
 
-        return models.Node.create({ cluster_id: cluster.id })
+        return models.Node.create({ cluster_id: cluster.id, name: 'test' })
         .then(() => {
           return cluster.reload();
         });
       });
 
-      it('increases the node counter', () => {
+      it('increases the node counter cache', () => {
         expect(cluster.nodes_count).to.equal(previousNodesCount + 1);
-      });
-    });
-  });
-
-  VALID_STATES.forEach(state => {
-    context(`when last state is equal to ${state}`, () => {
-      context('when last ping is recent', () => {
-        let cluster;
-
-        beforeEach(() => {
-          cluster = factory.buildSync('cluster', {
-            last_state: state,
-            last_ping: moment()
-          });
-          return cluster.save();
-        });
-
-        it(`has a state equals to ${state}`, () => {
-          expect(cluster.state).to.equal(state);
-        });
-      });
-
-      context('when last ping has expired', () => {
-        let cluster;
-
-         beforeEach(() => {
-          cluster = factory.buildSync('cluster', {
-            last_state: state,
-            last_ping: moment().subtract(6, 'minutes')
-          });
-          return cluster.save();
-        });
-
-        if (state === 'running') {
-          it('is unreachable', () => {
-            expect(cluster.state).to.equal('unreachable');
-          });
-        } else {
-          it(`has a state equals to ${state}`, () => {
-            expect(cluster.state).to.equal(state);
-          });
-        }
       });
     });
   });

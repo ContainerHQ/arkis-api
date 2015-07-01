@@ -17,18 +17,27 @@ module.exports = {
         },
         onDelete: 'CASCADE'
       },
-      state: {
-        type: DataTypes.ENUM,
+      name: {
+        type: DataTypes.STRING,
         allowNull: false,
-        values: [
-         'deploying', 'upgrading', 'starting', 'running', 'stopping', 'down'
-        ],
-        defaultValue: 'deploying',
+        defaultValue: null,
+        validate: { len: [1, 64] }
       },
       master: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false
+      },
+      last_state: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'empty',
+        validate: { isIn: [['empty', 'deploying', 'upgrading', 'running']] }
+      },
+      last_ping: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: null
       },
 
       created_at: DataTypes.DATE,

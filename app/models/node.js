@@ -1,22 +1,21 @@
 'use strict';
 
-let _ = require('lodash');
+let _ = require('lodash'),
+  mixins = require('./concerns');
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('Node', {
+  return sequelize.define('Node', mixins.extend('state', 'attributes', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
       defaultValue: DataTypes.UUIDV1,
       unique: true
     },
-    state: {
-      type: DataTypes.ENUM,
+    name: {
+      type: DataTypes.STRING,
       allowNull: false,
-      values: [
-        'deploying', 'upgrading', 'starting', 'running', 'stopping', 'down'
-      ],
-      defaultValue: 'deploying',
+      defaultValue: null,
+      validate: { len: [1, 64] }
     },
     master: {
       type: DataTypes.BOOLEAN,
@@ -24,7 +23,7 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: false
     },
     containers_count: DataTypes.VIRTUAL
-  }, {
+  }, DataTypes), mixins.extend('state', 'options', {
     hooks: {
       afterFind: function(nodes) {
         if (!nodes) { return sequelize.Promise.resolve(); }
@@ -38,5 +37,5 @@ module.exports = function(sequelize, DataTypes) {
         // update state (ping the machine)
       }
     }
-  });
+  }));
 };

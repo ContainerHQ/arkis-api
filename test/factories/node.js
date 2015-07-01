@@ -3,7 +3,9 @@
 let Node = require('../../app/models').Node;
 
 module.exports = function(factory) {
-  factory.define('node', Node, {});
+  factory.define('node', Node, {
+    name: 'battlestar.apps'
+  });
 
   factory.define('masterNode', Node, {
     master: true,
