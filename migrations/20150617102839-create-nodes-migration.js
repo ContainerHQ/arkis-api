@@ -28,6 +28,18 @@ module.exports = {
         allowNull: false,
         defaultValue: false
       },
+      fqdn: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+        validate: { isUrl: true }
+      },
+      public_ip: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+        validate: { isIP: true }
+      },
       last_state: {
         type: DataTypes.STRING,
         allowNull: false,

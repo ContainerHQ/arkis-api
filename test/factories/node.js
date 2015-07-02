@@ -7,12 +7,11 @@ module.exports = function(factory) {
     name: 'battlestar.apps'
   });
 
-  factory.define('masterNode', Node, {
+  factory.define('registeredNode', Node, {
+    name: 'registered',
     master: true,
-  });
-
-  factory.define('runningMasterNode', Node, {
-    master: true,
-    state: 'running'
+    fqdn: 'http://registered.node.arkis.io',
+    public_ip: '192.168.212.128',
+    last_state: 'running'
   });
 };

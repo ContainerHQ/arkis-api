@@ -14,7 +14,7 @@ describe('Profile Model', () => {
     it('succeed with empty attributes', () => {
       let profile = factory.buildSync('emptyProfile');
 
-      return expect(Profile.create()).to.be.fulfilled;
+      return expect(profile.save()).to.be.fulfilled;
     });
 
     it('succeed with valid attributes', done => {
@@ -22,7 +22,7 @@ describe('Profile Model', () => {
     });
 
     it('succeed with attributes at max size', done => {
-      factory.create('profileMaxSize', done);
+      factory.create('maxSizeProfile', done);
     });
 
     ['fullname', 'company', 'location'].forEach(attribute => {
