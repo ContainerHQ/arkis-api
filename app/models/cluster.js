@@ -64,6 +64,9 @@ module.exports = function(sequelize, DataTypes) {
       beforeCreate: function(cluster) {
         return cluster._initializeToken();
       },
+      afterCreate: function(cluster) {
+        return cluster._initializeCert();
+      },
       afterDestroy: function(cluster) {
         return cluster.destroyToken();
       },
@@ -73,6 +76,21 @@ module.exports = function(sequelize, DataTypes) {
         return machine.createToken().then(token => {
           this.token = token;
         });
+      },
+      _initializeCert: function() {
+        return machine.createCerts().then(certs => {
+          let params = {};
+
+          _.keys(certs).forEach(type => {
+            _.keys(certs[type]).forEach(name => {
+              params[`${type}_${name}`] = certs[type][name];
+            });
+          });
+          return this.createCert(params);
+        });
+      },
+      _destroyToken: function() {
+        return machine.deleteToken(this.token);
       },
       notify: function(changes) {
         console.log(changes);
@@ -96,17 +114,14 @@ module.exports = function(sequelize, DataTypes) {
             last_state: 'upgrading'
           });
         });
-      },
-      destroyToken: function() {
-        return machine.deleteToken(this.token);
       }
     },
     classMethods: {
       associate: function(models) {
-        Cluster.hasMany(models.Node, {
-          onDelete: 'cascade',
+        Cluster.hasMany(models.Node, { onDelete: 'cascade',
           counterCache: { as: 'nodes_count' }
         });
+        Cluster.hasOne(models.Cert, { onDelete: 'cascade' });
       }
     }
   }));

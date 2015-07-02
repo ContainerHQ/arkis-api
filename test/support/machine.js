@@ -9,8 +9,25 @@ let random = require('./random'),
  */
 machine.createToken = function() {
   return new Promise(resolve => {
-    resolve(random.string() + random.string());
+    resolve(this.createFakeToken());
   });
+};
+
+machine.createCerts = function() {
+  return new Promise(resolve => {
+    resolve(this.createFakeCerts());
+  });
+};
+
+machine.createFakeToken = function() {
+  return rand() + rand();
+};
+
+machine.createFakeCerts = function() {
+  return {
+    client: { cert: rand(), key: rand(), ca: rand() },
+    server: { cert: rand(), key: rand(), ca: rand() }
+  };
 };
 
 machine.generateFQDN = function() {

@@ -236,7 +236,8 @@ describe('Cluster Model', () => {
   });
 
   context('afterCreate', () => {
-    const FAKE_TOKEN = Math.random().toString(36).substr(2);
+    const FAKE_TOKEN = machine.createFakeToken(),
+          FAKE_CERTS = machine.createFakeCerts();
 
     let cluster;
 
@@ -244,16 +245,25 @@ describe('Cluster Model', () => {
       sinon.stub(machine, 'createToken').returns(new Promise(resolve => {
         resolve(FAKE_TOKEN);
       }));
+      sinon.stub(machine, 'createCerts').returns(new Promise(resolve => {
+        resolve(FAKE_CERTS);
+      }));
       cluster = factory.buildSync('cluster');
       return cluster.save();
     });
 
     afterEach(() => {
       machine.createToken.restore();
+      machine.createCerts.restore();
     });
 
-    it('initializes its token', () => {
+    it('creates its token', () => {
       expect(cluster.token).to.equal(FAKE_TOKEN);
+    });
+
+    it('creates its ssl certificates', () => {
+      return expect(cluster.getCert())
+        .to.eventually.satisfy(has.certificate(FAKE_CERTS));
     });
 
     it('can be deleted', () => {
@@ -275,6 +285,60 @@ describe('Cluster Model', () => {
       it('increases its node counter cache', () => {
         expect(cluster.nodes_count).to.equal(previousNodesCount + 1);
       });
+    });
+  });
+
+  context('afterDestroy', () => {
+    let cluster, nodesId;
+
+    beforeEach(done => {
+      sinon.stub(machine, 'deleteToken', machine.deleteToken);
+
+      factory.create('cluster', (err, clusterCreated) => {
+        if (err) { return done(err); };
+
+        cluster = clusterCreated;
+
+        factory.createMany('node', { cluster_id: cluster.id }, 10,
+          (err, nodes) => {
+            nodesId = _.pluck(nodes, 'id');
+            done(err);
+        });
+      });
+    });
+
+    afterEach(() => {
+      machine.deleteToken.restore();
+    });
+
+    it('deletes its token', done => {
+      let token = cluster.token;
+
+      cluster.destroy().then(() => {
+        expect(machine.deleteToken).to.have.been.calledWith(token);
+        done();
+      }).catch(done);
+    });
+
+    it('deletes its ssl certificates', () => {
+      let certId;
+
+      return expect(
+        cluster.getCert().then(cert => {
+          certId = cert.id;
+          return cluster.destroy();
+        }).then(() =>{
+          return models.Cert.findById(certId);
+        })
+      ).to.be.fulfilled.and.to.eventually.not.exist;
+    });
+
+    it('removes its nodes', () => {
+      return expect(
+        cluster.destroy().then(() => {
+          return models.Node.findAll({ where: { id: nodesId } });
+        })
+      ).to.be.fulfilled.and.to.eventually.be.empty;
     });
   });
 });
