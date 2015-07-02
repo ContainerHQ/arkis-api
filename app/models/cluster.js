@@ -64,6 +64,9 @@ module.exports = function(sequelize, DataTypes) {
       beforeCreate: function(cluster) {
         return cluster._initializeToken();
       },
+      afterDestroy: function(cluster) {
+        return cluster.destroyToken();
+      },
     },
     instanceMethods: {
       _initializeToken: function() {
@@ -93,6 +96,9 @@ module.exports = function(sequelize, DataTypes) {
             last_state: 'upgrading'
           });
         });
+      },
+      destroyToken: function() {
+        return machine.deleteToken(this.token);
       }
     },
     classMethods: {

@@ -3,6 +3,7 @@
 let _ = require('lodash'),
   moment = require('moment'),
   errors = require('../../app/routes/shared/errors'),
+  machine = require('../support/machine'),
   models = require('../../app/models'),
   concerns = require('./concerns');
 
@@ -15,10 +16,8 @@ describe('Cluster Model', () => {
   concerns.behavesAsAStateMachine('cluster');
 
   describe('validations', () => {
-    it('succeeds with valid attributes', () => {
-      let cluster = factory.buildSync('cluster');
-
-      return expect(cluster.save()).to.be.fulfilled;
+    it('succeeds with valid attributes', done => {
+      factory.create('cluster', done);
     });
 
     it('succeeds to create multiple clusters', done => {
@@ -200,7 +199,11 @@ describe('Cluster Model', () => {
     let cluster, nodesId;
 
     beforeEach(done => {
+      sinon.stub(machine, 'deleteToken', machine.deleteToken);
+
       factory.create('cluster', (err, clusterCreated) => {
+        if (err) { return done(err); };
+
         cluster = clusterCreated;
         factory.createMany('node', { cluster_id: cluster.id }, 10,
           (err, nodes) => {
@@ -208,6 +211,19 @@ describe('Cluster Model', () => {
             done(err);
         });
       });
+    });
+
+    afterEach(() => {
+      machine.deleteToken.restore();
+    });
+
+    it('deletes its token', done => {
+      let token = cluster.token;
+
+      cluster.destroy().then(() => {
+        expect(machine.deleteToken).to.have.been.calledWith(token);
+        done();
+      }).catch(done);
     });
 
     it('removes its nodes', () => {
@@ -220,15 +236,24 @@ describe('Cluster Model', () => {
   });
 
   context('afterCreate', () => {
+    const FAKE_TOKEN = Math.random().toString(36).substr(2);
+
     let cluster;
 
     beforeEach(() => {
+      sinon.stub(machine, 'createToken').returns(new Promise(resolve => {
+        resolve(FAKE_TOKEN);
+      }));
       cluster = factory.buildSync('cluster');
       return cluster.save();
     });
 
-    it('has a token', () => {
-      expect(cluster.token).to.exist;
+    afterEach(() => {
+      machine.createToken.restore();
+    });
+
+    it('initializes its token', () => {
+      expect(cluster.token).to.equal(FAKE_TOKEN);
     });
 
     it('can be deleted', () => {
@@ -247,7 +272,7 @@ describe('Cluster Model', () => {
         });
       });
 
-      it('increases the node counter cache', () => {
+      it('increases its node counter cache', () => {
         expect(cluster.nodes_count).to.equal(previousNodesCount + 1);
       });
     });
