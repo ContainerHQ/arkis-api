@@ -10,7 +10,7 @@ module.exports = function(factory) {
     company: 'Jedi Academy, Inc',
   });
 
-  factory.define('profileMaxSize', Profile, {
+  factory.define('maxSizeProfile', Profile, {
     fullname: _.repeat('*', 64),
     location: _.repeat('*', 64),
     company:  _.repeat('*', 64),
