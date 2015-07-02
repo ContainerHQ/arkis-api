@@ -94,6 +94,18 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true,
       defaultValue: null,
     },
+    fqdn: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
+      validate: { isUrl: true }
+    },
+    public_ip: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
+      validate: { isIP: true }
+    },
     containers_count: DataTypes.VIRTUAL
   }, DataTypes), mixins.extend('state', 'options', {
     instanceMethods: {

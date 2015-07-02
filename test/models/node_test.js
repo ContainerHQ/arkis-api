@@ -462,5 +462,29 @@ describe('Node Model', () => {
         });
       });
     });
+
+    it('fails with a too long name', () => {
+      let node = factory.buildSync('node', { name: _.repeat('*', 65) });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with an invalid fqdn', () => {
+      let node = factory.buildSync('node', { fqdn: _.repeat('*', 10) });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with an invalid public_ip', () => {
+      let node = factory.buildSync('node', { public_ip: _.repeat('*', 10) });
+
+      return expect(node.save()).to.be.rejected;
+    });
+  });
+
+  it('it is not a master node by default', () => {
+    let node = factory.buildSync('node');
+
+    return expect(node.save()).to.eventually.have.property('master', false);
   });
 });

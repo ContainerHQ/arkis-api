@@ -1,14 +1,7 @@
 'use strict';
 
-let random = require('./random');
-
-function resolve() {
-  return new Promise(resolve => {
-    resolve();
-  });
-}
-
-let machine = {};
+let random = require('./random'),
+  machine = {};
 
 /*
  * This is a async method, the real implementation is calling
