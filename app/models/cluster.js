@@ -59,14 +59,17 @@ module.exports = function(sequelize, DataTypes) {
     },
     hooks: {
       beforeCreate: function(cluster) {
-        return cluster.initializeToken();
+        return cluster._initializeToken();
       },
     },
     instanceMethods: {
-      initializeToken: function() {
+      _initializeToken: function() {
         return machine.createToken().then(token => {
           this.token = token;
         });
+      },
+      notify: function(changes) {
+        console.log(changes);
       }
     },
     classMethods: {

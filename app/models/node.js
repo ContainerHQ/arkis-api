@@ -1,10 +1,13 @@
 'use strict';
 
 let _ = require('lodash'),
+  moment = require('moment'),
+  errors = require('../routes/shared/errors'),
+  machine = require('../../config/machine'),
   mixins = require('./concerns');
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('Node', mixins.extend('state', 'attributes', {
+  let Node = sequelize.define('Node', mixins.extend('state', 'attributes', {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
@@ -36,7 +39,61 @@ module.exports = function(sequelize, DataTypes) {
     },
     containers_count: DataTypes.VIRTUAL
   }, DataTypes), mixins.extend('state', 'options', {
+    instanceMethods: {
+      deploy: function() {
+        this.last_state = 'deploying';
+
+        return machine.create({}).then(() => {
+          return this.save();
+        });
+      },
+      register: function() {
+        this.last_state = 'running';
+
+        return machine.registerFQDN(this.public_ip).then(fqdn => {
+          this.fqdn = fqdn;
+          return this.save();
+        });
+      },
+      upgrade: function() {
+        let state = this.get('state');
+
+        if (state !== 'running') {
+          let err = new errors.StateError('upgrade', state);
+
+          return sequelize.Promise.reject(err);
+        }
+
+        this.last_state = 'upgrading';
+
+        return machine.upgrade({}).then(() => {
+          return this.save();
+        });
+      },
+      ping: function() {
+        return this.update({ last_ping: moment() });
+      },
+      _notifyCluster: function(changes) {
+        return this.getCluster().then(cluster => {
+          return cluster.notify(changes);
+        });
+      }
+    },
     hooks: {
+      afterUpdate: function(node, options) {
+        if (node.master && _.includes(options.fields, 'last_ping')) {
+          return node._notifyCluster({ last_ping: node.last_ping });
+        }
+        if (_.includes(options.fields, 'last_state')) {
+          return node._notifyCluster({ last_state: node.last_state });
+        }
+        return sequelize.Promise.resolve(node);
+      },
+      afterDestroy: function(node) {
+        return machine.destroy({}).then(() => {
+          return node._notifyCluster({ destroyed: true });
+        });
+      },
       afterFind: function(nodes) {
         if (!nodes) { return sequelize.Promise.resolve(); }
 
@@ -46,8 +103,13 @@ module.exports = function(sequelize, DataTypes) {
         nodes.forEach(node => {
           node.containers_count = 2;
         });
-        // update state (ping the machine)
+      }
+    },
+    classMethods: {
+      associate: function(models) {
+        Node.belongsTo(models.Cluster);
       }
     }
   }));
+  return Node;
 };

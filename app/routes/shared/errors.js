@@ -32,3 +32,12 @@ error.PaginationError = class extends Error {
     this.message = `Invalid ${attribute} '${value}' provided. ${PAGINATION_MSG}`;
   }
 };
+
+error.StateError = class extends Error {
+  constructor(action, state) {
+    super();
+
+    this.name = 'StateError';
+    this.message = `Can't perform ${action} in ${state} state.`;
+  }
+};
