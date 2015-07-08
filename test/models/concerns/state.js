@@ -67,7 +67,7 @@ module.exports = function(modelName) {
       });
     });
 
-    it('has a default state', () => {
+    it(`is by default in ${DEFAULT_STATE} state`, () => {
       let model = factory.buildSync(modelName);
 
       return expect(model.save())

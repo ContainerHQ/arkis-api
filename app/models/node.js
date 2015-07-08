@@ -41,33 +41,25 @@ module.exports = function(sequelize, DataTypes) {
   }, DataTypes), mixins.extend('state', 'options', {
     instanceMethods: {
       deploy: function() {
-        this.last_state = 'deploying';
-
         return machine.create({}).then(() => {
-          return this.save();
+          return this.update({ last_state: 'deploying' });
         });
       },
       register: function() {
-        this.last_state = 'running';
-
         return machine.registerFQDN(this.public_ip).then(fqdn => {
-          this.fqdn = fqdn;
-          return this.save();
+          return this.update({ fqdn: fqdn, last_state: 'running' });
         });
       },
       upgrade: function() {
         let state = this.get('state');
 
         if (state !== 'running') {
-          let err = new errors.StateError('upgrade', state);
-
-          return sequelize.Promise.reject(err);
+          return new Promise((resolve, reject) => {
+            reject(new errors.StateError('upgrade', state));
+          });
         }
-
-        this.last_state = 'upgrading';
-
         return machine.upgrade({}).then(() => {
-          return this.save();
+          return this.update({ last_state: 'upgrading' });
         });
       },
       ping: function() {

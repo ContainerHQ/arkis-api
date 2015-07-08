@@ -161,8 +161,8 @@ describe('Node Model', () => {
       clock = sinon.useFakeTimers();
 
       node = factory.buildSync('node');
+      node.notifyCluster = sinon.stub();
       return node.save().then(node => {
-        node.notifyCluster = sinon.stub();
         clock.tick(500);
         return node.ping();
       });
@@ -197,6 +197,10 @@ describe('Node Model', () => {
     it('creates a machine behind', () => {
       expect(machine.create).to.have.been.calledWith({});
     });
+
+    context.skip('when node is already deployed', () => {
+
+    });
   });
 
   describe('#register', () => {
@@ -226,6 +230,10 @@ describe('Node Model', () => {
 
     it('has a fqdn equal to the registered fqdn', () => {
       expect(node.fqdn).to.equal(fqdn);
+    });
+
+    context.skip('when node is already registerd', () => {
+
     });
   });
 
@@ -267,33 +275,32 @@ describe('Node Model', () => {
     context('when node is not running', () => {
       let node, error;
 
-      beforeEach(done => {
+      beforeEach(() => {
         node = factory.buildSync('node');
         node._notifyCluster = sinon.stub();
 
-        return node.save().then(() => {
-          return node.upgrade();
-        }).then(done).catch(err => {
-          error = err;
-          done();
-        });
+        return node.save();
       });
 
-      /*
-       * This should return a proper error
-       */
       it('returns an error', () => {
         let expected = new errors.StateError('upgrade', node.state);
 
-        expect(error).to.deep.equal(expected);
+        return node.upgrade().catch(err => {
+          expect(err).to.deep.equal(expected);
+        });
       });
 
       it('has the same state than before', () => {
-        expect(node.state).to.equal('empty');
+        return node.upgrade().catch(err => {
+          return expect(node.reload())
+            .to.eventually.have.property('state', 'empty');
+        });
       });
 
       it("doesn't update the machine behind", () => {
-        expect(machine.upgrade).to.not.have.been.called;
+        return node.upgrade().catch(() => {
+          expect(machine.upgrade).to.not.have.been.called;
+        });
       });
     });
   });

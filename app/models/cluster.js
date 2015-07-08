@@ -1,6 +1,8 @@
 'use strict';
 
-let mixins = require('./concerns'),
+let _ = require('lodash'),
+  errors = require('../routes/shared/errors'),
+  mixins = require('./concerns'),
   machine = require('../../config/machine');
 
 module.exports = function(sequelize, DataTypes) {
@@ -70,6 +72,22 @@ module.exports = function(sequelize, DataTypes) {
       },
       notify: function(changes) {
         console.log(changes);
+      },
+      upgrade: function() {
+        let state = this.get('state');
+
+        if (state !== 'running') {
+          return new Promise((resolve, reject) => {
+            reject(new errors.StateError('upgrade', state));
+          });
+        }
+        return this.getNodes().then(nodes => {
+          let promises = _.invoke(nodes, 'upgrade');
+
+          return Promise.all(promises);
+        }).then(() => {
+          return this.update({ last_state: 'upgrading' });
+        });
       }
     },
     classMethods: {
