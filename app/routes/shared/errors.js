@@ -41,3 +41,12 @@ error.StateError = class extends Error {
     this.message = `Can't perform ${action} in ${state} state.`;
   }
 };
+
+error.AlreadyUpgradedError = class extends Error {
+  constructor() {
+    super();
+
+    this.name = 'AlreadyUpgradedError';
+    this.message = `Node already has these docker and swarm versions.`;
+  }
+};

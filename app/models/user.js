@@ -1,8 +1,7 @@
 'use strict';
 
 let bcrypt = require('bcrypt'),
-  jwt = require('jsonwebtoken'),
-  secrets = require('../../config/secrets');
+  token = require('../../config/token');
 
 module.exports = function(sequelize, DataTypes) {
   let User = sequelize.define('User', {
@@ -76,12 +75,9 @@ module.exports = function(sequelize, DataTypes) {
        * This really simplify the token revokation if a user is destroyed
        * (in this case, a deleted user carries its token uuid to
        * programming heaven).
-       *
        */
       generateToken: function() {
-        let payload = { jit: this.token_id };
-
-        this.token = jwt.sign(payload, secrets.jwt);
+        this.token = token.generate(this.token_id);
       },
       revokeToken: function() {
         this.token_id = sequelize.Utils.toDefaultValue(DataTypes.UUIDV1());
@@ -94,9 +90,9 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     hooks: {
-      beforeCreate: function(user, options, done) {
+      beforeCreate: function(user) {
         user.generateToken();
-        done(null, user);
+        return Promise.resolve(user);
       },
       afterCreate: function(user) {
         return user.createProfile();

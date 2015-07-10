@@ -18,6 +18,12 @@ module.exports = function(factory) {
     last_ping: moment().subtract(6, 'minutes')
   });
 
+  factory.define('runningCluster', Cluster, {
+    name: 'running',
+    last_state: 'running',
+    last_ping: moment()
+  });
+
   /*
    * Attribute id is specified with a non-integer to
    * verify that the db is taking care of the primary

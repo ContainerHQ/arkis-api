@@ -8,9 +8,9 @@ let jwt = require('jsonwebtoken'),
  * unique identifier (jit) and that this identifier is
  * the same than the user token id.
  */
-module.exports = function(user) {
-  let payload = jwt.decode(user.token);
+module.exports = function(model) {
+  let payload = jwt.decode(model.token);
 
-  return jwt.verify(user.token, secrets.jwt)
-    && user.token_id === payload.jit
+  return jwt.verify(model.token, secrets.jwt) &&
+    (payload.jit === model.token_id || payload.jit === model.id);
 };

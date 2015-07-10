@@ -5,23 +5,23 @@ let moment = require('moment');
 const DEFAULT_STATE = 'empty',
       VALID_STATES = [DEFAULT_STATE, 'deploying', 'upgrading', 'running'];
 
-module.exports = function(modelName) {
+module.exports = function(factoryName) {
   describe('behaves as a state machine:', () => {
     it('fails with an empty last state', () => {
-      let model = factory.buildSync(modelName, { last_state: null });
+      let model = factory.buildSync(factoryName, { last_state: null });
 
       return expect(model.save()).to.be.rejected;
     });
 
     it('fails with an invalid last state', () => {
-      let model = factory.buildSync(modelName, { last_state: 'whatever' });
+      let model = factory.buildSync(factoryName, { last_state: 'whatever' });
 
       return expect(model.save()).to.be.rejected;
     });
 
     VALID_STATES.forEach(state => {
       it(`succeeds with a last state equal to ${state}`, () => {
-        let model = factory.buildSync(modelName, { last_state: state });
+        let model = factory.buildSync(factoryName, { last_state: state });
 
         return expect(model.save()).to.be.fulfilled;
       });
@@ -31,7 +31,7 @@ module.exports = function(modelName) {
           let model;
 
           beforeEach(() => {
-            model = factory.buildSync(modelName, {
+            model = factory.buildSync(factoryName, {
               last_state: state,
               last_ping: moment()
             });
@@ -47,7 +47,7 @@ module.exports = function(modelName) {
           let model;
 
            beforeEach(() => {
-            model = factory.buildSync(modelName, {
+            model = factory.buildSync(factoryName, {
               last_state: state,
               last_ping: moment().subtract(6, 'minutes')
             });
@@ -68,7 +68,7 @@ module.exports = function(modelName) {
     });
 
     it(`is by default in ${DEFAULT_STATE} state`, () => {
-      let model = factory.buildSync(modelName);
+      let model = factory.buildSync(factoryName);
 
       return expect(model.save())
         .to.eventually.have.property('state', DEFAULT_STATE);

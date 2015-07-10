@@ -1,6 +1,7 @@
 'use strict';
 
-let errors = require('../../app/routes/shared/errors'),
+let sequelize = require('sequelize'),
+  errors = require('../../app/routes/shared/errors'),
   errorHandler = rewire('../../app/middlewares/error_handler');
 
 const INTERNAL_SERVER_ERROR = errorHandler.__get__('INTERNAL_SERVER_ERROR');
@@ -17,7 +18,31 @@ describe('ErrorHandler Middleware', () => {
     errorHandler.__set__('console', fakeConsole);
   });
 
-  context('with a validation error', () => {
+
+  [
+    'ValidationError',
+    'UniqueConstraintError'
+  ].forEach(errorName => {
+    context(`with a ${errorName}`, () => {
+      let err = new sequelize[errorName]();
+
+      it('sends a bad request status', done => {
+        errorHandler(err, {}, res, () => {
+          expect(res.status).to.have.been.calledWith(400);
+          done();
+        });
+      });
+
+      it('sends validation errors', done => {
+        errorHandler(err, {}, res, () => {
+          expect(res.json).to.have.been.calledWith({ errors: err.errors });
+          done();
+        });
+      });
+    });
+  });
+
+  context('with a MismatchError', () => {
     let err = new errors.MismatchError('test');
 
     it('sends a bad request status', done => {
@@ -35,7 +60,7 @@ describe('ErrorHandler Middleware', () => {
     });
   });
 
-  context('with a pagination error', () => {
+  context('with a PaginationError', () => {
     let err = new errors.PaginationError('limit', -5);
 
     it('sends a bad request status', done => {

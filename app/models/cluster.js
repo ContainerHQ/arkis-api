@@ -77,16 +77,20 @@ module.exports = function(sequelize, DataTypes) {
         let state = this.get('state');
 
         if (state !== 'running') {
-          return new Promise((resolve, reject) => {
-            reject(new errors.StateError('upgrade', state));
-          });
+          return Promise.reject(new errors.StateError('upgrade', state));
         }
+        let versions = {}; //_.first(config.versions);
+
         return this.getNodes().then(nodes => {
-          let promises = _.invoke(nodes, 'upgrade');
+          let promises = _.invoke(nodes, 'upgrade', versions);
 
           return Promise.all(promises);
         }).then(() => {
-          return this.update({ last_state: 'upgrading' });
+          return this.update({
+      //      docker_version: versions.docker,
+      //      swarm_version: verions.swarm,
+            last_state: 'upgrading'
+          });
         });
       }
     },

@@ -97,47 +97,72 @@ describe('Cluster Model', () => {
       });
     });
 
-    context('when cluster is running and has nodes', () => {
+    context('when cluster is running', () => {
       let cluster;
 
-      beforeEach(done => {
-        let opts = { last_state: 'running', last_ping: Date.now() };
+      beforeEach(() => {
+        cluster = factory.buildSync('runningCluster');
+        return cluster.save();
+      });
 
-        factory.create('cluster', opts, (err, clusterCreated) => {
-          if (err) { return done(err); }
+      context.skip('when cluster already has the latest versions', () => {
 
-          cluster = clusterCreated;
-          opts    = _.merge(opts, { cluster_id: cluster.id });
-          factory.createMany('node', opts, 10, done);
+      });
+
+      context('when nodes upgrade succeeds', () => {
+        let fakeNodes;
+
+        beforeEach(done => {
+          fakeNodes = _.repeat({
+            upgrade: sinon.stub().returns(true)
+          }, 10);
+          cluster.getNodes = sinon.stub().returns(Promise.resolve(fakeNodes));
+        });
+
+        ['docker', 'swarm'].forEach(binary => {
+          it.skip(`has the latest ${binary} version available`, () => {
+
+          });
+        });
+
+        it('is in upgrading state', () => {
+          return expect(cluster.upgrade().then(() => {
+            return cluster.reload();
+          })).to.eventually.have.property('state', 'upgrading');
+        });
+
+        it.skip('upgrades all the cluster nodes', () => {
+          return cluster.upgrade().then(() => {
+            fakeNodes.forEach(node => {
+              expect(node.upgrade).to.have.been.called;
+            });
+          });
+        });
+
+        it('returns the upgraded cluster', () =>{
+          return expect(cluster.upgrade())
+            .to.eventually.deep.equal(cluster);
         });
       });
 
-      it('is in upgrading state', () => {
-        return expect(cluster.upgrade().then(() => {
-          return cluster.reload();
-        })).to.eventually.have.property('state', 'upgrading');
-      });
+      // Add a tests verifying that we receive a promise chain
+      // equal to all nodes.upgrade + cluster.update
 
-      it('upgrades all the cluster nodes', () => {
-        return expect(cluster.upgrade().then(() => {
-          return cluster.getNodes().then(nodes => {
-            return _.every(nodes, { state: 'upgrading' });
-          })
-        })).to.be.eventually.true;
-      });
+      context.skip('when a node upgrade fails', () => {
+        let fakeNodes;
 
-      context('when a node upgrade fails', () => {
         beforeEach(done => {
-          factory.create('node', { cluster_id: cluster.id,
-            last_state: 'deploying'
-          }, done);
+          fakeNodes = _.repeat({
+            upgrade: sinon.stub().returns(false)
+          }, 10);
+          cluster.getNodes = sinon.stub().returns(Promise.resolve(fakeNodes));
         });
 
         it('cancels all nodes upgrade', () => {
           return cluster.upgrade().catch(() => {
-            return expect(cluster.getNodes().then(nodes => {
-              return _.some(nodes, { state: 'upgrading' })
-            })).to.be.eventually.false;
+            fakeNodes.forEach(node => {
+              expect(node.upgrade).not.to.have.been.called;
+            });
           });
         });
 
@@ -145,6 +170,11 @@ describe('Cluster Model', () => {
           return cluster.upgrade().catch(() => {
             return expect(cluster.reload())
               .not.to.eventually.have.property('state', 'upgrading')
+          });
+        });
+
+        ['docker', 'swarm'].forEach(binary => {
+          it.skip(`has the same ${binary} version as before`, () => {
           });
         });
       });
@@ -161,7 +191,6 @@ describe('Cluster Model', () => {
     beforeEach(done => {
       factory.create('cluster', (err, clusterCreated) => {
         cluster = clusterCreated;
-
         factory.createMany('node', { cluster_id: cluster.id }, 10,
           (err, nodes) => {
             nodesId = _.pluck(nodes, 'id');

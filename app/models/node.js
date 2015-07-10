@@ -4,6 +4,7 @@ let _ = require('lodash'),
   moment = require('moment'),
   errors = require('../routes/shared/errors'),
   machine = require('../../config/machine'),
+  token = require('../../config/token'),
   mixins = require('./concerns');
 
 module.exports = function(sequelize, DataTypes) {
@@ -20,13 +21,58 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: null,
       validate: { len: [1, 64] }
     },
+    token: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      defaultValue: null,
+      unique: true
+    },
     master: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: false
+      defaultValue: false,
+      validate: {
+        isUnique: function(master) {
+          if (!master || !this.cluster_id) { return Promise.resolve(); }
+
+          return this.findOne({ where:  { cluster_id: this.cluster_id,
+            master: true
+          }}).then(node => {
+            if (node) {
+              return Promise.reject('Cluster already has a master node!');
+            }
+          });
+        }
+      }
+    },
+    byon: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      validate: {
+        followOrigin: function(byon) {
+          if (byon && (this.region || this.node_size)) {
+            throw new Error("A byon node canno't have a region and size!");
+          }
+          if (!byon && (!this.region || !this.node_size)) {
+            throw new Error("A provided node must have a region and size!");
+          }
+        }
+      }
+    },
+    region: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
+    },
+    node_size: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
     },
     fqdn: {
       type: DataTypes.STRING,
+      unique: true,
       allowNull: true,
       defaultValue: null,
       validate: { isUrl: true }
@@ -37,28 +83,50 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: null,
       validate: { isIP: true }
     },
+    docker_version: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
+    },
+    swarm_version: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
+    },
     containers_count: DataTypes.VIRTUAL
   }, DataTypes), mixins.extend('state', 'options', {
     instanceMethods: {
-      deploy: function() {
+      _deploy: function() {
         return machine.create({}).then(() => {
-          return this.update({ last_state: 'deploying' });
+          this.last_state = 'deploying';
+          return this;
         });
       },
-      register: function() {
-        return machine.registerFQDN(this.public_ip).then(fqdn => {
-          return this.update({ fqdn: fqdn, last_state: 'running' });
-        });
+      _generateToken: function() {
+        this.token = token.generate(this.id);
       },
-      upgrade: function() {
+      _hasVersions: function(versions) {
+        return versions.docker === this.docker_version &&
+               versions.swarm  === this.swarm_version;
+      },
+      /*
+       * This must update the node in order to notify its
+       * affiliated cluster of its new state.
+       */
+      register: function(attributes={}) {
+        _.merge(attributes, { last_state: 'running' });
+        return this.update(attributes);
+      },
+      upgrade: function(versions) {
         let state = this.get('state');
 
         if (state !== 'running') {
-          return new Promise((resolve, reject) => {
-            reject(new errors.StateError('upgrade', state));
-          });
+          return Promise.reject(new errors.StateError('upgrade', state));
         }
-        return machine.upgrade({}).then(() => {
+        if (this._hasVersions(versions)) {
+          return Promise.reject(new errors.AlreadyUpgradedError());
+        }
+        return machine.upgrade(versions).then(() => {
           return this.update({ last_state: 'upgrading' });
         });
       },
@@ -72,7 +140,18 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     hooks: {
+      beforeCreate: function(node) {
+        node.fqdn = machine.generateFQDN({});
+        node._generateToken();
+
+        if (!node.byon) { return node._deploy();}
+
+        return Promise.resolve(node);
+      },
       afterUpdate: function(node, options) {
+        if (_.includes(options.fields, 'public_ip')) {
+          return machine.registerFQDN(node);
+        }
         if (node.master && _.includes(options.fields, 'last_ping')) {
           return node._notifyCluster({ last_ping: node.last_ping });
         }
@@ -82,12 +161,18 @@ module.exports = function(sequelize, DataTypes) {
         return sequelize.Promise.resolve(node);
       },
       afterDestroy: function(node) {
-        return machine.destroy({}).then(() => {
+        let promise = Promise.resolve();
+
+        if (!node.byon) { promise = machine.destroy({}); }
+
+        return machine.deleteFQDN(node.fqdn).then(() => {
+          return promise;
+        }).then(() => {
           return node._notifyCluster({ destroyed: true });
         });
       },
       afterFind: function(nodes) {
-        if (!nodes) { return sequelize.Promise.resolve(); }
+        if (!nodes) { return Promise.resolve(); }
 
         if (!_.isArray(nodes)) {
           nodes = [nodes];

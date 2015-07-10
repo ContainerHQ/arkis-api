@@ -9,7 +9,12 @@ let _ = require('lodash'),
 describe('Node Model', () => {
   db.sync();
 
-  concerns.behavesAsAStateMachine('node');
+  /*
+   * A non byon node has a default state set to 'deploying',
+   * we must use a byon node wich has a default state set to
+   * 'empty'.
+   */
+  concerns.behavesAsAStateMachine('byonNode');
 
   describe('validations', () => {
     /*
@@ -19,6 +24,14 @@ describe('Node Model', () => {
      */
     it('succeeds with valid attributes', done => {
       factory.create('registeredNode', done);
+    });
+
+    it('succeeds to create multiple slave nodes for the same cluster', done => {
+      factory.create('cluster', (err, cluster) => {
+        factory.createMany('node', {
+          master: false, cluster_id: cluster.id
+        }, 3, done);
+      });
     });
 
     it('fails without a name', () => {
@@ -39,12 +52,6 @@ describe('Node Model', () => {
       return expect(node.save()).to.be.rejected;
     });
 
-    it('fails with an invalid fqdn', () => {
-      let node = factory.buildSync('node', { fqdn: _.repeat('*', 10) });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
     it('fails with an invalid public_ip', () => {
       let node = factory.buildSync('node', { public_ip: _.repeat('*', 10) });
 
@@ -55,6 +62,42 @@ describe('Node Model', () => {
       let node = factory.buildSync('node', { master: '' });
 
       return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with a null region and byon false', () => {
+      let node = factory.buildSync('node', { byon: false, region: null });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with a null node_size and byon false', () => {
+      let node = factory.buildSync('node', { byon: false, node_size: null });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with a region and byon true', () => {
+      let node = factory.buildSync('node', { byon: true, node_size: null });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with a node_size and byon true', () => {
+      let node = factory.buildSync('node', { byon: true, region: null });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails when master is not unique for the same cluster', () => {
+      let cluster = factory.buildSync('cluster'),
+        opts = { master: true };
+
+      return expect(cluster.save().then(() => {
+        _.merge(opts, { cluster_id: cluster.id });
+        return factory.buildSync('node', opts).save();
+      }).then(() => {
+        return factory.buildSync('node', opts).save();
+      })).to.be.rejected;
     });
   });
 
@@ -76,9 +119,7 @@ describe('Node Model', () => {
     beforeEach(() => {
         cluster = { notify: sinon.stub() };
         node = factory.buildSync('node');
-        node.getCluster = sinon.stub().returns(new Promise(resolve => {
-          resolve(cluster);
-        }));
+        node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
         return node.save();
     });
 
@@ -97,23 +138,52 @@ describe('Node Model', () => {
     context('afterDestroy', () => {
       beforeEach(() => {
         sinon.stub(machine, 'destroy', machine.destroy);
-
-        return node.deploy().then(() => {
-          return node.destroy();
-        });
+        sinon.stub(machine, 'deleteFQDN', machine.deleteFQDN);
       });
 
       afterEach(() => {
         machine.destroy.restore();
+        machine.deleteFQDN.restore();
       });
 
-      it('reports back the deletion to its cluster', () => {
-        expect(cluster.notify)
-          .to.have.been.calledWith({ destroyed: true });
+      context('with a non byon node', () => {
+        beforeEach(() => {
+          return node.save().then(() => {
+            return node.destroy();
+          });
+        });
+
+        it('reports back the deletion to its cluster', () => {
+          expect(cluster.notify)
+            .to.have.been.calledWith({ destroyed: true });
+        });
+
+        it('removes the machine behind', () => {
+          expect(machine.destroy).to.have.been.calledWith({});
+        });
+
+        it('removes the fqdn', () => {
+          expect(machine.deleteFQDN).to.have.been.calledWith(node.fqdn);
+        });
       });
 
-      it('removes the machine behind', () => {
-        expect(machine.destroy).to.have.been.calledWith({});
+      context('with a byon node', () => {
+        beforeEach(() => {
+          _.merge(node, { byon: true, region: null, node_size: null });
+
+          return node.save().then(() => {
+            return node.destroy();
+          });
+        });
+
+        it('reports back the deletion to its cluster', () => {
+          expect(cluster.notify)
+            .to.have.been.calledWith({ destroyed: true });
+        });
+
+        it("doesn't attempt to remove the machine behind", () => {
+          expect(machine.destroy).to.not.have.been.called;
+        });
       });
     });
 
@@ -150,6 +220,97 @@ describe('Node Model', () => {
     });
   });
 
+  context('afterCreate', () => {
+    const FQDN = 'node_01.node.arkis.io';
+
+    let node;
+
+    beforeEach(() => {
+      node = factory.buildSync('node');
+      sinon.stub(machine, 'generateFQDN').returns(FQDN);
+      sinon.stub(machine, 'create', machine.create);
+    });
+
+    afterEach(() => {
+      machine.generateFQDN.restore();
+      machine.create.restore();
+    });
+
+    it('has a fqdn', () => {
+      return expect(node.save()).to.eventually.have.property('fqdn', FQDN);
+    });
+
+    it('has a jwt token', () => {
+      return expect(node.save())
+        .to.eventually.satisfy(has.validJWT);
+    });
+
+    it('generate a fqdn through machine', () => {
+      return node.save().then(() => {
+        return expect(machine.generateFQDN).to.have.been.calledWith({});
+      });
+    });
+
+    it('it is in deploying state', () => {
+      return expect(node.save())
+        .to.eventually.have.property('state', 'deploying');
+    });
+
+    it('creates a machine behind', () => {
+      return node.save().then(() => {
+        return expect(machine.create).to.have.been.calledWith({});
+      });
+    });
+
+    context('when byon node', () => {
+      beforeEach(() => {
+        _.merge(node, { byon: true, region: null, node_size: null });
+      });
+
+      it("doesn't create a machine behind", () => {
+        return node.save().then(() => {
+          return expect(machine.create).not.to.have.been.called;
+        });
+      });
+
+      it('it is in empty state', () => {
+        return expect(node.save())
+          .to.eventually.have.property('state', 'empty');
+      });
+    });
+  });
+
+  context('afterUpdate', () => {
+    let node;
+
+    beforeEach(() => {
+      node = factory.buildSync('node');
+      sinon.stub(machine, 'registerFQDN', machine.registerFQDN);
+      return node.save();
+    });
+
+    afterEach(() => {
+      machine.registerFQDN.restore();
+    });
+
+    context('when updating public_ip', () => {
+      it('registers this ip for the fqdn', () => {
+        return node.update({ public_ip: '192.168.1.90' }).then(() => {
+          return expect(machine.registerFQDN)
+            .to.have.been.calledWithMatch(_.pick(node, ['fqdn', 'public_ip']));
+        });
+      });
+    });
+
+    context('when not updating public_ip', () => {
+      it("doesn't registers the public_ip for the fqdn", () => {
+        return node.update({ name: 'test' }).then(() => {
+          return expect(machine.registerFQDN).not.to.have.been.called;
+        });
+      })
+    });
+  });
+
   describe('#ping', () => {
     let node, clock;
 
@@ -177,63 +338,25 @@ describe('Node Model', () => {
     });
   });
 
-  describe('#deploy', () => {
+  describe('#register', () => {
     let node;
 
     beforeEach(() => {
       node = factory.buildSync('node');
-      sinon.stub(machine, 'create', machine.create);
-      return node.deploy();
+      node._notifyCluster = sinon.stub();
+      return node.save();
     });
 
-    afterEach(() => {
-      machine.create.restore();
+    it('updates the attributes', () => {
+      let attributes = { public_ip: '192.168.0.1' };
+
+      return expect(node.register(attributes))
+        .to.eventually.include(attributes);
     });
 
-    it('it is in deploying state', () => {
-      expect(node.state).to.equal('deploying');
-    });
-
-    it('creates a machine behind', () => {
-      expect(machine.create).to.have.been.calledWith({});
-    });
-
-    context.skip('when node is already deployed', () => {
-
-    });
-  });
-
-  describe('#register', () => {
-    let node, fqdn, options;
-
-    beforeEach(() => {
-      node = factory.buildSync('node', { public_ip: '127.0.0.1' });
-      fqdn = `${node.name}.node.arkis.io`;
-
-      sinon.stub(machine, 'registerFQDN').returns(new Promise(resolve => {
-        resolve(fqdn);
-      }));
-      return node.register();
-    });
-
-    afterEach(() => {
-      machine.registerFQDN.restore();
-    });
-
-    it('it is in deploying state', () => {
-      expect(node.state).to.equal('running');
-    });
-
-    it('registers a fqdn for the node public_ip', () => {
-      expect(machine.registerFQDN).to.have.been.calledWith(node.public_ip);
-    });
-
-    it('has a fqdn equal to the registered fqdn', () => {
-      expect(node.fqdn).to.equal(fqdn);
-    });
-
-    context.skip('when node is already registerd', () => {
-
+    it('set the node state to running', () => {
+      return expect(node.register())
+        .to.eventually.have.property('state', 'running');
     });
   });
 
@@ -249,17 +372,15 @@ describe('Node Model', () => {
     });
 
     context('when node is running', () => {
+      const VERSIONS = { docker: '1.7.0', swarm: '0.3.0' };
+
       let node;
 
       beforeEach(() => {
-        node = factory.buildSync('node', {
-          last_state: 'running',
-          last_ping: Date.now()
-        });
-
+        node = factory.buildSync('runningNode');
         node._notifyCluster = sinon.stub();
         return node.save().then(() => {
-          return node.upgrade();
+          return node.upgrade(VERSIONS);
         });
       });
 
@@ -268,7 +389,7 @@ describe('Node Model', () => {
       });
 
       it('upgrades the machine behind', () => {
-        expect(machine.upgrade).to.have.been.calledWith({});
+        expect(machine.upgrade).to.have.been.calledWith(VERSIONS);
       });
     });
 
@@ -293,13 +414,44 @@ describe('Node Model', () => {
       it('has the same state than before', () => {
         return node.upgrade().catch(err => {
           return expect(node.reload())
-            .to.eventually.have.property('state', 'empty');
+            .to.eventually.have.property('state', 'deploying');
         });
       });
 
       it("doesn't update the machine behind", () => {
         return node.upgrade().catch(() => {
           expect(machine.upgrade).to.not.have.been.called;
+        });
+      });
+    });
+
+    context('when node has already the same version', () => {
+      const VERSIONS = { docker: '1.2.0', swarm: '0.2.0' };
+
+      let node, error;
+
+      beforeEach(() => {
+        node = factory.buildSync('runningNode', {
+          docker_version: VERSIONS.docker,
+          swarm_version: VERSIONS.swarm
+        });
+        node._notifyCluster = sinon.stub();
+
+        return node.save();
+      });
+
+      it('has the same state than before', () => {
+        let previousState = node.state;
+
+        return node.upgrade(VERSIONS).catch(() => {
+          return expect(node.reload())
+            .to.eventually.have.property('state', previousState);
+        });
+      });
+
+      it("doesn't update the machine behind", () => {
+        return node.upgrade(VERSIONS).catch(err => {
+          return expect(err).to.deep.equal(new errors.AlreadyUpgradedError());
         });
       });
     });
