@@ -17,23 +17,77 @@ module.exports = {
         },
         onDelete: 'CASCADE'
       },
-      state: {
-        type: DataTypes.ENUM,
+      name: {
+        type: DataTypes.STRING,
         allowNull: false,
-        values: [
-         'deploying', 'upgrading', 'starting', 'running', 'stopping', 'down'
-        ],
-        defaultValue: 'deploying',
+        defaultValue: null,
+        unique: true,
+        validate: { len: [1, 64] }
+      },
+      token: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        defaultValue: null,
+        unique: true
       },
       master: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
+        defaultValue: false,
+      },
+      byon: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
         defaultValue: false
+      },
+      region: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+      },
+      node_size: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+      },
+      fqdn: {
+        type: DataTypes.STRING,
+        unique: true,
+        allowNull: true,
+        defaultValue: null,
+        validate: { isUrl: true }
+      },
+      public_ip: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+        validate: { isIP: true }
+      },
+      docker_version: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+      },
+      swarm_version: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+      },
+      last_state: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'empty',
+        validate: { isIn: [['empty', 'deploying', 'upgrading', 'running']] }
+      },
+      last_ping: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: null
       },
 
       created_at: DataTypes.DATE,
       updated_at: DataTypes.DATE
-    });
+    })
   },
 
   down: function (queryInterface) {

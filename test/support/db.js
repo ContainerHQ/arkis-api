@@ -32,7 +32,7 @@ module.exports.deleteAll = function(modelsName) {
  */
 module.exports.sync = function() {
   beforeEach(() => {
-    return this.deleteAll(ENTITIES_TO_DESTROY);
+    this.deleteAll(ENTITIES_TO_DESTROY);
   });
 
   beforeEach(done => {

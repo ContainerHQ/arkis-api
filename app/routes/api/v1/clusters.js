@@ -47,10 +47,8 @@ router
   }).catch(next);
 })
 .post('/', (req, res, next) => {
-  Cluster.create(_.pick(req.body, CLUSTER_PARAMS))
+  req.user.createCluster(_.pick(req.body, CLUSTER_PARAMS))
   .then(cluster => {
-    return req.user.addCluster(cluster);
-  }).then(cluster => {
     res.status(201).json({ cluster: cluster });
   }).catch(next);
 })

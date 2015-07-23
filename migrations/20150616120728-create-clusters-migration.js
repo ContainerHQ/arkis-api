@@ -21,6 +21,7 @@ module.exports = {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: null,
+        unique: true,
         validate: { len: [1, 64] }
       },
       token: {

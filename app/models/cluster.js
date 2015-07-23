@@ -1,6 +1,8 @@
 'use strict';
 
-let mixins = require('./concerns'),
+let _ = require('lodash'),
+  errors = require('../routes/shared/errors'),
+  mixins = require('./concerns'),
   machine = require('../../config/machine');
 
 module.exports = function(sequelize, DataTypes) {
@@ -15,6 +17,7 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: null,
+      unique: true,
       validate: { len: [1, 64] }
     },
     token: {
@@ -59,13 +62,36 @@ module.exports = function(sequelize, DataTypes) {
     },
     hooks: {
       beforeCreate: function(cluster) {
-        return cluster.initializeToken();
+        return cluster._initializeToken();
       },
     },
     instanceMethods: {
-      initializeToken: function() {
+      _initializeToken: function() {
         return machine.createToken().then(token => {
           this.token = token;
+        });
+      },
+      notify: function(changes) {
+        console.log(changes);
+      },
+      upgrade: function() {
+        let state = this.get('state');
+
+        if (state !== 'running') {
+          return Promise.reject(new errors.StateError('upgrade', state));
+        }
+        let versions = {}; //_.first(config.versions);
+
+        return this.getNodes().then(nodes => {
+          let promises = _.invoke(nodes, 'upgrade', versions);
+
+          return Promise.all(promises);
+        }).then(() => {
+          return this.update({
+      //      docker_version: versions.docker,
+      //      swarm_version: verions.swarm,
+            last_state: 'upgrading'
+          });
         });
       }
     },

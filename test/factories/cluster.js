@@ -1,21 +1,28 @@
 'use strict';
 
 let moment = require('moment'),
+  random = require('../support/random'),
   Cluster = require('../../app/models').Cluster;
 
 module.exports = function(factory) {
   factory.define('cluster', Cluster, {
-    name: 'grounds-production',
+    name: random.string,
   });
 
   factory.define('defaultCluster', Cluster, {
-    name: 'default',
+    name: random.string,
   });
 
   factory.define('unreachableCluster', Cluster, {
-    name: 'unreachable',
+    name: random.string,
     last_state: 'running',
     last_ping: moment().subtract(6, 'minutes')
+  });
+
+  factory.define('runningCluster', Cluster, {
+    name: 'running',
+    last_state: 'running',
+    last_ping: moment()
   });
 
   /*
@@ -26,7 +33,7 @@ module.exports = function(factory) {
    */
   factory.define('forbiddenCluster', Cluster, {
     id: 'lol',
-    name: 'forbidden',
+    name: random.string,
     strategy: 'spread',
     user_id: 45,
     nodes_count: 1,
