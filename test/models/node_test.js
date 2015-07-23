@@ -131,7 +131,11 @@ describe('Node Model', () => {
     });
 
     context('when switching state', () => {
-      let opts = { last_state: 'deploying' };
+      /*
+       * Be careful here, sequelize doesn't add a field in options.fields
+       * if we are providing a value for the field equal to its prior value.
+       */
+      let opts = { last_state: 'upgrading' };
 
       beforeEach(() => {
         return node.update(opts);

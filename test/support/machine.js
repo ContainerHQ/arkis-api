@@ -20,13 +20,13 @@ machine.createCerts = function() {
 };
 
 machine.createFakeToken = function() {
-  return rand() + rand();
+  return random.string() + random.string();
 };
 
 machine.createFakeCerts = function() {
   return {
-    client: { cert: rand(), key: rand(), ca: rand() },
-    server: { cert: rand(), key: rand(), ca: rand() }
+    client: { cert: random.string(), key: random.string(), ca: random.string() },
+    server: { cert: random.string(), key: random.string(), ca: random.string() }
   };
 };
 
@@ -42,7 +42,9 @@ machine.generateFQDN = function() {
   'upgrade',
   'destroy'
 ].forEach(method => {
-  machine[method] = resolve;
+  machine[method] = function() {
+    return Promise.resolve();
+  };
 });
 
 module.exports = machine;

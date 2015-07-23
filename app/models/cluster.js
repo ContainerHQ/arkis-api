@@ -68,7 +68,7 @@ module.exports = function(sequelize, DataTypes) {
         return cluster._initializeCert();
       },
       afterDestroy: function(cluster) {
-        return cluster.destroyToken();
+        return cluster._destroyToken();
       },
     },
     instanceMethods: {

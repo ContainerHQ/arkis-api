@@ -31,10 +31,13 @@ module.exports = function(factory) {
     public_ip: '192.168.212.129',
     last_state: 'running',
     last_ping: Date.now
+  });
 
   factory.define('registeredNode', Node, {
     name: 'registered',
     master: true,
+    region: 'london',
+    node_size: 'deathstar',
     public_ip: '192.168.212.128',
     last_state: 'running'
   });
