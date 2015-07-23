@@ -1,8 +1,6 @@
 'use strict';
 
-function rand() {
-  return Math.random().toString(36).substr(2);
-}
+let random = require('./random');
 
 function resolve() {
   return new Promise(resolve => {
@@ -18,12 +16,12 @@ let machine = {};
  */
 machine.createToken = function() {
   return new Promise(resolve => {
-    resolve(rand() + rand());
+    resolve(random.string() + random.string());
   });
 };
 
 machine.generateFQDN = function() {
-  return rand() + '.node.arkis.io';
+  return random.string() + '.node.arkis.io';
 };
 
 [
