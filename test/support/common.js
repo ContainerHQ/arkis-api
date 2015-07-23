@@ -16,3 +16,4 @@ global.factory = require('../factories');
 global.api = require('./api');
 global.has = require('./matchers');
 global.format = require('./format');
+global.random = require('./random');

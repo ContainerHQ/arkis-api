@@ -1,10 +1,11 @@
 'use strict';
 
-let Node = require('../../app/models').Node;
+let Node = require('../../app/models').Node,
+  random = require('../support/random');
 
 module.exports = function(factory) {
   factory.define('node', Node, {
-    name: 'battlestar.apps',
+    name: random.string,
     region: 'london',
     node_size: 'deathstar'
   });
@@ -15,7 +16,7 @@ module.exports = function(factory) {
   });
 
   factory.define('registeredNode', Node, {
-    name: 'registered',
+    name: random.string,
     master: true,
     region: 'london',
     node_size: 'deathstar',
@@ -24,11 +25,11 @@ module.exports = function(factory) {
   });
 
   factory.define('runningNode', Node, {
-    name: 'running',
+    name: random.string,
     master: false,
     byon: true,
     public_ip: '192.168.212.129',
     last_state: 'running',
-    last_ping: Date.now()
+    last_ping: Date.now
   });
 };

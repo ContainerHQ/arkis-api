@@ -59,7 +59,7 @@ describe('Cluster Model', () => {
       return expect(cluster.save()).to.be.rejected;
     });
 
-     it('fails with an empty strategy', () => {
+    it('fails with an empty strategy', () => {
       let cluster = factory.buildSync('cluster', { strategy: null });
 
       return expect(cluster.save()).to.be.rejected;

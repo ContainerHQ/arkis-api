@@ -52,6 +52,13 @@ describe('Node Model', () => {
       return expect(node.save()).to.be.rejected;
     });
 
+    it('fails with multiple node with the same name', done => {
+      factory.createMany('node', { name: 'test' }, 2, err => {
+        expect(err).to.exist;
+        done();
+      });
+    });
+
     it('fails with an invalid public_ip', () => {
       let node = factory.buildSync('node', { public_ip: _.repeat('*', 10) });
 
