@@ -90,7 +90,7 @@ describe('Cluster Model', () => {
       .to.eventually.have.property('strategy', DEFAULT_STRATEGY);
   });
 
-  context.skip('#upgrade', () => {
+  context('#upgrade', () => {
     context('when cluster is not running', () => {
       let cluster;
 
@@ -103,7 +103,7 @@ describe('Cluster Model', () => {
         let expected = new errors.StateError('upgrade', cluster.state);
 
         return cluster.upgrade().catch(err => {
-          expect(err).to.deep.equal(expected);
+          return expect(err).to.deep.equal(expected);
         });
       });
     });
@@ -123,10 +123,10 @@ describe('Cluster Model', () => {
       context('when nodes upgrade succeeds', () => {
         let fakeNodes;
 
-        beforeEach(done => {
-          fakeNodes = _.repeat({
-            upgrade: sinon.stub().returns(true)
-          }, 10);
+        beforeEach(() => {
+          fakeNodes = _.map(new Array(10), () => {
+            return { upgrade: sinon.stub().returns(true) };
+          });
           cluster.getNodes = sinon.stub().returns(Promise.resolve(fakeNodes));
         });
 
@@ -142,7 +142,7 @@ describe('Cluster Model', () => {
           })).to.eventually.have.property('state', 'upgrading');
         });
 
-        it.skip('upgrades all the cluster nodes', () => {
+        it('upgrades all the cluster nodes', () => {
           return cluster.upgrade().then(() => {
             fakeNodes.forEach(node => {
               expect(node.upgrade).to.have.been.called;
@@ -159,13 +159,13 @@ describe('Cluster Model', () => {
       // Add a tests verifying that we receive a promise chain
       // equal to all nodes.upgrade + cluster.update
 
-      context.skip('when a node upgrade fails', () => {
+      context('when a node upgrade fails', () => {
         let fakeNodes;
 
-        beforeEach(done => {
-          fakeNodes = _.repeat({
-            upgrade: sinon.stub().returns(false)
-          }, 10);
+        beforeEach(() => {
+          fakeNodes = _.map(new Array(10), () => {
+            return { upgrade: sinon.stub().returns(false) };
+          });
           cluster.getNodes = sinon.stub().returns(Promise.resolve(fakeNodes));
         });
 
@@ -232,9 +232,7 @@ describe('Cluster Model', () => {
     });
 
     it('can be deleted', () => {
-      return expect(cluster.destroy().then(() => {
-        return models.Cluster.findById(cluster.id);
-      })).to.be.fulfilled.and.to.eventually.be.empty;
+      return expect(cluster.destroy()).to.be.fulfilled;
     });
 
     context('adding a node to this cluster', () => {
@@ -243,8 +241,8 @@ describe('Cluster Model', () => {
       beforeEach(() => {
         previousNodesCount = cluster.nodes_count;
 
-        return models.Node.create({ cluster_id: cluster.id, name: 'test' })
-        .then(() => {
+        return factory.buildSync('node', { cluster_id: cluster.id })
+        .save().then(() => {
           return cluster.reload();
         });
       });
