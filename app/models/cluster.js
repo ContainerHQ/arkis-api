@@ -114,7 +114,23 @@ module.exports = function(sequelize, DataTypes) {
                LATEST_VERSIONS.swarm  === this.swarm_version;
       },
       notify: function(changes) {
-        console.log(changes);
+        if (_.has(changes, 'last_ping')) {
+          return this.update({ last_ping: changes.last_ping });
+        }
+        switch (changes.last_state) {
+          case 'deploying':
+          case 'upgrading':
+            return this.update({ last_state: changes.last_state });
+          case 'running':
+            return this.getNodes({ where: { last_state: { $ne: 'running' } } })
+            .then(nodes => {
+              if (nodes.length > 0) {
+                return this.update({ last_state: _.first(nodes).last_state });
+              }
+              return this.update({ last_state: changes.last_state });
+            });
+        }
+        return Promise.resolve(this);
       },
       upgrade: function() {
         let state = this.get('state');
@@ -127,7 +143,7 @@ module.exports = function(sequelize, DataTypes) {
         }
         return this.getNodes().then(nodes => {
           _.invoke(nodes, 'upgrade', versions);
-          
+
           return this.update({
             docker_version: LATEST_VERSIONS.docker,
             swarm_version:  LATEST_VERSIONS.swarm,

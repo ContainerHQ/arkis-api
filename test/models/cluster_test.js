@@ -241,8 +241,104 @@ describe('Cluster Model', () => {
     });
   });
 
-  context.skip('#notify', () => {
+  context('#notify', () => {
+    let cluster;
 
+    beforeEach(() => {
+      cluster = factory.buildSync('runningCluster');
+      return cluster.save();
+    });
+
+    ['deploying', 'upgrading'].forEach(state => {
+      context(`with a last state equal to ${state}`, () => {
+        let lastPing;
+
+        beforeEach(() => {
+          lastPing = cluster.last_ping;
+          return cluster.notify({ last_state: state }).then(() => {
+            return cluster.reload();
+          });
+        });
+
+        it(`has a state set to ${state}`, () => {
+          expect(cluster.state).to.equal(state);
+        });
+
+        it('has the same last ping than before', () => {
+          expect(cluster.last_ping).to.deep.equal(lastPing);
+        });
+      });
+    });
+
+    context('with a last state equal to running', () => {
+      ['empty', 'deploying', 'upgrading'].forEach(state => {
+        context(`with a least one node in state ${state}`, () => {
+          beforeEach(() => {
+            let node = factory.buildSync('node', { cluster_id: cluster.id }),
+              runningNode = factory.buildSync('runningNode', {
+                cluster_id: cluster.id
+              });
+
+            return node.save().then(() => {
+              return node.update({ last_state: state });
+            }).then(() => {
+              return runningNode.save();
+            }).then(() => {
+              return cluster.notify({ last_state: 'running' })
+            }).then(() => {
+              return cluster.reload();
+            });
+          });
+
+          it(`is in ${state} state`, () => {
+            expect(cluster.state).to.equal(state);
+          });
+        });
+      });
+
+      context('with only nodes in running state', () => {
+        beforeEach(() => {
+          let node = factory.buildSync('runningNode', {
+            cluster_id: cluster.id
+          });
+
+          return node.save().then(() => {
+            return cluster.update({ last_state: 'upgrading' })
+          }).then(() => {
+            return cluster.notify({ last_state: 'running' })
+          }).then(() => {
+            return cluster.reload();
+          });
+        });
+
+        it(`is in running state`, () => {
+          expect(cluster.state).to.equal('running');
+        });
+      });
+    });
+
+    context.skip('with destroyed', () => {
+    });
+
+    context('with last ping', () => {
+      let lastPing, lastState;
+
+      beforeEach(() => {
+        lastPing = moment();
+        lastState = cluster.state;
+        return cluster.notify({ last_ping: lastPing }).then(() => {
+          return cluster.reload();
+        });
+      });
+
+      it('updates the cluster last ping with the provided value', () => {
+        expect(cluster.last_ping).to.deep.equal(lastPing.toDate());
+      });
+
+      it('has the same state than before', () => {
+        expect(cluster.state).to.equal(lastState);
+      });
+    });
   });
 
   context('afterDestroy', () => {

@@ -20,7 +20,7 @@ module.exports = function(factory) {
   });
 
   factory.define('runningCluster', Cluster, {
-    name: 'running',
+    name: random.string,
     last_state: 'running',
     last_ping: moment()
   });
