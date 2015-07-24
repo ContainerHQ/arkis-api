@@ -1,11 +1,16 @@
 'use strict';
 
-let moment = require('moment');
+let _ = require('lodash'),
+  moment = require('moment');
 
-const DEFAULT_STATE = 'empty',
-      VALID_STATES = [DEFAULT_STATE, 'deploying', 'upgrading', 'running'];
+module.exports = function(factoryName, opts={}) {
+  let defaultState = opts.default || 'empty',
+    validStates = ['empty', 'deploying', 'upgrading', 'running'];
 
-module.exports = function(factoryName) {
+  if (defaultState !== 'empty') {
+    validStates = _.remove(validStates, 'empty');
+  }
+
   describe('behaves as a state machine:', () => {
     it('fails with an empty last state', () => {
       let model = factory.buildSync(factoryName, { last_state: null });
@@ -19,7 +24,7 @@ module.exports = function(factoryName) {
       return expect(model.save()).to.be.rejected;
     });
 
-    VALID_STATES.forEach(state => {
+    validStates.forEach(state => {
       it(`succeeds with a last state equal to ${state}`, () => {
         let model = factory.buildSync(factoryName, { last_state: state });
 
@@ -67,11 +72,11 @@ module.exports = function(factoryName) {
       });
     });
 
-    it(`is by default in ${DEFAULT_STATE} state`, () => {
+    it(`is by default in ${defaultState} state`, () => {
       let model = factory.buildSync(factoryName);
 
       return expect(model.save())
-        .to.eventually.have.property('state', DEFAULT_STATE);
+        .to.eventually.have.property('state', defaultState);
     });
   });
 }

@@ -272,17 +272,17 @@ describe('Cluster Model', () => {
 
     context('with a last state equal to running', () => {
       ['empty', 'deploying', 'upgrading'].forEach(state => {
-        context(`with a least one node in state ${state}`, () => {
+        context(`with at least one node in state ${state}`, () => {
           beforeEach(() => {
             let node = factory.buildSync('node', { cluster_id: cluster.id }),
-              runningNode = factory.buildSync('runningNode', {
-                cluster_id: cluster.id
-              });
+              runningNode = factory.buildSync('node', { cluster_id: cluster.id });
 
             return node.save().then(() => {
               return node.update({ last_state: state });
             }).then(() => {
               return runningNode.save();
+            }).then(() => {
+              return runningNode.update({ last_state: 'running' })
             }).then(() => {
               return cluster.notify({ last_state: 'running' })
             }).then(() => {
@@ -298,11 +298,13 @@ describe('Cluster Model', () => {
 
       context('with only nodes in running state', () => {
         beforeEach(() => {
-          let node = factory.buildSync('runningNode', {
+          let node = factory.buildSync('node', {
             cluster_id: cluster.id
           });
 
           return node.save().then(() => {
+            return node.update({ last_state: 'running' })
+          }).then(() => {
             return cluster.update({ last_state: 'upgrading' })
           }).then(() => {
             return cluster.notify({ last_state: 'running' })

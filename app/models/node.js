@@ -115,12 +115,6 @@ module.exports = function(sequelize, DataTypes) {
       },
     },
     instanceMethods: {
-      _deploy: function() {
-        return machine.create({}).then(() => {
-          this.last_state = 'deploying';
-          return this;
-        });
-      },
       _generateToken: function() {
         this.token = token.generate(this.id);
       },
@@ -160,10 +154,13 @@ module.exports = function(sequelize, DataTypes) {
     },
     hooks: {
       beforeCreate: function(node) {
-        node.fqdn = machine.generateFQDN({});
         node._generateToken();
+        node.fqdn = machine.generateFQDN({});
+        node.last_state = 'deploying';
 
-        if (!node.byon) { return node._deploy();}
+        if (!node.byon) {
+          return machine.create({});
+        }
 
         return Promise.resolve(node);
       },

@@ -14,7 +14,7 @@ describe('Node Model', () => {
    * we must use a byon node wich has a default state set to
    * 'empty'.
    */
-  concerns.behavesAsAStateMachine('byonNode');
+  concerns.behavesAsAStateMachine('byonNode', { default: 'deploying' });
 
   describe('validations', () => {
     /*
@@ -286,7 +286,7 @@ describe('Node Model', () => {
 
       it('it is in empty state', () => {
         return expect(node.save())
-          .to.eventually.have.property('state', 'empty');
+          .to.eventually.have.property('state', 'deploying');
       });
     });
   });
@@ -388,9 +388,12 @@ describe('Node Model', () => {
       let node;
 
       beforeEach(() => {
-        node = factory.buildSync('runningNode');
+        node = factory.buildSync('node');
         node._notifyCluster = sinon.stub();
+
         return node.save().then(() => {
+          return node.update({ last_state: 'running' });
+        }).then(() => {
           return node.upgrade(VERSIONS);
         });
       });
@@ -448,13 +451,15 @@ describe('Node Model', () => {
       let node, error;
 
       beforeEach(() => {
-        node = factory.buildSync('runningNode', {
+        node = factory.buildSync('node', {
           docker_version: VERSIONS.docker,
           swarm_version: VERSIONS.swarm
         });
         node._notifyCluster = sinon.stub();
 
-        return node.save();
+        return node.save().then(() => {
+          return node.update({ last_state: 'running' });
+        });
       });
 
       it('has the same state than before', () => {
