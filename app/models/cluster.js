@@ -3,7 +3,10 @@
 let _ = require('lodash'),
   errors = require('../routes/shared/errors'),
   mixins = require('./concerns'),
-  machine = require('../../config/machine');
+  machine = require('../../config/machine'),
+  versions = require('../../config/versions');
+
+const LATEST_VERSIONS = _.first(versions);
 
 module.exports = function(sequelize, DataTypes) {
   let Cluster = sequelize.define('Cluster', mixins.extend('state', 'attributes', {
@@ -37,6 +40,16 @@ module.exports = function(sequelize, DataTypes) {
         }
       }
     },
+    docker_version: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
+    },
+    swarm_version: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
+    },
     containers_count: DataTypes.VIRTUAL
   }, DataTypes), mixins.extend('state', 'options', {
     defaultScope: {
@@ -62,6 +75,10 @@ module.exports = function(sequelize, DataTypes) {
     },
     hooks: {
       beforeCreate: function(cluster) {
+        _.merge(cluster, {
+          docker_version: LATEST_VERSIONS.docker,
+          swarm_version:  LATEST_VERSIONS.swarm
+        });
         return cluster._initializeToken();
       },
       afterCreate: function(cluster) {
@@ -92,6 +109,10 @@ module.exports = function(sequelize, DataTypes) {
       _destroyToken: function() {
         return machine.deleteToken(this.token);
       },
+      _hasLatestVersions: function() {
+        return LATEST_VERSIONS.docker === this.docker_version &&
+               LATEST_VERSIONS.swarm  === this.swarm_version;
+      },
       notify: function(changes) {
         console.log(changes);
       },
@@ -101,16 +122,15 @@ module.exports = function(sequelize, DataTypes) {
         if (state !== 'running') {
           return Promise.reject(new errors.StateError('upgrade', state));
         }
-        let versions = {}; //_.first(config.versions);
-
+        if (this._hasLatestVersions()) {
+          return Promise.reject(new errors.AlreadyUpgradedError());
+        }
         return this.getNodes().then(nodes => {
-          let promises = _.invoke(nodes, 'upgrade', versions);
-
-          return Promise.all(promises);
-        }).then(() => {
+          _.invoke(nodes, 'upgrade', versions);
+          
           return this.update({
-      //      docker_version: versions.docker,
-      //      swarm_version: verions.swarm,
+            docker_version: LATEST_VERSIONS.docker,
+            swarm_version:  LATEST_VERSIONS.swarm,
             last_state: 'upgrading'
           });
         });

@@ -5,10 +5,12 @@ let _ = require('lodash'),
   errors = require('../../app/routes/shared/errors'),
   machine = require('../support/machine'),
   models = require('../../app/models'),
-  concerns = require('./concerns');
+  concerns = require('./concerns'),
+  versions = require('../../config/versions');
 
 const DEFAULT_STRATEGY = 'spread',
-      VALID_STRATEGIES = [DEFAULT_STRATEGY, 'binpack', 'random'];
+      VALID_STRATEGIES = [DEFAULT_STRATEGY, 'binpack', 'random'],
+      LATEST_VERSIONS  = _.first(versions);
 
 describe('Cluster Model', () => {
   db.sync();
@@ -101,7 +103,9 @@ describe('Cluster Model', () => {
       it('returns an error', () => {
         let expected = new errors.StateError('upgrade', cluster.state);
 
-        return cluster.upgrade().catch(err => {
+        return cluster.upgrade().then(() => {
+          throw new Error('Upgrade should be rejected!');
+        }).catch(err => {
           return expect(err).to.deep.equal(expected);
         });
       });
@@ -110,13 +114,49 @@ describe('Cluster Model', () => {
     context('when cluster is running', () => {
       let cluster;
 
+      /*
+       * A cluster is currently created with the latest versions avaiable.
+       * We need to update it with a prior versions in order to validate
+       * the following test suite.
+       */
       beforeEach(() => {
         cluster = factory.buildSync('runningCluster');
-        return cluster.save();
+        return cluster.save().then(() => {
+          return cluster.update({
+            docker_version: '0.0.0',
+            swarm_version:  '0.0.0'
+          });
+        });
       });
 
-      context.skip('when cluster already has the latest versions', () => {
+      ['docker', 'swarm'].forEach(binary => {
+        context(`when cluster already has the latest ${binary} version`, () => {
+          beforeEach(() => {
+            return cluster.update({
+              docker_version: LATEST_VERSIONS.docker,
+              swarm_version:  LATEST_VERSIONS.swarm
+            });
+          });
 
+          it('returns an upgrade version error', () => {
+            return cluster.upgrade().then(() => {
+              throw new Error('Upgrade should be rejected!');
+            }).catch(err => {
+              return expect(err)
+                .to.deep.equal(new errors.AlreadyUpgradedError());
+            });
+          });
+
+          it(`has the same ${binary} version as before`, () => {
+            return cluster.upgrade().then(() => {
+              throw new Error('Upgrade should be rejected!');
+            }).catch(() => {
+              return expect(cluster.reload())
+                .to.eventually.have
+                .property(`${binary}_version`, LATEST_VERSIONS[binary]);
+            });
+          });
+        });
       });
 
       context('when nodes upgrade succeeds', () => {
@@ -130,8 +170,12 @@ describe('Cluster Model', () => {
         });
 
         ['docker', 'swarm'].forEach(binary => {
-          it.skip(`has the latest ${binary} version available`, () => {
+          it(`has the latest ${binary} version available`, () => {
+            let latestVersion = LATEST_VERSIONS[binary];
 
+            return expect(cluster.upgrade().then(() => {
+              return cluster.reload();
+            })).to.eventually.have.property(`${binary}_version`, latestVersion);
           });
         });
 
@@ -155,37 +199,43 @@ describe('Cluster Model', () => {
         });
       });
 
-      // Add a tests verifying that we receive a promise chain
-      // equal to all nodes.upgrade + cluster.update
-
       context('when a node upgrade fails', () => {
         let fakeNodes;
 
         beforeEach(() => {
           fakeNodes = _.map(new Array(10), () => {
-            return { upgrade: sinon.stub().returns(false) };
+            return { upgrade: sinon.stub().returns(Promise.reject()) };
           });
           cluster.getNodes = sinon.stub().returns(Promise.resolve(fakeNodes));
         });
 
-        it('cancels all nodes upgrade', () => {
-          return cluster.upgrade().catch(() => {
+        ['docker', 'swarm'].forEach(binary => {
+          it(`has the latest ${binary} version available`, () => {
+            let latestVersion = LATEST_VERSIONS[binary];
+
+            return expect(cluster.upgrade().then(() => {
+              return cluster.reload();
+            })).to.eventually.have.property(`${binary}_version`, latestVersion);
+          });
+        });
+
+        it('is in upgrading state', () => {
+          return expect(cluster.upgrade().then(() => {
+            return cluster.reload();
+          })).to.eventually.have.property('state', 'upgrading');
+        });
+
+        it('upgrades all the cluster nodes', () => {
+          return cluster.upgrade().then(() => {
             fakeNodes.forEach(node => {
-              expect(node.upgrade).not.to.have.been.called;
+              expect(node.upgrade).to.have.been.called;
             });
           });
         });
 
-        it('is not in upgrading state', () => {
-          return cluster.upgrade().catch(() => {
-            return expect(cluster.reload())
-              .not.to.eventually.have.property('state', 'upgrading')
-          });
-        });
-
-        ['docker', 'swarm'].forEach(binary => {
-          it.skip(`has the same ${binary} version as before`, () => {
-          });
+        it('returns the upgraded cluster', () =>{
+          return expect(cluster.upgrade())
+            .to.eventually.deep.equal(cluster);
         });
       });
     });
@@ -242,12 +292,8 @@ describe('Cluster Model', () => {
     let cluster;
 
     beforeEach(() => {
-      sinon.stub(machine, 'createToken').returns(new Promise(resolve => {
-        resolve(FAKE_TOKEN);
-      }));
-      sinon.stub(machine, 'createCerts').returns(new Promise(resolve => {
-        resolve(FAKE_CERTS);
-      }));
+      sinon.stub(machine, 'createToken').returns(Promise.resolve(FAKE_TOKEN));
+      sinon.stub(machine, 'createCerts').returns(Promise.resolve(FAKE_CERTS));
       cluster = factory.buildSync('cluster');
       return cluster.save();
     });
@@ -268,6 +314,12 @@ describe('Cluster Model', () => {
 
     it('can be deleted', () => {
       return expect(cluster.destroy()).to.be.fulfilled;
+    });
+
+    ['docker', 'swarm'].forEach(binary => {
+      it(`has the latest ${binary} version available`, () => {
+        expect(cluster[`${binary}_version`]).to.equal(LATEST_VERSIONS[binary]);
+      });
     });
 
     context('adding a node to this cluster', () => {

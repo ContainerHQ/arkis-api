@@ -417,20 +417,26 @@ describe('Node Model', () => {
       it('returns an error', () => {
         let expected = new errors.StateError('upgrade', node.state);
 
-        return node.upgrade().catch(err => {
+        return node.upgrade().then(() => {
+          throw new Error('Upgrade should be rejected!');
+        }).catch(err => {
           expect(err).to.deep.equal(expected);
         });
       });
 
       it('has the same state than before', () => {
-        return node.upgrade().catch(err => {
+        return node.upgrade().then(() => {
+          throw new Error('Upgrade should be rejected!');
+        }).catch(err => {
           return expect(node.reload())
             .to.eventually.have.property('state', 'deploying');
         });
       });
 
       it("doesn't update the machine behind", () => {
-        return node.upgrade().catch(() => {
+        return node.upgrade().then(() => {
+          throw new Error('Upgrade should be rejected!');
+        }).catch(() => {
           expect(machine.upgrade).to.not.have.been.called;
         });
       });
@@ -454,14 +460,18 @@ describe('Node Model', () => {
       it('has the same state than before', () => {
         let previousState = node.state;
 
-        return node.upgrade(VERSIONS).catch(() => {
+        return node.upgrade(VERSIONS).then(() => {
+          throw new Error('Upgrade should be rejected!');
+        }).catch(() => {
           return expect(node.reload())
             .to.eventually.have.property('state', previousState);
         });
       });
 
       it("doesn't update the machine behind", () => {
-        return node.upgrade(VERSIONS).catch(err => {
+        return node.upgrade(VERSIONS).then(() => {
+          throw new Error('Upgrade should be rejected!');
+        }).catch(err => {
           return expect(err).to.deep.equal(new errors.AlreadyUpgradedError());
         });
       });
