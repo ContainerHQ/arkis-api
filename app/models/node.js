@@ -96,6 +96,24 @@ module.exports = function(sequelize, DataTypes) {
     },
     containers_count: DataTypes.VIRTUAL
   }, DataTypes), mixins.extend('state', 'options', {
+    getterMethods: {
+      state_message: function() {
+        let state = this.get('state');
+
+        switch (state) {
+          case 'empty':
+            return 'Create at least one node to work with this cluster';
+          case 'unreachable':
+            return 'Master node is unreachable';
+          case 'deploying':
+            return 'Node is being deployed';
+          case 'upgrading':
+            return 'Node is being upgraded';
+          case 'running':
+            return 'Node is running and reachable';
+        }
+      },
+    },
     instanceMethods: {
       _deploy: function() {
         return machine.create({}).then(() => {

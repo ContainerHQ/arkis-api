@@ -14,8 +14,11 @@ describe('POST /clusters/', () => {
   });
 
   it('creates a cluster for the user', done => {
-    let form = factory.buildSync('cluster').dataValues;
-
+    let form = factory.buildSync('cluster').dataValues,
+      params = _.merge(_.omit(form,
+        ['id', 'token', 'docker_version', 'swarm_version']),
+        { user_id: user.id }
+      );
     api.clusters(user).create().send(form)
     .expect(201)
     .end((err, res) => {
@@ -23,16 +26,13 @@ describe('POST /clusters/', () => {
 
       let cluster = format.timestamps(res.body.cluster);
 
-      expect(
-        user.getClusters({ where: { id: cluster.id } })
-        .then(clusters => {
-          return _.first(clusters).toJSON();
-        })
-      ).to.eventually.deep.equal(cluster)
-       .and.include(
-         _.merge(_.omit(form, ['id', 'token']), { user_id: user.id }))
-       .and.have.property('token').that.exist
-       .notify(done);
+      expect(user.getClusters({ where: { id: cluster.id } })
+      .then(clusters => {
+        return _.first(clusters).toJSON();
+      })).to.eventually.deep.equal(cluster)
+        .and.include(params)
+        .and.have.property('token').that.exist
+        .notify(done);
     });
   });
 
