@@ -7,13 +7,13 @@ let moment = require('moment');
  */
 const PING_EXPIRATION = 5;
 
-module.exports = function(DataTypes) {
+module.exports = function(DataTypes, opts={}) {
   return {
     attributes: {
       last_state: {
         type: DataTypes.STRING,
         allowNull: false,
-        defaultValue: 'empty',
+        defaultValue: opts.default || 'empty',
         validate: { isIn: [['empty', 'deploying', 'upgrading', 'running']] }
       },
       last_ping: {

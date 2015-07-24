@@ -388,12 +388,10 @@ describe('Node Model', () => {
       let node;
 
       beforeEach(() => {
-        node = factory.buildSync('node');
+        node = factory.buildSync('runningNode');
         node._notifyCluster = sinon.stub();
 
         return node.save().then(() => {
-          return node.update({ last_state: 'running' });
-        }).then(() => {
           return node.upgrade(VERSIONS);
         });
       });
@@ -445,13 +443,13 @@ describe('Node Model', () => {
       });
     });
 
-    context('when node has already the same version', () => {
+    context('when node already has the same version', () => {
       const VERSIONS = { docker: '1.2.0', swarm: '0.2.0' };
 
       let node, error;
 
       beforeEach(() => {
-        node = factory.buildSync('node', {
+        node = factory.buildSync('runningNode', {
           docker_version: VERSIONS.docker,
           swarm_version: VERSIONS.swarm
         });

@@ -95,7 +95,7 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: null,
     },
     containers_count: DataTypes.VIRTUAL
-  }, DataTypes), mixins.extend('state', 'options', {
+  }, DataTypes, { default: 'deploying' }), mixins.extend('state', 'options', {
     getterMethods: {
       state_message: function() {
         let state = this.get('state');
@@ -156,7 +156,6 @@ module.exports = function(sequelize, DataTypes) {
       beforeCreate: function(node) {
         node._generateToken();
         node.fqdn = machine.generateFQDN({});
-        node.last_state = 'deploying';
 
         if (!node.byon) {
           return machine.create({});

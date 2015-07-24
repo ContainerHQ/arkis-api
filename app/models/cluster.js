@@ -122,8 +122,9 @@ module.exports = function(sequelize, DataTypes) {
           case 'upgrading':
             return this.update({ last_state: changes.last_state });
           case 'running':
-            return this.getNodes({ where: { last_state: { $ne: 'running' } } })
-            .then(nodes => {
+            return this.getNodes({ where: {
+              last_state: { $ne: changes.last_state } }
+            }).then(nodes => {
               if (nodes.length > 0) {
                 return this.update({ last_state: _.first(nodes).last_state });
               }

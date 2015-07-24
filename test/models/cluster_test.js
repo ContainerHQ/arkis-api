@@ -274,15 +274,16 @@ describe('Cluster Model', () => {
       ['empty', 'deploying', 'upgrading'].forEach(state => {
         context(`with at least one node in state ${state}`, () => {
           beforeEach(() => {
-            let node = factory.buildSync('node', { cluster_id: cluster.id }),
-              runningNode = factory.buildSync('node', { cluster_id: cluster.id });
+            let node = factory.buildSync('node', {
+                last_state: state,
+                cluster_id: cluster.id
+              }),
+              runningNode = factory.buildSync('runningNode', {
+                cluster_id: cluster.id
+              });
 
             return node.save().then(() => {
-              return node.update({ last_state: state });
-            }).then(() => {
               return runningNode.save();
-            }).then(() => {
-              return runningNode.update({ last_state: 'running' })
             }).then(() => {
               return cluster.notify({ last_state: 'running' })
             }).then(() => {
@@ -298,13 +299,11 @@ describe('Cluster Model', () => {
 
       context('with only nodes in running state', () => {
         beforeEach(() => {
-          let node = factory.buildSync('node', {
+          let node = factory.buildSync('runningNode', {
             cluster_id: cluster.id
           });
 
           return node.save().then(() => {
-            return node.update({ last_state: 'running' })
-          }).then(() => {
             return cluster.update({ last_state: 'upgrading' })
           }).then(() => {
             return cluster.notify({ last_state: 'running' })
@@ -340,46 +339,6 @@ describe('Cluster Model', () => {
       it('has the same state than before', () => {
         expect(cluster.state).to.equal(lastState);
       });
-    });
-  });
-
-  context('afterDestroy', () => {
-    let cluster, nodesId;
-
-    beforeEach(done => {
-      sinon.stub(machine, 'deleteToken', machine.deleteToken);
-
-      factory.create('cluster', (err, clusterCreated) => {
-        if (err) { return done(err); };
-
-        cluster = clusterCreated;
-        factory.createMany('node', { cluster_id: cluster.id }, 10,
-          (err, nodes) => {
-            nodesId = _.pluck(nodes, 'id');
-            done(err);
-        });
-      });
-    });
-
-    afterEach(() => {
-      machine.deleteToken.restore();
-    });
-
-    it('deletes its token', done => {
-      let token = cluster.token;
-
-      cluster.destroy().then(() => {
-        expect(machine.deleteToken).to.have.been.calledWith(token);
-        done();
-      }).catch(done);
-    });
-
-    it('removes its nodes', () => {
-      return expect(
-        cluster.destroy().then(() => {
-          return models.Node.findAll({ where: { id: nodesId } });
-        })
-      ).to.be.fulfilled.and.to.eventually.be.empty;
     });
   });
 
@@ -448,7 +407,6 @@ describe('Cluster Model', () => {
         if (err) { return done(err); };
 
         cluster = clusterCreated;
-
         factory.createMany('node', { cluster_id: cluster.id }, 10,
           (err, nodes) => {
             nodesId = _.pluck(nodes, 'id');
@@ -470,25 +428,10 @@ describe('Cluster Model', () => {
       }).catch(done);
     });
 
-    it('deletes its ssl certificates', () => {
-      let certId;
-
-      return expect(
-        cluster.getCert().then(cert => {
-          certId = cert.id;
-          return cluster.destroy();
-        }).then(() =>{
-          return models.Cert.findById(certId);
-        })
-      ).to.be.fulfilled.and.to.eventually.not.exist;
-    });
-
     it('removes its nodes', () => {
-      return expect(
-        cluster.destroy().then(() => {
-          return models.Node.findAll({ where: { id: nodesId } });
-        })
-      ).to.be.fulfilled.and.to.eventually.be.empty;
+      return expect(cluster.destroy().then(() => {
+        return models.Node.findAll({ where: { id: nodesId } });
+      })).to.be.fulfilled.and.to.eventually.be.empty;
     });
   });
 });
