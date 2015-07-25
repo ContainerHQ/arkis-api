@@ -91,306 +91,6 @@ describe('Cluster Model', () => {
       .to.eventually.have.property('strategy', DEFAULT_STRATEGY);
   });
 
-  context('#upgrade', () => {
-    context('when cluster is not running', () => {
-      let cluster;
-
-      beforeEach(() => {
-        cluster = factory.buildSync('cluster');
-        return cluster.save();
-      });
-
-      it('returns an error', () => {
-        let expected = new errors.StateError('upgrade', cluster.state);
-
-        return cluster.upgrade().then(() => {
-          throw new Error('Upgrade should be rejected!');
-        }).catch(err => {
-          return expect(err).to.deep.equal(expected);
-        });
-      });
-    });
-
-    context('when cluster is running', () => {
-      let cluster;
-
-      /*
-       * A cluster is currently created with the latest versions avaiable.
-       * We need to update it with a prior versions in order to validate
-       * the following test suite.
-       */
-      beforeEach(() => {
-        cluster = factory.buildSync('runningCluster');
-        return cluster.save().then(() => {
-          return cluster.update({
-            docker_version: '0.0.0',
-            swarm_version:  '0.0.0'
-          });
-        });
-      });
-
-      ['docker', 'swarm'].forEach(binary => {
-        context(`when cluster already has the latest ${binary} version`, () => {
-          beforeEach(() => {
-            return cluster.update({
-              docker_version: LATEST_VERSIONS.docker,
-              swarm_version:  LATEST_VERSIONS.swarm
-            });
-          });
-
-          it('returns an upgrade version error', () => {
-            return cluster.upgrade().then(() => {
-              throw new Error('Upgrade should be rejected!');
-            }).catch(err => {
-              return expect(err)
-                .to.deep.equal(new errors.AlreadyUpgradedError());
-            });
-          });
-
-          it(`has the same ${binary} version as before`, () => {
-            return cluster.upgrade().then(() => {
-              throw new Error('Upgrade should be rejected!');
-            }).catch(() => {
-              return expect(cluster.reload())
-                .to.eventually.have
-                .property(`${binary}_version`, LATEST_VERSIONS[binary]);
-            });
-          });
-        });
-      });
-
-      context('when nodes upgrade succeeds', () => {
-        let fakeNodes;
-
-        beforeEach(() => {
-          fakeNodes = _.map(new Array(10), () => {
-            return { upgrade: sinon.stub().returns(true) };
-          });
-          cluster.getNodes = sinon.stub().returns(Promise.resolve(fakeNodes));
-        });
-
-        ['docker', 'swarm'].forEach(binary => {
-          it(`has the latest ${binary} version available`, () => {
-            let latestVersion = LATEST_VERSIONS[binary];
-
-            return expect(cluster.upgrade())
-              .to.eventually.have.property(`${binary}_version`, latestVersion);
-          });
-        });
-
-        it('is in upgrading state', () => {
-          return expect(cluster.upgrade())
-            .to.eventually.have.property('state', 'upgrading');
-        });
-
-        it('upgrades all the cluster nodes', () => {
-          return cluster.upgrade().then(() => {
-            fakeNodes.forEach(node => {
-              expect(node.upgrade).to.have.been.called;
-            });
-          });
-        });
-
-        it('returns the upgraded cluster', () =>{
-          return expect(cluster.upgrade())
-            .to.eventually.deep.equal(cluster);
-        });
-      });
-
-      context('when a node upgrade fails', () => {
-        let fakeNodes;
-
-        beforeEach(() => {
-          fakeNodes = _.map(new Array(10), () => {
-            return { upgrade: sinon.stub().returns(Promise.reject()) };
-          });
-          cluster.getNodes = sinon.stub().returns(Promise.resolve(fakeNodes));
-        });
-
-        ['docker', 'swarm'].forEach(binary => {
-          it(`has the latest ${binary} version available`, () => {
-            let latestVersion = LATEST_VERSIONS[binary];
-
-            return expect(cluster.upgrade())
-              .to.eventually.have.property(`${binary}_version`, latestVersion);
-          });
-        });
-
-        it('is in upgrading state', () => {
-          return expect(cluster.upgrade())
-            .to.eventually.have.property('state', 'upgrading');
-        });
-
-        it('upgrades all the cluster nodes', () => {
-          return cluster.upgrade().then(() => {
-            fakeNodes.forEach(node => {
-              expect(node.upgrade).to.have.been.called;
-            });
-          });
-        });
-
-        it('returns the upgraded cluster', () =>{
-          return expect(cluster.upgrade())
-            .to.eventually.deep.equal(cluster);
-        });
-      });
-    });
-  });
-
-  context('#notify', () => {
-    let cluster;
-
-    beforeEach(() => {
-      cluster = factory.buildSync('runningCluster');
-      return cluster.save();
-    });
-
-    ['deploying', 'upgrading'].forEach(state => {
-      context(`with a last state equal to ${state}`, () => {
-        let lastPing;
-
-        beforeEach(() => {
-          lastPing = cluster.last_ping;
-          return cluster.notify({ last_state: state });
-        });
-
-        it(`has a state set to ${state}`, () => {
-          expect(cluster.state).to.equal(state);
-        });
-
-        it('has the same last ping than before', () => {
-          expect(cluster.last_ping).to.deep.equal(lastPing);
-        });
-      });
-    });
-
-    context('with a last state equal to running', () => {
-      ['deploying', 'upgrading'].forEach(state => {
-        context(`with at least one node in state ${state}`, () => {
-          beforeEach(() => {
-            let node = factory.buildSync('node', {
-                last_state: state,
-                cluster_id: cluster.id
-              }),
-              runningNode = factory.buildSync('runningNode', {
-                cluster_id: cluster.id
-              });
-
-            return node.save().then(() => {
-              return runningNode.save();
-            }).then(() => {
-              return cluster.reload();
-            }).then(() => {
-              return cluster.notify({ last_state: 'running' })
-            });
-          });
-
-          it(`is in ${state} state`, () => {
-            expect(cluster.state).to.equal(state);
-          });
-        });
-      });
-
-      context('with only nodes in running state', () => {
-        beforeEach(() => {
-          let node = factory.buildSync('runningNode', {
-            cluster_id: cluster.id
-          });
-
-          return node.save().then(() => {
-            return cluster.update({ last_state: 'upgrading' })
-          }).then(() => {
-              return cluster.reload();
-          }).then(() => {
-            return cluster.notify({ last_state: 'running' })
-          });
-        });
-
-        it(`is in running state`, () => {
-          expect(cluster.state).to.equal('running');
-        });
-      });
-    });
-
-    context('with destroyed', () => {
-      ['deploying', 'upgrading'].forEach(state => {
-        context(`with at least one node in state ${state}`, () => {
-          beforeEach(() => {
-            let node = factory.buildSync('node', {
-                last_state: state,
-                cluster_id: cluster.id
-              }),
-              runningNode = factory.buildSync('runningNode', {
-                cluster_id: cluster.id
-              });
-
-            return node.save().then(() => {
-              return runningNode.save();
-            }).then(() => {
-              return cluster.reload();
-            }).then(() => {
-              return cluster.notify({ destroyed: true })
-            });
-          });
-
-          it(`is in ${state} state`, () => {
-            expect(cluster.state).to.equal(state);
-          });
-        });
-      });
-
-      context('with only nodes in running state', () => {
-        beforeEach(() => {
-          let node = factory.buildSync('runningNode', {
-            cluster_id: cluster.id
-          });
-
-          return node.save().then(() => {
-            return cluster.reload();
-          }).then(() => {
-            return cluster.update({ last_state: 'upgrading' })
-          }).then(() => {
-            return cluster.notify({ destroyed: true })
-          });
-        });
-
-        it(`is in running state`, () => {
-          expect(cluster.state).to.equal('running');
-        });
-      });
-
-      context('when cluster has no longer any nodes', () => {
-        beforeEach(() => {
-          return cluster.update({ last_state: 'upgrading' }).then(() => {
-            return cluster.notify({ destroyed: true });
-          });
-        });
-
-        it(`is in empty state`, () => {
-          expect(cluster.state).to.equal('empty');
-        });
-      });
-    });
-
-    context('with last ping', () => {
-      let lastPing, lastState;
-
-      beforeEach(() => {
-        lastPing = moment();
-        lastState = cluster.state;
-        return cluster.notify({ last_ping: lastPing });
-      });
-
-      it('updates the cluster last ping with the provided value', () => {
-        expect(cluster.last_ping).to.deep.equal(lastPing.toDate());
-      });
-
-      it('has the same state than before', () => {
-        expect(cluster.state).to.equal(lastState);
-      });
-    });
-  });
-
   context('afterCreate', () => {
     const FAKE_TOKEN = machine.createFakeToken(),
           FAKE_CERTS = machine.createFakeCerts();
@@ -482,5 +182,262 @@ describe('Cluster Model', () => {
         return models.Node.findAll({ where: { id: nodesId } });
       })).to.be.fulfilled.and.to.eventually.be.empty;
     });
+  });
+
+  context('#upgrade', () => {
+    context('when cluster is not running', () => {
+      let cluster;
+
+      beforeEach(() => {
+        cluster = factory.buildSync('cluster');
+        return cluster.save();
+      });
+
+      it('returns an error', () => {
+        let expected = new errors.StateError('upgrade', cluster.state);
+
+        return cluster.upgrade().then(() => {
+          throw new Error('Upgrade should be rejected!');
+        }).catch(err => {
+          return expect(err).to.deep.equal(expected);
+        });
+      });
+    });
+
+    context('when cluster is running', () => {
+      let cluster;
+
+
+      beforeEach(() => {
+        cluster = factory.buildSync('runningCluster');
+        return updateClusterToOldestVersions(cluster);
+      });
+
+      ['docker', 'swarm'].forEach(binary => {
+        context(`when cluster already has the latest ${binary} version`, () => {
+          beforeEach(() => {
+            return cluster.update({
+              docker_version: LATEST_VERSIONS.docker,
+              swarm_version:  LATEST_VERSIONS.swarm
+            });
+          });
+
+          it('returns an upgrade version error', () => {
+            return cluster.upgrade().then(() => {
+              throw new Error('Upgrade should be rejected!');
+            }).catch(err => {
+              return expect(err)
+                .to.deep.equal(new errors.AlreadyUpgradedError());
+            });
+          });
+
+          it(`has the same ${binary} version as before`, () => {
+            return cluster.upgrade().then(() => {
+              throw new Error('Upgrade should be rejected!');
+            }).catch(() => {
+              expect(cluster[`${binary}_version`])
+                .to.equal(LATEST_VERSIONS[binary]);
+            });
+          });
+        });
+      });
+    });
+
+    ['resolve', 'reject'].forEach(result => {
+      contextNodeUpgrade(result);
+    });
+
+    function contextNodeUpgrade(result) {
+      let cluster;
+
+      beforeEach(() => {
+        cluster = factory.buildSync('runningCluster');
+        return updateClusterToOldestVersions(cluster);
+      });
+
+      context(`when a node upgrade has been ${result}ed`, () => {
+        let fakeNodes, upgradedCluster;
+
+        beforeEach(() => {
+          fakeNodes = _.map(new Array(10), () => {
+            return { upgrade: sinon.stub().returns(Promise[result]()) };
+          });
+          cluster.getNodes = sinon.stub().returns(Promise.resolve(fakeNodes));
+          return cluster.upgrade().then(cluster => {
+            upgradedCluster = cluster;
+          });
+        });
+
+        ['docker', 'swarm'].forEach(binary => {
+          it(`has the latest ${binary} version available`, () => {
+            let latestVersion = LATEST_VERSIONS[binary];
+
+            expect(cluster[`${binary}_version`], latestVersion);
+          });
+        });
+
+        it('is in upgrading state', () => {
+          expect(cluster.state).to.equal('upgrading');
+        });
+
+        it('upgrades all the cluster nodes', () => {
+          fakeNodes.forEach(node => {
+            expect(node.upgrade).to.have.been.called;
+          });
+        });
+
+        it('returns the upgraded cluster', () =>{
+          expect(upgradedCluster).to.deep.equal(cluster);
+        });
+      });
+    }
+  });
+
+  /*
+   * A cluster is currently created with the latest versions avaiable.
+   * We need to update it with a prior versions in order to validate
+   * the following test suite.
+   */
+  function updateClusterToOldestVersions(cluster) {
+    return cluster.save().then(() => {
+      return cluster.update({
+        docker_version: '0.0.0',
+        swarm_version:  '0.0.0'
+      });
+    });
+  }
+
+  context('#notify', () => {
+    let cluster;
+
+    beforeEach(() => {
+      cluster = factory.buildSync('runningCluster');
+      return cluster.save();
+    });
+
+    ['deploying', 'upgrading'].forEach(state => {
+      context(`with a last state equal to ${state}`, () => {
+        let lastPing;
+
+        beforeEach(() => {
+          lastPing = cluster.last_ping;
+          return cluster.notify({ last_state: state });
+        });
+
+        it(`has a state set to ${state}`, () => {
+          expect(cluster.state).to.equal(state);
+        });
+
+        it('has the same last ping than before', () => {
+          expect(cluster.last_ping).to.deep.equal(lastPing);
+        });
+      });
+    });
+
+    context('with a last state equal to running', () => {
+      ['deploying', 'upgrading'].forEach(state => {
+        context(`when cluster has at least one node in state ${state}`, () => {
+          beforeEach(() => {
+            return addNodeTo(cluster, 'node', { last_state: state })
+            .then(() => {
+              return addNodeTo(cluster, 'runningNode');
+            }).then(() => {
+              return cluster.notify({ last_state: 'running' })
+            });
+          });
+
+          it(`is in ${state} state`, () => {
+            expect(cluster.state).to.equal(state);
+          });
+        });
+      });
+
+      context('when cluster has only nodes in running state', () => {
+        beforeEach(() => {
+          return addNodeTo(cluster, 'runningNode').then(() => {
+            return cluster.update({ last_state: 'upgrading' })
+          }).then(() => {
+            return cluster.notify({ last_state: 'running' })
+          });
+        });
+
+        it(`is in running state`, () => {
+          expect(cluster.state).to.equal('running');
+        });
+      });
+    });
+
+    context('with destroyed', () => {
+      ['deploying', 'upgrading'].forEach(state => {
+        context(`when cluster has at least one node in state ${state}`, () => {
+          beforeEach(() => {
+            return addNodeTo(cluster, 'node', { last_state: state })
+            .then(() => {
+              return addNodeTo(cluster, 'runningNode');
+            }).then(() => {
+              return cluster.notify({ destroyed: true })
+            });
+          });
+
+          it(`is in ${state} state`, () => {
+            expect(cluster.state).to.equal(state);
+          });
+        });
+      });
+
+      context('when cluster has only nodes in running state', () => {
+        beforeEach(() => {
+          return addNodeTo(cluster, 'runningNode').then(() => {
+            return cluster.update({ last_state: 'upgrading' })
+          }).then(() => {
+            return cluster.notify({ destroyed: true })
+          });
+        });
+
+        it(`is in running state`, () => {
+          expect(cluster.state).to.equal('running');
+        });
+      });
+
+      context('when cluster has no longer any node', () => {
+        beforeEach(() => {
+          return cluster.update({ last_state: 'upgrading' }).then(() => {
+            return cluster.notify({ destroyed: true });
+          });
+        });
+
+        it(`is in empty state`, () => {
+          expect(cluster.state).to.equal('empty');
+        });
+      });
+    });
+
+    context('with last ping', () => {
+      let lastPing, lastState;
+
+      beforeEach(() => {
+        lastPing = moment();
+        lastState = cluster.state;
+        return cluster.notify({ last_ping: lastPing });
+      });
+
+      it('updates the cluster last ping with the provided value', () => {
+        expect(cluster.last_ping).to.deep.equal(lastPing.toDate());
+      });
+
+      it('has the same state than before', () => {
+        expect(cluster.state).to.equal(lastState);
+      });
+    });
+
+    function addNodeTo(cluster, factoryName, opts={}) {
+      _.merge(opts, { cluster_id: cluster.id });
+
+      let node = factory.buildSync(factoryName, opts);
+
+      return cluster.addNode(node).then(() => {
+        return cluster.reload();
+      });
+    }
   });
 });
