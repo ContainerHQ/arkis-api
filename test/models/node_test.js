@@ -114,7 +114,7 @@ describe('Node Model', () => {
     return expect(node.save()).to.eventually.have.property('master', false);
   });
 
-  context('#create', () => {
+  describe('#create', () => {
     const FQDN = 'node_01.node.arkis.io';
 
     let node, cluster;
@@ -183,7 +183,7 @@ describe('Node Model', () => {
     });
   });
 
-  context('#update', () => {
+  describe('#update', () => {
     let node;
 
     beforeEach(() => {
@@ -277,7 +277,7 @@ describe('Node Model', () => {
     });
   });
 
-  context('#destroy', () => {
+  describe('#destroy', () => {
     let node, cluster;
 
     beforeEach(() => {
