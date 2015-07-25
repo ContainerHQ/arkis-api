@@ -148,6 +148,9 @@ module.exports = function(sequelize, DataTypes) {
       },
       _notifyCluster: function(changes) {
         return this.getCluster().then(cluster => {
+          if (!cluster) {
+            return Promise.resolve();
+          }
           return cluster.notify(changes);
         });
       }

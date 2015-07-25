@@ -331,9 +331,8 @@ describe('Node Model', () => {
      */
     beforeEach(() => {
       clock = sinon.useFakeTimers();
+      node  = factory.buildSync('node');
 
-      node = factory.buildSync('node');
-      node.notifyCluster = sinon.stub();
       return node.save().then(node => {
         clock.tick(500);
         return node.ping();
@@ -354,7 +353,6 @@ describe('Node Model', () => {
 
     beforeEach(() => {
       node = factory.buildSync('node');
-      node._notifyCluster = sinon.stub();
       return node.save();
     });
 
@@ -389,7 +387,6 @@ describe('Node Model', () => {
 
       beforeEach(() => {
         node = factory.buildSync('runningNode');
-        node._notifyCluster = sinon.stub();
 
         return node.save().then(() => {
           return node.upgrade(VERSIONS);
@@ -410,8 +407,6 @@ describe('Node Model', () => {
 
       beforeEach(() => {
         node = factory.buildSync('node');
-        node._notifyCluster = sinon.stub();
-
         return node.save();
       });
 
@@ -444,26 +439,18 @@ describe('Node Model', () => {
     });
 
     context('when node already has the same version', () => {
-      const VERSIONS = { docker: '1.2.0', swarm: '0.2.0' };
-
-      let node, error;
+      let node, versions, error;
 
       beforeEach(() => {
-        node = factory.buildSync('runningNode', {
-          docker_version: VERSIONS.docker,
-          swarm_version: VERSIONS.swarm
-        });
-        node._notifyCluster = sinon.stub();
-
-        return node.save().then(() => {
-          return node.update({ last_state: 'running' });
-        });
+        node = factory.buildSync('runningNode');
+        versions = { docker: node.docker_version, swarm: node.swarm_version };
+        return node.save();
       });
 
       it('has the same state than before', () => {
         let previousState = node.state;
 
-        return node.upgrade(VERSIONS).then(() => {
+        return node.upgrade(versions).then(() => {
           throw new Error('Upgrade should be rejected!');
         }).catch(() => {
           return expect(node.reload())
@@ -472,7 +459,7 @@ describe('Node Model', () => {
       });
 
       it("doesn't update the machine behind", () => {
-        return node.upgrade(VERSIONS).then(() => {
+        return node.upgrade(versions).then(() => {
           throw new Error('Upgrade should be rejected!');
         }).catch(err => {
           return expect(err).to.deep.equal(new errors.AlreadyUpgradedError());
