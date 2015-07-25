@@ -147,7 +147,7 @@ describe('Node Model', () => {
       });
     });
 
-    it('it is initialized in deploying state', () => {
+    it('initialized its state to deploying', () => {
       return expect(node.save())
         .to.eventually.have.property('state', 'deploying');
     });
@@ -158,9 +158,11 @@ describe('Node Model', () => {
       });
     });
 
-    it.skip('reports back its last_state to its cluster', () => {
-      expect(cluster.notify)
-        .to.have.been.calledWith({ last_state: node.last_state });
+    it('reports back its last_state to its cluster', () => {
+      return node.save().then(() => {
+        return expect(cluster.notify)
+          .to.have.been.calledWith({ last_state: node.last_state });
+      });
     });
 
     context('when byon node', () => {
@@ -174,7 +176,7 @@ describe('Node Model', () => {
         });
       });
 
-      it('it is initialized in deploying state', () => {
+      it('initialized its state to deploying', () => {
         return expect(node.save())
           .to.eventually.have.property('state', 'deploying');
       });

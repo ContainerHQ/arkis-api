@@ -165,6 +165,9 @@ module.exports = function(sequelize, DataTypes) {
         }
         return Promise.resolve(node);
       },
+      afterCreate: function(node) {
+        return node._notifyCluster({ last_state: node.last_state });
+      },
       afterUpdate: function(node, options) {
         if (_.includes(options.fields, 'public_ip')) {
           return machine.registerFQDN(node);
