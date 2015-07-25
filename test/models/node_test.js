@@ -114,130 +114,15 @@ describe('Node Model', () => {
     return expect(node.save()).to.eventually.have.property('master', false);
   });
 
-  context('when it belongs to a cluster', () => {
-    let node, cluster;
-
-    /*
-     * We are using a fake cluster here, tests for cluster.notify behavior
-     * belongs in the cluster model tests. Therefore we must only verify here
-     * that our node model notify its cluster of its changes when it's
-     * necessary.
-     */
-    beforeEach(() => {
-        cluster = { notify: sinon.stub() };
-        node = factory.buildSync('node');
-        node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
-        return node.save();
-    });
-
-    context('when switching state', () => {
-      /*
-       * Be careful here, sequelize doesn't add a field in options.fields
-       * if we are providing a value for the field equal to its prior value.
-       */
-      let opts = { last_state: 'upgrading' };
-
-      beforeEach(() => {
-        return node.update(opts);
-      });
-
-      it('reports back the new state to its cluster', () => {
-        expect(cluster.notify).to.have.been.calledWith(opts);
-      });
-    });
-
-    context('afterDestroy', () => {
-      beforeEach(() => {
-        sinon.stub(machine, 'destroy', machine.destroy);
-        sinon.stub(machine, 'deleteFQDN', machine.deleteFQDN);
-      });
-
-      afterEach(() => {
-        machine.destroy.restore();
-        machine.deleteFQDN.restore();
-      });
-
-      context('with a non byon node', () => {
-        beforeEach(() => {
-          return node.save().then(() => {
-            return node.destroy();
-          });
-        });
-
-        it('reports back the deletion to its cluster', () => {
-          expect(cluster.notify)
-            .to.have.been.calledWith({ destroyed: true });
-        });
-
-        it('removes the machine behind', () => {
-          expect(machine.destroy).to.have.been.calledWith({});
-        });
-
-        it('removes the fqdn', () => {
-          expect(machine.deleteFQDN).to.have.been.calledWith(node.fqdn);
-        });
-      });
-
-      context('with a byon node', () => {
-        beforeEach(() => {
-          _.merge(node, { byon: true, region: null, node_size: null });
-
-          return node.save().then(() => {
-            return node.destroy();
-          });
-        });
-
-        it('reports back the deletion to its cluster', () => {
-          expect(cluster.notify)
-            .to.have.been.calledWith({ destroyed: true });
-        });
-
-        it("doesn't attempt to remove the machine behind", () => {
-          expect(machine.destroy).to.not.have.been.called;
-        });
-      });
-    });
-
-    context('when updating last_ping', () => {
-      context('when slave node', () => {
-        beforeEach(() => {
-          return node.update({ master: false, last_ping: Date.now() });
-        });
-
-        it("doesn't report back the ping to its cluster", () => {
-          expect(cluster.notify).to.not.have.been.called;
-        });
-      });
-      context('when master node', () => {
-        beforeEach(() => {
-          return node.update({ master: true, last_ping: Date.now() });
-        });
-
-        it('reports back the ping to its cluster', () => {
-          expect(cluster.notify)
-            .to.have.been.calledWith({ last_ping: node.last_ping });
-        });
-      });
-    });
-
-    context('when updating a field different than last fields', () => {
-      beforeEach(() => {
-        return node.update({ public_ip: '127.0.0.1' });
-      });
-
-      it("doesn't notify its cluster", () => {
-        expect(cluster.notify).to.not.have.been.called;
-      });
-    });
-  });
-
-  context('afterCreate', () => {
+  context('#create', () => {
     const FQDN = 'node_01.node.arkis.io';
 
-    let node;
+    let node, cluster;
 
     beforeEach(() => {
+      cluster = { notify: sinon.stub() };
       node = factory.buildSync('node');
+      node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
       sinon.stub(machine, 'generateFQDN').returns(FQDN);
       sinon.stub(machine, 'create', machine.create);
     });
@@ -247,22 +132,22 @@ describe('Node Model', () => {
       machine.create.restore();
     });
 
-    it('has a fqdn', () => {
+    it('itinializes its fqdn', () => {
       return expect(node.save()).to.eventually.have.property('fqdn', FQDN);
     });
 
-    it('has a jwt token', () => {
+    it('initializes its jwt token', () => {
       return expect(node.save())
         .to.eventually.satisfy(has.validJWT);
     });
 
-    it('generate a fqdn through machine', () => {
+    it('generates its fqdn through machine', () => {
       return node.save().then(() => {
         return expect(machine.generateFQDN).to.have.been.calledWith({});
       });
     });
 
-    it('it is in deploying state', () => {
+    it('it is initialized in deploying state', () => {
       return expect(node.save())
         .to.eventually.have.property('state', 'deploying');
     });
@@ -271,6 +156,11 @@ describe('Node Model', () => {
       return node.save().then(() => {
         return expect(machine.create).to.have.been.calledWith({});
       });
+    });
+
+    it.skip('reports back its last_state to its cluster', () => {
+      expect(cluster.notify)
+        .to.have.been.calledWith({ last_state: node.last_state });
     });
 
     context('when byon node', () => {
@@ -284,14 +174,14 @@ describe('Node Model', () => {
         });
       });
 
-      it('it is in empty state', () => {
+      it('it is initialized in deploying state', () => {
         return expect(node.save())
           .to.eventually.have.property('state', 'deploying');
       });
     });
   });
 
-  context('afterUpdate', () => {
+  context('#update', () => {
     let node;
 
     beforeEach(() => {
@@ -319,6 +209,126 @@ describe('Node Model', () => {
           return expect(machine.registerFQDN).not.to.have.been.called;
         });
       })
+    });
+
+    context('when it belongs to a cluster', () => {
+      let cluster;
+
+      /*
+       * We are using a fake cluster here, tests for cluster.notify behavior
+       * belongs in the cluster model tests. Therefore we must only verify here
+       * that our node model notify its cluster of its changes when it's
+       * necessary.
+       */
+      beforeEach(() => {
+          cluster = { notify: sinon.stub() };
+          node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+      });
+
+      context('when updating last_state', () => {
+        /*
+         * Be careful here, sequelize doesn't add a field in options.fields
+         * if we are providing a value for the field equal to its prior value.
+         */
+        let opts = { last_state: 'upgrading' };
+
+        beforeEach(() => {
+          return node.update(opts);
+        });
+
+        it('reports back the new state to its cluster', () => {
+          expect(cluster.notify).to.have.been.calledWith(opts);
+        });
+      });
+
+      context('when updating last_ping', () => {
+        context('when slave node', () => {
+          beforeEach(() => {
+            return node.update({ master: false, last_ping: Date.now() });
+          });
+
+          it("doesn't report back the ping to its cluster", () => {
+            expect(cluster.notify).to.not.have.been.called;
+          });
+        });
+        context('when master node', () => {
+          beforeEach(() => {
+            return node.update({ master: true, last_ping: Date.now() });
+          });
+
+          it('reports back the ping to its cluster', () => {
+            expect(cluster.notify)
+              .to.have.been.calledWith({ last_ping: node.last_ping });
+          });
+        });
+      });
+
+      context('when updating a field different than last fields', () => {
+        beforeEach(() => {
+          return node.update({ public_ip: '127.0.0.1' });
+        });
+
+        it("doesn't notify its cluster", () => {
+          expect(cluster.notify).to.not.have.been.called;
+        });
+      });
+    });
+  });
+
+  context('#destroy', () => {
+    let node, cluster;
+
+    beforeEach(() => {
+      cluster = { notify: sinon.stub() };
+      node = factory.buildSync('node');
+      node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+      sinon.stub(machine, 'destroy', machine.destroy);
+      sinon.stub(machine, 'deleteFQDN', machine.deleteFQDN);
+    });
+
+    afterEach(() => {
+      machine.destroy.restore();
+      machine.deleteFQDN.restore();
+    });
+
+    context('with a non byon node', () => {
+      beforeEach(() => {
+        return node.save().then(() => {
+          return node.destroy();
+        });
+      });
+
+      it('reports back the deletion to its cluster', () => {
+        expect(cluster.notify)
+          .to.have.been.calledWith({ destroyed: true });
+      });
+
+      it('removes the machine behind', () => {
+        expect(machine.destroy).to.have.been.calledWith({});
+      });
+
+      it('removes the fqdn', () => {
+        expect(machine.deleteFQDN).to.have.been.calledWith(node.fqdn);
+      });
+    });
+
+    context('with a byon node', () => {
+      beforeEach(() => {
+        _.merge(node, { byon: true, region: null, node_size: null });
+
+        return node.save().then(() => {
+          return node.destroy();
+        });
+      });
+
+      it('reports back the deletion to its cluster', () => {
+        expect(cluster.notify)
+          .to.have.been.calledWith({ destroyed: true });
+      });
+
+      it("doesn't attempt to remove the machine behind", () => {
+        expect(machine.destroy).to.not.have.been.called;
+      });
     });
   });
 

@@ -163,7 +163,6 @@ module.exports = function(sequelize, DataTypes) {
         if (!node.byon) {
           return machine.create({});
         }
-
         return Promise.resolve(node);
       },
       afterUpdate: function(node, options) {
