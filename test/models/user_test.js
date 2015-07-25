@@ -68,30 +68,30 @@ describe('User Model', () => {
     });
   });
 
-  describe('afterCreate', () => {
+  describe('#create', () => {
     let user;
 
     beforeEach(() => {
       user = factory.buildSync('user');
     });
 
-    it('has a valid json web token', () => {
+    it('initializes its token', () => {
       return expect(user.save()).to.eventually.satisfy(has.validJWT);
     });
 
-    it('has a hash password', () => {
+    it('stores its password as a hash', () => {
       return expect(user.save())
         .to.eventually.satisfy(has.hashPassword(user.password));
     });
 
-    it('has a profile', () => {
+    it('creates its profile', () => {
       return expect(user.save().then(user => {
         return user.getProfile();
       })).to.eventually.exist;
     });
   });
 
-  describe('afterUpdate', () => {
+  describe('#update', () => {
     let user, password;
 
     /*
@@ -127,7 +127,7 @@ describe('User Model', () => {
     });
   });
 
-  describe('afterDestroy', () => {
+  describe('#destroy', () => {
     let user;
 
     beforeEach(() => {
@@ -135,7 +135,7 @@ describe('User Model', () => {
       return user.save();
     });
 
-    it('removes the user profile', () => {
+    it('removes its user profile', () => {
       let profileId;
 
       return expect(
@@ -162,7 +162,7 @@ describe('User Model', () => {
         );
       });
 
-      it('removes the user clusters', () => {
+      it('removes its clusters', () => {
         let clusterIds = _.pluck(clusters, 'id');
 
         return expect(
@@ -219,11 +219,15 @@ describe('User Model', () => {
       return user.save();
     });
 
-    it('adds a token to the user', () => {
+    it('generates a new token for the user', () => {
+      let previousToken = user.token;
+
       user.revokeToken();
       user.generateToken();
 
-      return expect(user.save()).to.eventually.satisfy(has.validJWT);
+      return expect(user.save())
+        .to.eventually.satisfy(has.validJWT).and
+        .not.to.have.property('token', previousToken);
     });
   });
 });
