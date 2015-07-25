@@ -125,12 +125,15 @@ describe('GET /clusters/', () => {
     });
 
     context('when user filters by name', () => {
-      let name = 'filter-production';
+      let name;
 
       beforeEach(done => {
-        let opts = { name: name, user_id: user.id };
+        let opts = { user_id: user.id };
 
-        factory.createMany('cluster', opts, 3, done);
+        factory.createMany('cluster', opts, 10, (err, clusters) => {
+          name = _(clusters).shuffle().first().name;
+          done(err);
+        });
       });
 
       it('retrieves only user clusters with the same name', done => {

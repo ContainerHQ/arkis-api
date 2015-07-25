@@ -52,9 +52,9 @@ module.exports = {
       },
       fqdn: {
         type: DataTypes.STRING,
-        unique: true,
         allowNull: true,
         defaultValue: null,
+        unique: true,
         validate: { isUrl: true }
       },
       public_ip: {

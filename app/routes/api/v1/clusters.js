@@ -39,9 +39,9 @@ router
   .scope(['defaultScope', 'state'], { method: ['state', req.query.state] })
   .findAndCount(criterias).then(result => {
     res.json({
-      meta: _.chain(criterias)
-             .pick(['limit', 'offset'])
-             .merge({ total_count: result.count.length }),
+      meta: _(criterias)
+        .pick(['limit', 'offset'])
+        .merge({ total_count: result.count.length }),
       clusters: result.rows
     });
   }).catch(next);
@@ -55,10 +55,11 @@ router
 .param('id', (req, res, next, id) => {
   if (!validator.isUUID(id)) { return res.notFound(); }
 
-  req.user.getClusters({ where: { id: id } }).then(clusters => {
-    if (clusters.length === 0) { return res.notFound(); }
+  Cluster.findOne({ where: { id: id, user_id: req.user.id } })
+  .then(cluster => {
+    if (!cluster) { return res.notFound(); }
 
-    req.cluster = _.first(clusters);
+    req.cluster = cluster;
     next();
   }).catch(next);
 })

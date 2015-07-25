@@ -14,7 +14,7 @@ describe('Node Model', () => {
    * we must use a byon node wich has a default state set to
    * 'empty'.
    */
-  concerns.behavesAsAStateMachine('byonNode');
+  concerns.behavesAsAStateMachine('byonNode', { default: 'deploying' });
 
   describe('validations', () => {
     /*
@@ -131,7 +131,11 @@ describe('Node Model', () => {
     });
 
     context('when switching state', () => {
-      let opts = { last_state: 'deploying' };
+      /*
+       * Be careful here, sequelize doesn't add a field in options.fields
+       * if we are providing a value for the field equal to its prior value.
+       */
+      let opts = { last_state: 'upgrading' };
 
       beforeEach(() => {
         return node.update(opts);
@@ -282,7 +286,7 @@ describe('Node Model', () => {
 
       it('it is in empty state', () => {
         return expect(node.save())
-          .to.eventually.have.property('state', 'empty');
+          .to.eventually.have.property('state', 'deploying');
       });
     });
   });
@@ -386,6 +390,7 @@ describe('Node Model', () => {
       beforeEach(() => {
         node = factory.buildSync('runningNode');
         node._notifyCluster = sinon.stub();
+
         return node.save().then(() => {
           return node.upgrade(VERSIONS);
         });
@@ -413,26 +418,32 @@ describe('Node Model', () => {
       it('returns an error', () => {
         let expected = new errors.StateError('upgrade', node.state);
 
-        return node.upgrade().catch(err => {
+        return node.upgrade().then(() => {
+          throw new Error('Upgrade should be rejected!');
+        }).catch(err => {
           expect(err).to.deep.equal(expected);
         });
       });
 
       it('has the same state than before', () => {
-        return node.upgrade().catch(err => {
+        return node.upgrade().then(() => {
+          throw new Error('Upgrade should be rejected!');
+        }).catch(err => {
           return expect(node.reload())
             .to.eventually.have.property('state', 'deploying');
         });
       });
 
       it("doesn't update the machine behind", () => {
-        return node.upgrade().catch(() => {
+        return node.upgrade().then(() => {
+          throw new Error('Upgrade should be rejected!');
+        }).catch(() => {
           expect(machine.upgrade).to.not.have.been.called;
         });
       });
     });
 
-    context('when node has already the same version', () => {
+    context('when node already has the same version', () => {
       const VERSIONS = { docker: '1.2.0', swarm: '0.2.0' };
 
       let node, error;
@@ -444,23 +455,53 @@ describe('Node Model', () => {
         });
         node._notifyCluster = sinon.stub();
 
-        return node.save();
+        return node.save().then(() => {
+          return node.update({ last_state: 'running' });
+        });
       });
 
       it('has the same state than before', () => {
         let previousState = node.state;
 
-        return node.upgrade(VERSIONS).catch(() => {
+        return node.upgrade(VERSIONS).then(() => {
+          throw new Error('Upgrade should be rejected!');
+        }).catch(() => {
           return expect(node.reload())
             .to.eventually.have.property('state', previousState);
         });
       });
 
       it("doesn't update the machine behind", () => {
-        return node.upgrade(VERSIONS).catch(err => {
+        return node.upgrade(VERSIONS).then(() => {
+          throw new Error('Upgrade should be rejected!');
+        }).catch(err => {
           return expect(err).to.deep.equal(new errors.AlreadyUpgradedError());
         });
       });
     });
+
+    it('fails with a too long name', () => {
+      let node = factory.buildSync('node', { name: _.repeat('*', 65) });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with an invalid fqdn', () => {
+      let node = factory.buildSync('node', { fqdn: _.repeat('*', 10) });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with an invalid public_ip', () => {
+      let node = factory.buildSync('node', { public_ip: _.repeat('*', 10) });
+
+      return expect(node.save()).to.be.rejected;
+    });
+  });
+
+  it('it is not a master node by default', () => {
+    let node = factory.buildSync('node');
+
+    return expect(node.save()).to.eventually.have.property('master', false);
   });
 });

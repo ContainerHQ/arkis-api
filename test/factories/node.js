@@ -21,14 +21,13 @@ module.exports = function(factory) {
     region: 'london',
     node_size: 'deathstar',
     public_ip: '192.168.212.128',
-    last_state: 'running'
   });
 
   factory.define('runningNode', Node, {
     name: random.string,
-    master: false,
-    byon: true,
-    public_ip: '192.168.212.129',
+    region: 'london',
+    node_size: 'deathstar',
+    public_ip: '192.168.212.128',
     last_state: 'running',
     last_ping: Date.now
   });

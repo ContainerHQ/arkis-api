@@ -36,6 +36,16 @@ module.exports = {
         defaultValue: 'spread',
         validate: { isIn: [['spread', 'binpack', 'random']] }
       },
+      docker_version: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+      },
+      swarm_version: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+      },
       last_state: {
         type: DataTypes.STRING,
         allowNull: false,

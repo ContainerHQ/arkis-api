@@ -95,14 +95,26 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: null,
     },
     containers_count: DataTypes.VIRTUAL
-  }, DataTypes), mixins.extend('state', 'options', {
-    instanceMethods: {
-      _deploy: function() {
-        return machine.create({}).then(() => {
-          this.last_state = 'deploying';
-          return this;
-        });
+  }, DataTypes, { default: 'deploying' }), mixins.extend('state', 'options', {
+    getterMethods: {
+      state_message: function() {
+        let state = this.get('state');
+
+        switch (state) {
+          case 'empty':
+            return 'Create at least one node to work with this cluster';
+          case 'unreachable':
+            return 'Master node is unreachable';
+          case 'deploying':
+            return 'Node is being deployed';
+          case 'upgrading':
+            return 'Node is being upgraded';
+          case 'running':
+            return 'Node is running and reachable';
+        }
       },
+    },
+    instanceMethods: {
       _generateToken: function() {
         this.token = token.generate(this.id);
       },
@@ -142,10 +154,12 @@ module.exports = function(sequelize, DataTypes) {
     },
     hooks: {
       beforeCreate: function(node) {
-        node.fqdn = machine.generateFQDN({});
         node._generateToken();
+        node.fqdn = machine.generateFQDN({});
 
-        if (!node.byon) { return node._deploy();}
+        if (!node.byon) {
+          return machine.create({});
+        }
 
         return Promise.resolve(node);
       },

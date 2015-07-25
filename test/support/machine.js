@@ -1,14 +1,7 @@
 'use strict';
 
-let random = require('./random');
-
-function resolve() {
-  return new Promise(resolve => {
-    resolve();
-  });
-}
-
-let machine = {};
+let random = require('./random'),
+  machine = {};
 
 /*
  * This is a async method, the real implementation is calling
@@ -16,8 +9,25 @@ let machine = {};
  */
 machine.createToken = function() {
   return new Promise(resolve => {
-    resolve(random.string() + random.string());
+    resolve(this.createFakeToken());
   });
+};
+
+machine.createCerts = function() {
+  return new Promise(resolve => {
+    resolve(this.createFakeCerts());
+  });
+};
+
+machine.createFakeToken = function() {
+  return random.string() + random.string();
+};
+
+machine.createFakeCerts = function() {
+  return {
+    client: { cert: random.string(), key: random.string(), ca: random.string() },
+    server: { cert: random.string(), key: random.string(), ca: random.string() }
+  };
 };
 
 machine.generateFQDN = function() {
@@ -32,7 +42,9 @@ machine.generateFQDN = function() {
   'upgrade',
   'destroy'
 ].forEach(method => {
-  machine[method] = resolve;
+  machine[method] = function() {
+    return Promise.resolve();
+  };
 });
 
 module.exports = machine;

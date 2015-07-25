@@ -3,7 +3,10 @@
 let _ = require('lodash'),
   errors = require('../routes/shared/errors'),
   mixins = require('./concerns'),
-  machine = require('../../config/machine');
+  machine = require('../../config/machine'),
+  versions = require('../../config/versions');
+
+const LATEST_VERSIONS = _.first(versions);
 
 module.exports = function(sequelize, DataTypes) {
   let Cluster = sequelize.define('Cluster', mixins.extend('state', 'attributes', {
@@ -37,6 +40,16 @@ module.exports = function(sequelize, DataTypes) {
         }
       }
     },
+    docker_version: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
+    },
+    swarm_version: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
+    },
     containers_count: DataTypes.VIRTUAL
   }, DataTypes), mixins.extend('state', 'options', {
     defaultScope: {
@@ -62,7 +75,17 @@ module.exports = function(sequelize, DataTypes) {
     },
     hooks: {
       beforeCreate: function(cluster) {
+        _.merge(cluster, {
+          docker_version: LATEST_VERSIONS.docker,
+          swarm_version:  LATEST_VERSIONS.swarm
+        });
         return cluster._initializeToken();
+      },
+      afterCreate: function(cluster) {
+        return cluster._initializeCert();
+      },
+      afterDestroy: function(cluster) {
+        return cluster._destroyToken();
       },
     },
     instanceMethods: {
@@ -71,8 +94,57 @@ module.exports = function(sequelize, DataTypes) {
           this.token = token;
         });
       },
-      notify: function(changes) {
-        console.log(changes);
+      _initializeCert: function() {
+        return machine.createCerts().then(certs => {
+          let params = {};
+
+          _.keys(certs).forEach(type => {
+            _.keys(certs[type]).forEach(name => {
+              params[`${type}_${name}`] = certs[type][name];
+            });
+          });
+          return this.createCert(params);
+        });
+      },
+      _destroyToken: function() {
+        return machine.deleteToken(this.token);
+      },
+      _hasLatestVersions: function() {
+        return LATEST_VERSIONS.docker === this.docker_version &&
+               LATEST_VERSIONS.swarm  === this.swarm_version;
+      },
+      _getLastStateFromNodes: function() {
+        if (this.nodes_count <= 0) {
+          return Promise.resolve('empty');
+        }
+        return this.getNodes({ where: {
+          last_state: { $ne: 'running' }
+        }}).then(nodes => {
+          if (nodes.length > 0) {
+            return _.first(nodes).last_state;
+          }
+          return 'running';
+        });
+      },
+      notify: function(changes={}) {
+        if (_.has(changes, 'last_ping')) {
+          return this.update({ last_ping: changes.last_ping });
+        }
+        if (!!changes.destroyed) {
+          return this._getLastStateFromNodes().then(lastState => {
+            return this.update({ last_state: lastState });
+          });
+        }
+        switch (changes.last_state) {
+          case 'deploying':
+          case 'upgrading':
+            return this.update({ last_state: changes.last_state });
+          case 'running':
+            return this._getLastStateFromNodes().then(lastState => {
+              return this.update({ last_state: lastState });
+            });
+        }
+        return Promise.resolve(this);
       },
       upgrade: function() {
         let state = this.get('state');
@@ -80,16 +152,15 @@ module.exports = function(sequelize, DataTypes) {
         if (state !== 'running') {
           return Promise.reject(new errors.StateError('upgrade', state));
         }
-        let versions = {}; //_.first(config.versions);
-
+        if (this._hasLatestVersions()) {
+          return Promise.reject(new errors.AlreadyUpgradedError());
+        }
         return this.getNodes().then(nodes => {
-          let promises = _.invoke(nodes, 'upgrade', versions);
+          _.invoke(nodes, 'upgrade', versions);
 
-          return Promise.all(promises);
-        }).then(() => {
           return this.update({
-      //      docker_version: versions.docker,
-      //      swarm_version: verions.swarm,
+            docker_version: LATEST_VERSIONS.docker,
+            swarm_version:  LATEST_VERSIONS.swarm,
             last_state: 'upgrading'
           });
         });
@@ -97,10 +168,10 @@ module.exports = function(sequelize, DataTypes) {
     },
     classMethods: {
       associate: function(models) {
-        Cluster.hasMany(models.Node, {
-          onDelete: 'cascade',
+        Cluster.hasMany(models.Node, { onDelete: 'cascade',
           counterCache: { as: 'nodes_count' }
         });
+        Cluster.hasOne(models.Cert, { onDelete: 'cascade' });
       }
     }
   }));
