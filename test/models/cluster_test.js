@@ -173,16 +173,14 @@ describe('Cluster Model', () => {
           it(`has the latest ${binary} version available`, () => {
             let latestVersion = LATEST_VERSIONS[binary];
 
-            return expect(cluster.upgrade().then(() => {
-              return cluster.reload();
-            })).to.eventually.have.property(`${binary}_version`, latestVersion);
+            return expect(cluster.upgrade())
+              .to.eventually.have.property(`${binary}_version`, latestVersion);
           });
         });
 
         it('is in upgrading state', () => {
-          return expect(cluster.upgrade().then(() => {
-            return cluster.reload();
-          })).to.eventually.have.property('state', 'upgrading');
+          return expect(cluster.upgrade())
+            .to.eventually.have.property('state', 'upgrading');
         });
 
         it('upgrades all the cluster nodes', () => {
@@ -213,16 +211,14 @@ describe('Cluster Model', () => {
           it(`has the latest ${binary} version available`, () => {
             let latestVersion = LATEST_VERSIONS[binary];
 
-            return expect(cluster.upgrade().then(() => {
-              return cluster.reload();
-            })).to.eventually.have.property(`${binary}_version`, latestVersion);
+            return expect(cluster.upgrade())
+              .to.eventually.have.property(`${binary}_version`, latestVersion);
           });
         });
 
         it('is in upgrading state', () => {
-          return expect(cluster.upgrade().then(() => {
-            return cluster.reload();
-          })).to.eventually.have.property('state', 'upgrading');
+          return expect(cluster.upgrade())
+            .to.eventually.have.property('state', 'upgrading');
         });
 
         it('upgrades all the cluster nodes', () => {
@@ -255,9 +251,7 @@ describe('Cluster Model', () => {
 
         beforeEach(() => {
           lastPing = cluster.last_ping;
-          return cluster.notify({ last_state: state }).then(() => {
-            return cluster.reload();
-          });
+          return cluster.notify({ last_state: state });
         });
 
         it(`has a state set to ${state}`, () => {
@@ -271,7 +265,7 @@ describe('Cluster Model', () => {
     });
 
     context('with a last state equal to running', () => {
-      ['empty', 'deploying', 'upgrading'].forEach(state => {
+      ['deploying', 'upgrading'].forEach(state => {
         context(`with at least one node in state ${state}`, () => {
           beforeEach(() => {
             let node = factory.buildSync('node', {
@@ -285,9 +279,9 @@ describe('Cluster Model', () => {
             return node.save().then(() => {
               return runningNode.save();
             }).then(() => {
-              return cluster.notify({ last_state: 'running' })
-            }).then(() => {
               return cluster.reload();
+            }).then(() => {
+              return cluster.notify({ last_state: 'running' })
             });
           });
 
@@ -306,9 +300,9 @@ describe('Cluster Model', () => {
           return node.save().then(() => {
             return cluster.update({ last_state: 'upgrading' })
           }).then(() => {
-            return cluster.notify({ last_state: 'running' })
+              return cluster.reload();
           }).then(() => {
-            return cluster.reload();
+            return cluster.notify({ last_state: 'running' })
           });
         });
 
@@ -318,7 +312,64 @@ describe('Cluster Model', () => {
       });
     });
 
-    context.skip('with destroyed', () => {
+    context('with destroyed', () => {
+      ['deploying', 'upgrading'].forEach(state => {
+        context(`with at least one node in state ${state}`, () => {
+          beforeEach(() => {
+            let node = factory.buildSync('node', {
+                last_state: state,
+                cluster_id: cluster.id
+              }),
+              runningNode = factory.buildSync('runningNode', {
+                cluster_id: cluster.id
+              });
+
+            return node.save().then(() => {
+              return runningNode.save();
+            }).then(() => {
+              return cluster.reload();
+            }).then(() => {
+              return cluster.notify({ destroyed: true })
+            });
+          });
+
+          it(`is in ${state} state`, () => {
+            expect(cluster.state).to.equal(state);
+          });
+        });
+      });
+
+      context('with only nodes in running state', () => {
+        beforeEach(() => {
+          let node = factory.buildSync('runningNode', {
+            cluster_id: cluster.id
+          });
+
+          return node.save().then(() => {
+            return cluster.reload();
+          }).then(() => {
+            return cluster.update({ last_state: 'upgrading' })
+          }).then(() => {
+            return cluster.notify({ destroyed: true })
+          });
+        });
+
+        it(`is in running state`, () => {
+          expect(cluster.state).to.equal('running');
+        });
+      });
+
+      context('when cluster has no longer any nodes', () => {
+        beforeEach(() => {
+          return cluster.update({ last_state: 'upgrading' }).then(() => {
+            return cluster.notify({ destroyed: true });
+          });
+        });
+
+        it(`is in empty state`, () => {
+          expect(cluster.state).to.equal('empty');
+        });
+      });
     });
 
     context('with last ping', () => {
@@ -327,9 +378,7 @@ describe('Cluster Model', () => {
       beforeEach(() => {
         lastPing = moment();
         lastState = cluster.state;
-        return cluster.notify({ last_ping: lastPing }).then(() => {
-          return cluster.reload();
-        });
+        return cluster.notify({ last_ping: lastPing });
       });
 
       it('updates the cluster last ping with the provided value', () => {

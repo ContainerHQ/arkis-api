@@ -114,6 +114,9 @@ module.exports = function(sequelize, DataTypes) {
                LATEST_VERSIONS.swarm  === this.swarm_version;
       },
       _getLastStateFromNodes: function() {
+        if (this.nodes_count <= 0) {
+          return Promise.resolve('empty');
+        }
         return this.getNodes({ where: {
           last_state: { $ne: 'running' }
         }}).then(nodes => {
@@ -123,9 +126,14 @@ module.exports = function(sequelize, DataTypes) {
           return 'running';
         });
       },
-      notify: function(changes) {
+      notify: function(changes={}) {
         if (_.has(changes, 'last_ping')) {
           return this.update({ last_ping: changes.last_ping });
+        }
+        if (!!changes.destroyed) {
+          return this._getLastStateFromNodes().then(lastState => {
+            return this.update({ last_state: lastState });
+          });
         }
         switch (changes.last_state) {
           case 'deploying':
