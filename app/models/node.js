@@ -82,7 +82,26 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: true,
       defaultValue: null,
+      unique: true,
       validate: { isIP: true }
+    },
+    cpu: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      defaultValue: null,
+      allowNull: true,
+      validate: { min: 1 }
+    },
+    memory: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      defaultValue: null,
+      allowNull: true,
+      validate: { min: 128 }
+    },
+    disk: {
+      type: DataTypes.REAL.UNSIGNED,
+      defaultValue: null,
+      allowNull: true,
+      validate: { min: 1.0 }
     },
     docker_version: {
       type: DataTypes.STRING,
@@ -145,6 +164,20 @@ module.exports = function(sequelize, DataTypes) {
       },
       ping: function() {
         return this.update({ last_ping: moment() });
+      },
+      agentInfos: function() {
+        let infos = {};
+
+        return this.getCluster().then(cluster => {
+          _.merge(infos, { versions: {
+            docker: cluster.docker_version,
+            swarm:  cluster.swarm_version
+          }});
+          return cluster.getCert();
+        }).then(cert => {
+          _.merge(infos, { cert: cert });
+          return Promise.resolve(infos);
+        });
       },
       _notifyCluster: function(changes) {
         return this.getCluster().then(cluster => {

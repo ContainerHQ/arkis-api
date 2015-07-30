@@ -20,6 +20,9 @@ module.exports = function(factory) {
     master: true,
     region: 'london',
     node_size: 'deathstar',
+    cpu: 1,
+    memory: 128,
+    disk: 1.0,
     public_ip: '192.168.212.128',
   });
 
@@ -30,5 +33,15 @@ module.exports = function(factory) {
     public_ip: '192.168.212.128',
     last_state: 'running',
     last_ping: Date.now
+  });
+
+  factory.define('forbiddenNode', Node, {
+    name: random.string,
+    region: 'test',
+    node_size: 'whatever',
+    public_ip: '192.168.212.42',
+    last_state: 'upgrading',
+    last_ping: Date.now,
+    fqdn: 'forbidden.node.arkis.io'
   });
 };

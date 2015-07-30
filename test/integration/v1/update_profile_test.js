@@ -33,7 +33,7 @@ describe('PATCH /account/profile', () => {
     });
   });
 
-  context('with invalid attributes', done => {
+  context('with invalid attributes', () => {
     it('responds with a bad request status and validation errors', done => {
       let fullname = _.repeat('*', 65);
 

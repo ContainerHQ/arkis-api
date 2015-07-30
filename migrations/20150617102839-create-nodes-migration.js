@@ -61,7 +61,26 @@ module.exports = {
         type: DataTypes.STRING,
         allowNull: true,
         defaultValue: null,
+        unique: true,
         validate: { isIP: true }
+      },
+      cpu: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        defaultValue: null,
+        allowNull: true,
+        validate: { min: 1 }
+      },
+      memory: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        defaultValue: null,
+        allowNull: true,
+        validate: { min: 128 }
+      },
+      disk: {
+        type: DataTypes.REAL.UNSIGNED,
+        defaultValue: null,
+        allowNull: true,
+        validate: { min: 1.0 }
       },
       docker_version: {
         type: DataTypes.STRING,

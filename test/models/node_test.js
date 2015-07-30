@@ -26,6 +26,10 @@ describe('Node Model', () => {
       factory.create('registeredNode', done);
     });
 
+    it('succeeds with minimal attributes', done => {
+      factory.create('node', done);
+    });
+
     it('succeeds to create multiple slave nodes for the same cluster', done => {
       factory.create('cluster', (err, cluster) => {
         factory.createMany('node', {
@@ -59,10 +63,23 @@ describe('Node Model', () => {
       });
     });
 
+    it('fails with an invalid fqdn', () => {
+      let node = factory.buildSync('node', { fqdn: _.repeat('*', 10) });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
     it('fails with an invalid public_ip', () => {
       let node = factory.buildSync('node', { public_ip: _.repeat('*', 10) });
 
       return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails when public_ip already exists', done => {
+      factory.createMany('node', { public_ip: '127.0.0.1' }, 2, err => {
+        expect(err).to.exist;
+        done();
+      });
     });
 
     it('fails with an invalid master choice', () => {
@@ -95,6 +112,24 @@ describe('Node Model', () => {
       return expect(node.save()).to.be.rejected;
     });
 
+    it('fails with min cpu', () => {
+      let node = factory.buildSync('node', { cpu: 0 });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with min memory', () => {
+      let node = factory.buildSync('node', { memory: 127 });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with min disk', () => {
+      let node = factory.buildSync('node', { disk: 0.9999 });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
     it('fails when master is not unique for the same cluster', () => {
       let cluster = factory.buildSync('cluster'),
         opts = { master: true };
@@ -106,12 +141,6 @@ describe('Node Model', () => {
         return factory.buildSync('node', opts).save();
       })).to.be.rejected;
     });
-  });
-
-  it('it is not a master node by default', () => {
-    let node = factory.buildSync('node');
-
-    return expect(node.save()).to.eventually.have.property('master', false);
   });
 
   describe('#create', () => {
@@ -132,7 +161,13 @@ describe('Node Model', () => {
       machine.create.restore();
     });
 
-    it('itinializes its fqdn', () => {
+    it('is not a master node by default', () => {
+      let node = factory.buildSync('node');
+
+      return expect(node.save()).to.eventually.have.property('master', false);
+    });
+
+    it('initializes its fqdn', () => {
       return expect(node.save()).to.eventually.have.property('fqdn', FQDN);
     });
 
@@ -478,29 +513,37 @@ describe('Node Model', () => {
         });
       });
     });
-
-    it('fails with a too long name', () => {
-      let node = factory.buildSync('node', { name: _.repeat('*', 65) });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    it('fails with an invalid fqdn', () => {
-      let node = factory.buildSync('node', { fqdn: _.repeat('*', 10) });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    it('fails with an invalid public_ip', () => {
-      let node = factory.buildSync('node', { public_ip: _.repeat('*', 10) });
-
-      return expect(node.save()).to.be.rejected;
-    });
   });
 
-  it('it is not a master node by default', () => {
-    let node = factory.buildSync('node');
+  describe('#agentInfos', () => {
+    let node, agentInfos;
 
-    return expect(node.save()).to.eventually.have.property('master', false);
+    beforeEach(() => {
+      return factory.buildSync('cluster').save().then(cluster => {
+        node = factory.buildSync('node', { cluster_id: cluster.id });
+        return node.save();
+      }).then(() => {
+        return node.agentInfos();
+      }).then(infos => {
+        agentInfos = infos;
+      });
+    });
+
+    it('returns node certificates', () => {
+      return node.getCluster().then(cluster => {
+        return cluster.getCert();
+      }).then(cert => {
+        return expect(agentInfos.cert).to.deep.equal(cert);
+      });
+    });
+
+    it('returns node desired versions', () => {
+      return node.getCluster().then(cluster => {
+        return expect(agentInfos.versions).to.deep.equal({
+          docker: cluster.docker_version,
+          swarm: cluster.swarm_version
+        });
+      });
+    });
   });
 });

@@ -7,9 +7,12 @@ let router = express.Router();
 
 router
 .use('/auth', require('./auth'))
+.use('/agent', require('./agent'))
 
 .use(passport.authenticate('jwt', { session: false }))
-
+/*
+ * This below requires to have an authorization header with a valid JWT.
+ */
 .use('/account', require('./account'))
 .use('/clusters', require('./clusters'))
 .use('/node_sizes', require('./node_sizes'))
