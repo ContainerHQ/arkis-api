@@ -14,8 +14,10 @@ router
     next();
   });
 })
-.get('/:token/infos', (req, res) => {
-  res.noContent();
+.get('/:token/infos', (req, res, next) => {
+  req.node.agentInfos().then(infos => {
+    res.json(infos);
+  }).catch(next);
 })
 .post('/:token/register', (req, res) => {
   res.noContent();

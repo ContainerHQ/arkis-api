@@ -64,6 +64,10 @@ module.exports.agent = function(token) {
     live: function() {
       return request(app)
       .get(`${API_ROUTE}/${ressource}/${token}/live`);
+    },
+    infos: function() {
+      return request(app)
+      .get(`${API_ROUTE}/${ressource}/${token}/infos`);
     }
   };
 };

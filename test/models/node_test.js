@@ -59,6 +59,12 @@ describe('Node Model', () => {
       });
     });
 
+    it('fails with an invalid fqdn', () => {
+      let node = factory.buildSync('node', { fqdn: _.repeat('*', 10) });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
     it('fails with an invalid public_ip', () => {
       let node = factory.buildSync('node', { public_ip: _.repeat('*', 10) });
 
@@ -108,12 +114,6 @@ describe('Node Model', () => {
     });
   });
 
-  it('it is not a master node by default', () => {
-    let node = factory.buildSync('node');
-
-    return expect(node.save()).to.eventually.have.property('master', false);
-  });
-
   describe('#create', () => {
     const FQDN = 'node_01.node.arkis.io';
 
@@ -132,7 +132,13 @@ describe('Node Model', () => {
       machine.create.restore();
     });
 
-    it('itinializes its fqdn', () => {
+    it('is not a master node by default', () => {
+      let node = factory.buildSync('node');
+
+      return expect(node.save()).to.eventually.have.property('master', false);
+    });
+
+    it('initializes its fqdn', () => {
       return expect(node.save()).to.eventually.have.property('fqdn', FQDN);
     });
 
@@ -478,29 +484,37 @@ describe('Node Model', () => {
         });
       });
     });
-
-    it('fails with a too long name', () => {
-      let node = factory.buildSync('node', { name: _.repeat('*', 65) });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    it('fails with an invalid fqdn', () => {
-      let node = factory.buildSync('node', { fqdn: _.repeat('*', 10) });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    it('fails with an invalid public_ip', () => {
-      let node = factory.buildSync('node', { public_ip: _.repeat('*', 10) });
-
-      return expect(node.save()).to.be.rejected;
-    });
   });
 
-  it('it is not a master node by default', () => {
-    let node = factory.buildSync('node');
+  describe('#agentInfos', () => {
+    let node, agentInfos;
 
-    return expect(node.save()).to.eventually.have.property('master', false);
+    beforeEach(() => {
+      return factory.buildSync('cluster').save().then(cluster => {
+        node = factory.buildSync('node', { cluster_id: cluster.id });
+        return node.save();
+      }).then(() => {
+        return node.agentInfos();
+      }).then(infos => {
+        agentInfos = infos;
+      });
+    });
+
+    it('returns node certificates', () => {
+      return node.getCluster().then(cluster => {
+        return cluster.getCert();
+      }).then(cert => {
+        return expect(agentInfos.cert).to.deep.equal(cert);
+      });
+    });
+
+    it('returns node desired versions', () => {
+      return node.getCluster().then(cluster => {
+        return expect(agentInfos.versions).to.deep.equal({
+          docker: cluster.docker_version,
+          swarm: cluster.swarm_version
+        });
+      });
+    });
   });
 });

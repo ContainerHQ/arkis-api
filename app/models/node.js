@@ -146,6 +146,20 @@ module.exports = function(sequelize, DataTypes) {
       ping: function() {
         return this.update({ last_ping: moment() });
       },
+      agentInfos: function() {
+        let infos = {};
+
+        return this.getCluster().then(cluster => {
+          _.merge(infos, { versions: {
+            docker: cluster.docker_version,
+            swarm:  cluster.swarm_version
+          }});
+          return cluster.getCert();
+        }).then(cert => {
+          _.merge(infos, { cert: cert });
+          return Promise.resolve(infos);
+        });
+      },
       _notifyCluster: function(changes) {
         return this.getCluster().then(cluster => {
           if (!cluster) {
