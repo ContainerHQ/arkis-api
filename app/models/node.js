@@ -117,7 +117,7 @@ module.exports = function(sequelize, DataTypes) {
   }, DataTypes, { default: 'deploying' }), mixins.extend('state', 'options', {
     getterMethods: {
       state_message: function() {
-        let state = this.getDataValue('state');
+        let state = this.get('state');
 
         switch (state) {
           case 'empty':
@@ -133,9 +133,9 @@ module.exports = function(sequelize, DataTypes) {
         }
       },
       download_link: function() {
-        if (!this.getDataValue('byon')) { return null; }
+        if (!this.get('byon')) { return null; }
 
-        return machine.agentLink(this.getDataValue('token'));
+        return machine.agentLink(this.get('token'));
       }
     },
     instanceMethods: {
