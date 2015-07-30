@@ -57,6 +57,17 @@ module.exports.account = function(user={}) {
   };
 };
 
+module.exports.agent = function(token) {
+  let ressource = 'agent';
+
+  return {
+    live: function() {
+      return request(app)
+      .get(`${API_ROUTE}/${ressource}/${token}/live`);
+    }
+  };
+};
+
 module.exports.clusters = function(user={}) {
   let ressource = 'clusters';
 

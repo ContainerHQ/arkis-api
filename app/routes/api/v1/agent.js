@@ -6,18 +6,24 @@ let express = require('express'),
 let router = express.Router();
 
 router
-.param('token', (req, res, next) => {
-  next();
+.param('token', (req, res, next, token) => {
+  Node.findOne({ where: { token: token } }).then(node => {
+    if (!node) { return res.notFound(); }
+
+    req.node = node;
+    next();
+  });
 })
-.route('/:token')
-.get('inspect', (req, res) => {
+.get('/:token/infos', (req, res) => {
   res.noContent();
 })
-.post('register', (req, res) => {
+.post('/:token/register', (req, res) => {
   res.noContent();
 })
-.patch('live', (req, res) => {
-  res.noContent();
+.get('/:token/live', (req, res, next) => {
+  req.node.update({ last_ping: Date.now() }).then(() => {
+    res.noContent();
+  }).catch(next);
 });
 
 module.exports = router;
