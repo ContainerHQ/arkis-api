@@ -6,7 +6,9 @@ let _ = require('lodash'),
 
 let router = express.Router();
 
-const REGISTER_PARAMS = ['public_ip', 'swarm_version', 'docker_version'];
+const REGISTER_PARAMS = [
+  'public_ip', 'cpu', 'memory', 'disk', 'swarm_version', 'docker_version'
+];
 
 router
 .param('token', (req, res, next, token) => {

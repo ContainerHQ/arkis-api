@@ -17,7 +17,10 @@ describe('PATCH /agent/:token/register', () => {
     it('updates the node infos sent by the agent', done => {
       let form = { public_ip: '123.1.12.3',
         docker_version: '0.0.0',
-        swarm_version:  '0.0.0'
+        swarm_version:  '0.0.0',
+        cpu: 3,
+        memory: 2048,
+        disk: 2.048
       };
 
       api.agent(node.token).register(form)
@@ -57,8 +60,8 @@ describe('PATCH /agent/:token/register', () => {
       beforeEach(() => {
         attributes = _.difference(node.attributes,
           [
-            'public_ip', 'docker_version', 'swarm_version', 'last_state',
-            'id', 'containers_count', 'created_at', 'updated_at'
+            'public_ip', 'docker_version', 'swarm_version', 'cpu', 'memory',
+            'disk', 'last_state', 'id', 'containers_count', 'created_at', 'updated_at'
           ]
         );
         form = factory.buildSync('forbiddenNode').dataValues;

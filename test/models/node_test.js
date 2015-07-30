@@ -26,6 +26,10 @@ describe('Node Model', () => {
       factory.create('registeredNode', done);
     });
 
+    it('succeeds with minimal attributes', done => {
+      factory.create('node', done);
+    });
+
     it('succeeds to create multiple slave nodes for the same cluster', done => {
       factory.create('cluster', (err, cluster) => {
         factory.createMany('node', {
@@ -104,6 +108,24 @@ describe('Node Model', () => {
 
     it('fails with a node_size and byon true', () => {
       let node = factory.buildSync('node', { byon: true, region: null });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with min cpu', () => {
+      let node = factory.buildSync('node', { cpu: 0 });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with min memory', () => {
+      let node = factory.buildSync('node', { memory: 127 });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with min disk', () => {
+      let node = factory.buildSync('node', { disk: 0.9999 });
 
       return expect(node.save()).to.be.rejected;
     });

@@ -20,6 +20,9 @@ module.exports = function(factory) {
     master: true,
     region: 'london',
     node_size: 'deathstar',
+    cpu: 1,
+    memory: 128,
+    disk: 1.0,
     public_ip: '192.168.212.128',
   });
 
