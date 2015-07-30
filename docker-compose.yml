@@ -10,7 +10,7 @@ api:
   volumes:
     - '$DOCKER_CERT_PATH:/home/.docker'
     - '/var/run/docker.sock:/var/run/docker.sock'
-    - '.:/docker-proxy'
+    - '.:/arkis-api'
   environment:
     - DOCKER_CERT_PATH=/home/.docker
     - DOCKER_HOST
