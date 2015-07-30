@@ -1,9 +1,12 @@
 'use strict';
 
-let express = require('express'),
+let _ = require('lodash'),
+  express = require('express'),
   Node = require('../../../models').Node;
 
 let router = express.Router();
+
+const REGISTER_PARAMS = ['public_ip', 'swarm_version', 'docker_version'];
 
 router
 .param('token', (req, res, next, token) => {
@@ -19,10 +22,12 @@ router
     res.json(infos);
   }).catch(next);
 })
-.post('/:token/register', (req, res) => {
-  res.noContent();
+.patch('/:token/register', (req, res, next) => {
+  req.node.register(_.pick(req.body, REGISTER_PARAMS)).then(() => {
+    res.noContent();
+  }).catch(next);
 })
-.get('/:token/live', (req, res, next) => {
+.patch('/:token/live', (req, res, next) => {
   req.node.update({ last_ping: Date.now() }).then(() => {
     res.noContent();
   }).catch(next);

@@ -61,13 +61,18 @@ module.exports.agent = function(token) {
   let ressource = 'agent';
 
   return {
-    live: function() {
-      return request(app)
-      .get(`${API_ROUTE}/${ressource}/${token}/live`);
-    },
     infos: function() {
       return request(app)
       .get(`${API_ROUTE}/${ressource}/${token}/infos`);
+    },
+    register: function(form) {
+      return request(app)
+      .patch(`${API_ROUTE}/${ressource}/${token}/register`)
+      .send(form);
+    },
+    live: function() {
+      return request(app)
+      .patch(`${API_ROUTE}/${ressource}/${token}/live`);
     }
   };
 };

@@ -82,6 +82,7 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: true,
       defaultValue: null,
+      unique: true,
       validate: { isIP: true }
     },
     docker_version: {

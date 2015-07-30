@@ -17,7 +17,6 @@ module.exports = function(original, attributes) {
        * If an attribute has been updated on the targeted instance,
        * this matcher throw an error to help us identify witch attribute
        * failed and pass through the filters.
-       *
        */
       if (instance.dataValues[attribute] !== original.dataValues[attribute]) {
         throw new Error(`${attribute} is not filtered!`);

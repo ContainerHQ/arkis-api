@@ -71,6 +71,13 @@ describe('Node Model', () => {
       return expect(node.save()).to.be.rejected;
     });
 
+    it('fails when public_ip already exists', done => {
+      factory.createMany('node', { public_ip: '127.0.0.1' }, 2, err => {
+        expect(err).to.exist;
+        done();
+      });
+    });
+
     it('fails with an invalid master choice', () => {
       let node = factory.buildSync('node', { master: '' });
 
