@@ -1,6 +1,6 @@
 FROM node:0.12.2
 
-ENV APP=/docker-proxy VENDOR=/vendor
+ENV APP=/arkis-api VENDOR=/vendor
 
 # Add user exec.
 RUN useradd dev
