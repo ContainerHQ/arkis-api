@@ -200,9 +200,21 @@ describe('Node Model', () => {
       });
     });
 
+    it('has no download link to get the agent', () => {
+      return expect(node.save())
+        .to.eventually.have.property('download_link', null);
+    });
+
     context('when byon node', () => {
+      const DOWNLOAD_LINK = random.string();
+
       beforeEach(() => {
         _.merge(node, { byon: true, region: null, node_size: null });
+        sinon.stub(machine, 'agentLink').returns(DOWNLOAD_LINK);
+      });
+
+      afterEach(() => {
+        machine.agentLink.restore();
       });
 
       it("doesn't create a machine behind", () => {
@@ -214,6 +226,19 @@ describe('Node Model', () => {
       it('initialized its state to deploying', () => {
         return expect(node.save())
           .to.eventually.have.property('state', 'deploying');
+      });
+
+      it('uses machine to get its download link', () => {
+        return node.save().then(() => {
+          return node.toJSON();
+        }).then(() => {
+          return expect(machine.agentLink).to.have.been.calledWith(node.token);
+        });
+      });
+
+      it('has no download link to get the agent', () => {
+        return expect(node.save())
+          .to.eventually.have.property('download_link', DOWNLOAD_LINK);
       });
     });
   });

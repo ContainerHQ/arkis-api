@@ -57,7 +57,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     getterMethods: {
       state_message: function() {
-        let state = this.get('state');
+        let state = this.getDataValue('state');
 
         switch (state) {
           case 'empty':

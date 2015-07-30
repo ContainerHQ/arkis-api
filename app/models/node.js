@@ -117,7 +117,7 @@ module.exports = function(sequelize, DataTypes) {
   }, DataTypes, { default: 'deploying' }), mixins.extend('state', 'options', {
     getterMethods: {
       state_message: function() {
-        let state = this.get('state');
+        let state = this.getDataValue('state');
 
         switch (state) {
           case 'empty':
@@ -132,6 +132,11 @@ module.exports = function(sequelize, DataTypes) {
             return 'Node is running and reachable';
         }
       },
+      download_link: function() {
+        if (!this.getDataValue('byon')) { return null; }
+
+        return machine.agentLink(this.getDataValue('token'));
+      }
     },
     instanceMethods: {
       _generateToken: function() {
