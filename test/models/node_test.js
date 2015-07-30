@@ -202,19 +202,19 @@ describe('Node Model', () => {
 
     it('has no download link to get the agent', () => {
       return expect(node.save())
-        .to.eventually.have.property('download_link', null);
+        .to.eventually.have.property('agent_cmd', null);
     });
 
     context('when byon node', () => {
-      const DOWNLOAD_LINK = random.string();
+      const AGENT_CMD = random.string();
 
       beforeEach(() => {
         _.merge(node, { byon: true, region: null, node_size: null });
-        sinon.stub(machine, 'agentLink').returns(DOWNLOAD_LINK);
+        sinon.stub(machine, 'agentCmd').returns(AGENT_CMD);
       });
 
       afterEach(() => {
-        machine.agentLink.restore();
+        machine.agentCmd.restore();
       });
 
       it("doesn't create a machine behind", () => {
@@ -228,17 +228,17 @@ describe('Node Model', () => {
           .to.eventually.have.property('state', 'deploying');
       });
 
-      it('uses machine to get its download link', () => {
+      it('uses machine to get the command to install the agent', () => {
         return node.save().then(() => {
           return node.toJSON();
         }).then(() => {
-          return expect(machine.agentLink).to.have.been.calledWith(node.token);
+          return expect(machine.agentCmd).to.have.been.calledWith(node.token);
         });
       });
 
-      it('has no download link to get the agent', () => {
+      it('has no command to get the agent', () => {
         return expect(node.save())
-          .to.eventually.have.property('download_link', DOWNLOAD_LINK);
+          .to.eventually.have.property('agent_cmd', AGENT_CMD);
       });
     });
   });

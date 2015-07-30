@@ -30,7 +30,7 @@ machine.createFakeCerts = function() {
   };
 };
 
-machine.agentLink = function(token) {
+machine.agentCmd = function(token) {
   return `curl -Ls https://get.arkis.io/ | sudo -H sh -s ${token}`;
 };
 

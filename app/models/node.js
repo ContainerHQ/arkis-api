@@ -132,10 +132,10 @@ module.exports = function(sequelize, DataTypes) {
             return 'Node is running and reachable';
         }
       },
-      download_link: function() {
+      agent_cmd: function() {
         if (!this.get('byon')) { return null; }
 
-        return machine.agentLink(this.get('token'));
+        return machine.agentCmd(this.get('token'));
       }
     },
     instanceMethods: {
