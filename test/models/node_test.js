@@ -38,6 +38,19 @@ describe('Node Model', () => {
       });
     });
 
+    it('succeeds with the same name on different clusters', () => {
+      let cluster1 = factory.buildSync('cluster'),
+        cluster2 = factory.buildSync('cluster');
+
+      return expect(cluster1.save().then(() => {
+        return factory.buildSync('node', { cluster_id: cluster1.id }).save();
+      }).then(() => {
+        return cluster2.save();
+      }).then(() => {
+        return factory.buildSync('node', { cluster_id: cluster2.id }).save();
+      })).to.be.fulfilled;
+    });
+
     it('fails without a name', () => {
       let node = factory.buildSync('node', { name: null });
 
@@ -56,10 +69,21 @@ describe('Node Model', () => {
       return expect(node.save()).to.be.rejected;
     });
 
-    it('fails with multiple node with the same name', done => {
-      factory.createMany('node', { name: 'test' }, 2, err => {
-        expect(err).to.exist;
-        done();
+    context('when in the same cluster', () => {
+      let cluster;
+
+      beforeEach(() => {
+        cluster = factory.buildSync('cluster');
+        return cluster.save();
+      });
+
+      it('fails with multiple node with the same name', done => {
+        let opts = { name: 'test', cluster_id: cluster.id };
+
+        factory.createMany('node', opts, 2, err => {
+          expect(err).to.exist;
+          done();
+        });
       });
     });
 

@@ -19,7 +19,7 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: null,
-      unique: true,
+      unique: 'cluster_id',
       validate: { len: [1, 64] }
     },
     token: {
@@ -40,7 +40,7 @@ module.exports = function(sequelize, DataTypes) {
             master: true
           }}).then(node => {
             if (node) {
-              return Promise.reject('Cluster already has a master node!');
+              return Promise.reject('This cluster already has a master node!');
             }
           });
         }
