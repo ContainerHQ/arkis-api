@@ -21,7 +21,6 @@ module.exports = {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: null,
-        unique: true,
         validate: { len: [1, 64] }
       },
       token: {
@@ -61,10 +60,18 @@ module.exports = {
 
       created_at: DataTypes.DATE,
       updated_at: DataTypes.DATE
+    }).then(function () {
+      return queryInterface.addIndex('Clusters', ['name', 'user_id'], {
+        indicesType: 'UNIQUE'
+      });
     });
   },
 
   down: function (queryInterface, Sequelize) {
-    return queryInterface.dropTable('Clusters');
+    return queryInterface.removeIndex('Clusters', ['name', 'user_id'], {
+      indicesType: 'UNIQUE'
+    }).then(function() {
+      return queryInterface.dropTable('Clusters');
+    });
   }
 };

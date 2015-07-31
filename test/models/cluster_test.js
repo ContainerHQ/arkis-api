@@ -46,6 +46,19 @@ describe('Cluster Model', () => {
       });
     });
 
+    it('succeeds with the same name for different users', () => {
+      let user1 = factory.buildSync('user'),
+        user2 = factory.buildSync('user', { email: 'user2@arkis.io' } );
+
+      return expect(user1.save().then(() => {
+        return factory.buildSync('cluster', { user_id: user1.id }).save();
+      }).then(() => {
+        return user2.save();
+      }).then(() => {
+        return factory.buildSync('cluster', { user_id: user2.id }).save();
+      })).to.be.fulfilled;
+    });
+
     it('fails without a name', () => {
       let cluster = factory.buildSync('cluster', { name: null });
 
@@ -64,12 +77,24 @@ describe('Cluster Model', () => {
       return expect(cluster.save()).to.be.rejected;
     });
 
-    it('fails with multiple node with the same name', done => {
-      factory.createMany('cluster', { name: 'test' }, 2, err => {
-        expect(err).to.exist;
-        done();
+    context('when it belongs to the same user', () => {
+      let user;
+
+      beforeEach(() => {
+        user = factory.buildSync('user');
+        return user.save();
+      });
+
+      it('fails with multiple node with the same name', done => {
+        let opts = { name: 'test', user_id: user.id };
+
+        factory.createMany('cluster', opts, 2, err => {
+          expect(err).to.exist;
+          done();
+        });
       });
     });
+
 
     it('fails with an empty strategy', () => {
       let cluster = factory.buildSync('cluster', { strategy: null });

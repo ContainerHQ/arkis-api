@@ -19,7 +19,6 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: null,
-      unique: 'cluster_id',
       validate: { len: [1, 64] }
     },
     token: {
