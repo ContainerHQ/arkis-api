@@ -26,8 +26,7 @@ describe('POST /auth/login', () => {
        * Retrieve the newly created user and verify the token.
        */
       expect(User.findOne({ where: { email: user.email } }))
-        .to.eventually.have.property('token', res.body.token).and
-        .not.to.be.null
+        .to.eventually.exist.and.have.property('token', res.body.token)
         .notify(done);
     });
   });

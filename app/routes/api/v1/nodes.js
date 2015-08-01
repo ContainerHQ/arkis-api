@@ -1,9 +1,9 @@
 'use strict';
 
-let express = require('express'),
+let _ = require('lodash'),
+  express = require('express'),
   validator = require('validator'),
-  handler = require('../../shared/handler'),
-  Node = require('../../../models').Node;
+  handler = require('../../shared/handler');
 
 let router = express.Router();
 
@@ -14,11 +14,11 @@ router
 .param('node_id', (req, res, next, id) => {
   if (!validator.isUUID(id)) { return res.notFound(); }
 
-  Node.findOne({ where: { id: id, cluster_id: req.cluster.id } })
-  .then(node => {
-    if (!node) { return res.notFound(); }
+  req.cluster.getNodes({ where: { id: id } })
+  .then(nodes => {
+    if (_.isEmpty(nodes)) { return res.notFound(); }
 
-    req.node = node;
+    req.node = _.first(nodes);
     next();
   }).catch(next);
 })
@@ -26,6 +26,8 @@ router
 .get((req, res) => {
   res.json({ node: req.node });
 })
-.delete(handler.notYetImplemented);
+.delete((req, res, next) => {
+  req.node.destroy().then(res.noContent).catch(next);
+});
 
 module.exports = router;

@@ -21,7 +21,7 @@ describe('DELETE /account/', () => {
       if (err) { return done(err); }
 
       expect(User.findOne({ where: { email: user.email } }))
-        .to.eventually.be.null
+        .to.eventually.not.exist
         .notify(done);
     });
   });
@@ -35,7 +35,7 @@ describe('DELETE /account/', () => {
         if (err) { return done(err); }
 
         expect(User.findOne({ where: { email: user.email } }))
-          .to.eventually.be.not.null
+          .to.eventually.exist
           .notify(done);
       });
     });
