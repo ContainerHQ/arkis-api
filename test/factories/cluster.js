@@ -26,16 +26,13 @@ module.exports = function(factory) {
   });
 
   /*
-   * Attribute id is specified with a non-integer to
-   * verify that the db is taking care of the primary
-   * key and is not taking into account of one specified
-   * in the user payload.
+   * Invalid ids are provided to ensure that they are blacklisted.
    */
   factory.define('forbiddenCluster', Cluster, {
-    id: 'lol',
+    id: 0,
+    user_id: 0,
     name: random.string,
     strategy: 'spread',
-    user_id: 45,
     nodes_count: 1,
     containers_count: 2
   });

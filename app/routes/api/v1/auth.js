@@ -11,22 +11,19 @@ const USER_PARAMS = ['email', 'password'];
 
 router
 .post('/login', (req, res, next) => {
-  let created = false;
+  let created;
 
-  User.findOne({ where: { email: req.body.email } })
-  .then(user => {
+  User.findOne({ where: { email: req.body.email } }).then(user => {
     created = user === null;
     return user || User.create(_.pick(req.body, USER_PARAMS));
-  })
-  .then(user => {
+  }).then(user => {
     if (!created && !user.verifyPassword(req.body.password)) {
       return res.unauthorized();
     }
     let statusCode = created ? 201 : 200;
 
     res.status(statusCode).json({ token: user.token });
-  })
-  .catch(next);
+  }).catch(next);
 })
 
 .get('/github', passport.authenticate('github'))

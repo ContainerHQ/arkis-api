@@ -17,7 +17,7 @@ describe('DELETE /clusters/:cluster_id/nodes/:node_id', () => {
       return node.save();
     }).then(() => {
       /*
-       * Node must be reload to ensure that we have the virtual attributes.
+       * Node must be reloaded to ensure that we have its virtual attributes.
        */
       return node.reload();
     });

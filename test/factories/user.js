@@ -14,13 +14,10 @@ module.exports = function(factory) {
   });
 
   /*
-   * Attribute id is specified with a non-integer to
-   * verify that the db is taking care of the primary
-   * key and is not taking into account of one specified
-   * in the user payload.
+   * Invalid ids are provided to ensure that they are blacklisted.
    */
   factory.define('forbiddenUser', User, {
-    id: 'lol',
+    id: 0,
     email: 'forbidden@arkis.io',
     password: 'azerty28',
     password_hash: 'whatever',

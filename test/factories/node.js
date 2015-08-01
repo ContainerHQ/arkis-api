@@ -35,7 +35,12 @@ module.exports = function(factory) {
     last_ping: Date.now
   });
 
+  /*
+   * Invalid ids are provided to ensure that they are blacklisted.
+   */
   factory.define('forbiddenNode', Node, {
+    id: 0,
+    cluster_id: 0,
     name: random.string,
     region: 'test',
     node_size: 'whatever',

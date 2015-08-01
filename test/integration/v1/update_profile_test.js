@@ -25,11 +25,11 @@ describe('PATCH /account/profile', () => {
 
       let profile = format.timestamps(res.body.profile);
 
-      expect(user.getProfile())
-        .to.eventually.have.property('dataValues')
-        .that.deep.equals(profile)
-        .and.include(_.pick(form, WHITELIST))
-        .notify(done);
+      user.getProfile().then(userProfile => {
+        expect(profile).to.deep.equal(userProfile.toJSON())
+          .and.include(_.pick(form, WHITELIST));
+        done();
+      }).catch(done);
     });
   });
 
@@ -56,6 +56,11 @@ describe('PATCH /account/profile', () => {
   });
 
   context('with blacklisted attributes', () => {
+    /*
+     * Basically for profile, every attributes are customizable by the user,
+     * therefore we just need to verify that the id/user_id of the profile
+     * can't be updated.
+     */
     it('these attributes are filtered', done => {
       api.account(user).updateProfile()
       .field('id', 'lol')
@@ -64,7 +69,7 @@ describe('PATCH /account/profile', () => {
       .end((err, res) => {
         if (err) { return done(err); }
 
-        expect(user.getProfile()).not.to.eventually.be.null
+        expect(user.getProfile()).to.eventually.exist
           .notify(done);
       });
     });

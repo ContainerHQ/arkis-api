@@ -21,7 +21,7 @@ describe('GET /agent/:token/infos', () => {
         res.body.cert = format.timestamps(res.body.cert);
 
         node.agentInfos().then(infos => {
-          infos.cert = infos.cert.dataValues;
+          infos.cert = infos.cert.toJSON();
 
           expect(res.body).to.deep.equal(infos);
           done();
