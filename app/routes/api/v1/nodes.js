@@ -12,6 +12,11 @@ router
 .post('/', handler.notYetImplemented)
 
 .param('node_id', (req, res, next, id) => {
+  /*
+   * Sequelize is throwing a standard error instead of a validation error when
+   * the specified id is not a uuid, therefore we need to check it manually
+   * before using sequelize queries.
+   */
   if (!validator.isUUID(id)) { return res.notFound(); }
 
   req.cluster.getNodes({ where: { id: id } })

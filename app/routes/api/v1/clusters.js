@@ -54,13 +54,18 @@ router
   }).catch(next);
 })
 .param('cluster_id', (req, res, next, id) => {
+  /*
+   * Sequelize is throwing a standard error instead of a validation error when
+   * the specified id is not a uuid, therefore we need to check it manually
+   * before using sequelize queries.
+   */
   if (!validator.isUUID(id)) { return res.notFound(); }
 
-  Cluster.findOne({ where: { id: id, user_id: req.user.id } })
-  .then(cluster => {
-    if (!cluster) { return res.notFound(); }
+  req.user.getClusters({ where: { id: id } })
+  .then(clusters => {
+    if (_.isEmpty(clusters)) { return res.notFound(); }
 
-    req.cluster = cluster;
+    req.cluster = _.first(clusters);
     next();
   }).catch(next);
 })
