@@ -11,6 +11,7 @@ let router = express.Router();
 const CLUSTER_PARAMS = ['name', 'strategy', 'token'];
 
 router
+
 .get('/', (req, res, next) => {
   let criterias = {
     limit: parseInt(req.query.limit || 25),
@@ -52,7 +53,7 @@ router
     res.status(201).json({ cluster: cluster });
   }).catch(next);
 })
-.param('id', (req, res, next, id) => {
+.param('cluster_id', (req, res, next, id) => {
   if (!validator.isUUID(id)) { return res.notFound(); }
 
   Cluster.findOne({ where: { id: id, user_id: req.user.id } })
@@ -63,7 +64,8 @@ router
     next();
   }).catch(next);
 })
-.route('/:id')
+.use('/:cluster_id/nodes', require('./nodes'))
+.route('/:cluster_id')
 .get((req, res) => {
   res.json({ cluster: req.cluster });
 })
