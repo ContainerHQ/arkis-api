@@ -120,10 +120,10 @@ module.exports = function(sequelize, DataTypes) {
         return this.getNodes({ where: {
           last_state: { $ne: 'running' }
         }}).then(nodes => {
-          if (nodes.length > 0) {
-            return _.first(nodes).last_state;
+          if (_.isEmpty(nodes)) {
+            return 'running';
           }
-          return 'running';
+          return _.first(nodes).last_state;
         });
       },
       notify: function(changes={}) {
