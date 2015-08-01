@@ -52,8 +52,19 @@ module.exports = function(sequelize, DataTypes) {
     },
     containers_count: DataTypes.VIRTUAL
   }, DataTypes), mixins.extend('state', 'options', {
-    defaultScope: {
-      order: [['id', 'ASC']]
+    defaultScope: { order: [['id', 'ASC']] },
+    scopes: {
+      user: function(id) {
+        return { where: { user_id: id } };
+      },
+      filtered: function(filters) {
+        return {
+          where: {
+            strategy: { $like: filters.strategy || '%' },
+            name:     { $like: filters.name     || '%' }
+          }
+        };
+      }
     },
     getterMethods: {
       state_message: function() {

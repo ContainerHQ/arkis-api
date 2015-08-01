@@ -114,6 +114,9 @@ module.exports = function(sequelize, DataTypes) {
     },
     containers_count: DataTypes.VIRTUAL
   }, DataTypes, { default: 'deploying' }), mixins.extend('state', 'options', {
+    defaultScope: {
+      order: [['id', 'ASC']]
+    },
     scopes: {
       nonRunning: { where: { last_state: { $ne: 'running' } } }
     },
@@ -147,6 +150,14 @@ module.exports = function(sequelize, DataTypes) {
       _hasVersions: function(versions) {
         return versions.docker === this.docker_version &&
                versions.swarm  === this.swarm_version;
+      },
+      _notifyCluster: function(changes) {
+        return this.getCluster().then(cluster => {
+          if (cluster) {
+            return cluster.notify(changes);
+          }
+          return Promise.resolve();
+        });
       },
       /*
        * This must update the node in order to notify its
@@ -184,14 +195,6 @@ module.exports = function(sequelize, DataTypes) {
         }).then(cert => {
           _.merge(infos, { cert: cert });
           return Promise.resolve(infos);
-        });
-      },
-      _notifyCluster: function(changes) {
-        return this.getCluster().then(cluster => {
-          if (!cluster) {
-            return Promise.resolve();
-          }
-          return cluster.notify(changes);
         });
       }
     },
