@@ -117,9 +117,7 @@ module.exports = function(sequelize, DataTypes) {
         if (this.nodes_count <= 0) {
           return Promise.resolve('empty');
         }
-        return this.getNodes({ where: {
-          last_state: { $ne: 'running' }
-        }}).then(nodes => {
+        return this.getNodes({ scope: 'nonRunning' }).then(nodes => {
           if (_.isEmpty(nodes)) {
             return 'running';
           }
@@ -130,7 +128,7 @@ module.exports = function(sequelize, DataTypes) {
         if (_.has(changes, 'last_ping')) {
           return this.update({ last_ping: changes.last_ping });
         }
-        if (!!changes.destroyed) {
+        if (changes.destroyed) {
           return this._getLastStateFromNodes().then(lastState => {
             return this.update({ last_state: lastState });
           });

@@ -114,6 +114,9 @@ module.exports = function(sequelize, DataTypes) {
     },
     containers_count: DataTypes.VIRTUAL
   }, DataTypes, { default: 'deploying' }), mixins.extend('state', 'options', {
+    scopes: {
+      nonRunning: { where: { last_state: { $ne: 'running' } } }
+    },
     getterMethods: {
       state_message: function() {
         let state = this.get('state');
