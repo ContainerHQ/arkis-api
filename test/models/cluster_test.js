@@ -396,7 +396,7 @@ describe('Cluster Model', () => {
             .then(() => {
               return addNodeTo(cluster, 'runningNode');
             }).then(() => {
-              return cluster.notify({ destroyed: true })
+              return cluster.notify({ last_state: 'destroyed' })
             });
           });
 
@@ -411,7 +411,7 @@ describe('Cluster Model', () => {
           return addNodeTo(cluster, 'runningNode').then(() => {
             return cluster.update({ last_state: 'upgrading' })
           }).then(() => {
-            return cluster.notify({ destroyed: true })
+            return cluster.notify({ last_state: 'destroyed' })
           });
         });
 
@@ -423,7 +423,7 @@ describe('Cluster Model', () => {
       context('when cluster has no longer any node', () => {
         beforeEach(() => {
           return cluster.update({ last_state: 'upgrading' }).then(() => {
-            return cluster.notify({ destroyed: true });
+            return cluster.notify({ last_state: 'destroyed' });
           });
         });
 

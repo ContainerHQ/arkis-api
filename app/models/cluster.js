@@ -128,16 +128,12 @@ module.exports = function(sequelize, DataTypes) {
         if (_.has(changes, 'last_ping')) {
           return this.update({ last_ping: changes.last_ping });
         }
-        if (changes.destroyed) {
-          return this._getLastStateFromNodes().then(lastState => {
-            return this.update({ last_state: lastState });
-          });
-        }
         switch (changes.last_state) {
           case 'deploying':
           case 'upgrading':
             return this.update({ last_state: changes.last_state });
           case 'running':
+          case 'destroyed':
             return this._getLastStateFromNodes().then(lastState => {
               return this.update({ last_state: lastState });
             });

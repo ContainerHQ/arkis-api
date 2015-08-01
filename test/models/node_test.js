@@ -386,7 +386,7 @@ describe('Node Model', () => {
 
       it('reports back the deletion to its cluster', () => {
         expect(cluster.notify)
-          .to.have.been.calledWith({ destroyed: true });
+          .to.have.been.calledWith({ last_state: 'destroyed' });
       });
 
       it('removes the machine behind', () => {
@@ -409,7 +409,7 @@ describe('Node Model', () => {
 
       it('reports back the deletion to its cluster', () => {
         expect(cluster.notify)
-          .to.have.been.calledWith({ destroyed: true });
+          .to.have.been.calledWith({ last_state: 'destroyed' });
       });
 
       it("doesn't attempt to remove the machine behind", () => {
