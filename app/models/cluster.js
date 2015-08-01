@@ -168,10 +168,12 @@ module.exports = function(sequelize, DataTypes) {
     },
     classMethods: {
       associate: function(models) {
-        Cluster.hasMany(models.Node, { onDelete: 'cascade',
-          counterCache: { as: 'nodes_count' }
+        Cluster.hasMany(models.Node, {
+          onDelete: 'cascade',
+          hooks: true,
+          counterCache: { as: 'nodes_count' },
         });
-        Cluster.hasOne(models.Cert, { onDelete: 'cascade' });
+        Cluster.hasOne(models.Cert, { onDelete: 'cascade', hooks: true });
       }
     }
   }));

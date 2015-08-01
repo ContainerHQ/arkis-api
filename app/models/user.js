@@ -85,8 +85,8 @@ module.exports = function(sequelize, DataTypes) {
     },
     classMethods: {
       associate: function(models) {
-        User.hasOne(models.Profile, { onDelete: 'cascade' });
-        User.hasMany(models.Cluster, { onDelete: 'cascade' });
+        User.hasOne(models.Profile,  { onDelete: 'cascade', hooks: true });
+        User.hasMany(models.Cluster, { onDelete: 'cascade', hooks: true });
       }
     },
     hooks: {
