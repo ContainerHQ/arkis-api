@@ -1,6 +1,6 @@
 machine:
   pre:
-    - sudo pip install -U docker-compose==1.2.0
+    - sudo pip install -U docker-compose==1.3.3
   services:
     - docker
 
