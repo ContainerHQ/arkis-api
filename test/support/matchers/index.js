@@ -4,5 +4,6 @@ module.exports = {
   certificate: require('./certificate'),
   validJWT: require('./valid_jwt'),
   hashPassword: require('./hash_password'),
-  beenFiltered: require('./been_filtered')
+  beenFiltered: require('./been_filtered'),
+  many: require('./many')
 };

@@ -58,12 +58,9 @@ module.exports = function(sequelize, DataTypes) {
         return { where: { user_id: id } };
       },
       filtered: function(filters) {
-        return {
-          where: {
-            strategy: { $like: filters.strategy || '%' },
-            name:     { $like: filters.name     || '%' }
-          }
-        };
+        let criterias = _.pick(filters, ['name', 'strategy']);
+
+        return { where: criterias };
       }
     },
     getterMethods: {

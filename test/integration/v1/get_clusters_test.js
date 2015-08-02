@@ -19,22 +19,18 @@ describe('GET /clusters/', () => {
   });
 
   it('retrieves the user clusters', done => {
-    api.clusters(user).getAll().expect(200, (err, res) => {
-      if (err) { return done(err); }
+    let opts = { limit: DEFAULT_LIMIT, offset: DEFAULT_OFFSET };
 
-      expectClusters(user, res.body, DEFAULT_OFFSET, DEFAULT_LIMIT, done);
-    });
+    api.clusters(user).getAll()
+    .expect(200, has.many(user, 'clusters', opts, done));
   });
 
   context('when user limits the number of results', () => {
+    let opts = { limit: 5, offset: DEFAULT_OFFSET };
+
     it('retrieves a limited number of cluster', done => {
-      let limit = 5;
-
-      api.clusters(user).getAll(`?limit=${limit}`).expect(200, (err, res) => {
-        if (err) { return done(err); }
-
-        expectClusters(user, res.body, DEFAULT_OFFSET, limit, done);
-      });
+      api.clusters(user).getAll(`?limit=${opts.limit}`)
+      .expect(200, has.many(user, 'clusters', opts, done));
     });
 
     context('with a negative limit', () => {
@@ -45,15 +41,11 @@ describe('GET /clusters/', () => {
   });
 
   context('when user asks for a specific offset of records', () => {
+    let opts = { limit: 3, offset: 4 };
+
     it('retrieves the specified offset of cluster records', done => {
-      let limit = 3, offset = 4;
-
-      api.clusters(user).getAll(`?limit=${limit}&offset=${offset}`)
-      .expect(200, (err, res) => {
-        if (err) { return done(err); }
-
-        expectClusters(user, res.body, offset, limit, done);
-      });
+      api.clusters(user).getAll(`?limit=${opts.limit}&offset=${opts.offset}`)
+      .expect(200, has.many(user, 'clusters', opts, done));
     });
 
     context('with a negative offset', () => {
@@ -62,22 +54,6 @@ describe('GET /clusters/', () => {
       });
     });
   });
-
-  function expectClusters(user, infos, offset, limit, done) {
-    let clusters = format.allTimestamps(infos.clusters);
-
-    user.getClusters().then(format.allToJSON).then(userClusters => {
-      expect(infos.meta).to.deep.equal({
-        limit: limit,
-        offset: offset,
-        total_count: userClusters.length
-      });
-      return _.slice(userClusters, offset, offset + limit);
-    }).then(userClusters => {
-      expect(clusters).to.deep.equal(userClusters);
-      done();
-    }).catch(done);
-  };
 
   [
     ['strategy', 'random'],
@@ -103,22 +79,17 @@ describe('GET /clusters/', () => {
         .expect(200, (err, res) => {
           if (err) { return done(err); }
 
-          expectClustersBy(user, res.body, name, value, done);
+          if (_.isEmpty(res.body.clusters)) {
+            return done(new Error('clusters list is empty!'));
+          }
+          expect(_.all(res.body.clusters, cluster => {
+            return cluster[name] === value;
+          })).to.be.true;
+          done();
         });
       });
     });
   });
-
-  function expectClustersBy(user, infos, attribute, value, done) {
-    if (_.isEmpty(infos.clusters)) {
-      return done(new Error('Clusters is empty!'));
-    }
-
-    expect(_.all(infos.clusters, cluster => {
-      return cluster[attribute] === value;
-    })).to.be.true;
-    done();
-  }
 
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {

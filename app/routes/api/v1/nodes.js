@@ -3,12 +3,21 @@
 let _ = require('lodash'),
   express = require('express'),
   validator = require('validator'),
-  handler = require('../../shared/handler');
+  handler = require('../../shared/handler'),
+  middlewares = require('../../../middlewares'),
+  Node = require('../../../models').Node;
 
 let router = express.Router();
 
 router
-.get('/', handler.notYetImplemented)
+.get('/', middlewares.pagination, (req, res, next) => {
+  Node
+  .scope('defaultScope',
+    { method: ['cluster', req.cluster.id] },
+    { method: ['state', req.query.state] },
+    { method: ['filtered', req.query] }
+  ).findAndCount(req.pagination).then(res.paginate('nodes')).catch(next);
+})
 .post('/', handler.notYetImplemented)
 
 .param('node_id', (req, res, next, id) => {

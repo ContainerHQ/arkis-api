@@ -35,7 +35,7 @@ module.exports = function(sequelize, DataTypes) {
         isUnique: function(master) {
           if (!master || !this.cluster_id) { return Promise.resolve(); }
 
-          return this.findOne({ where:  { cluster_id: this.cluster_id,
+          return Node.findOne({ where:  { cluster_id: this.cluster_id,
             master: true
           }}).then(node => {
             if (node) {
@@ -118,6 +118,15 @@ module.exports = function(sequelize, DataTypes) {
       order: [['id', 'ASC']]
     },
     scopes: {
+      cluster: function(id) {
+        return { where: { cluster_id: id } };
+      },
+      filtered: function(filters) {
+        let criterias = _.pick(filters, [
+          'byon', 'master', 'name', 'region', 'node_size'
+        ]);
+        return { where: criterias };
+      },
       nonRunning: { where: { last_state: { $ne: 'running' } } }
     },
     getterMethods: {

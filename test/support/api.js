@@ -110,6 +110,11 @@ module.exports.clusters = function(user={}) {
           .get(`${ressource}/${id}`)
           .set('Authorization', `JWT ${user.token}`);
         },
+        getAll: function(opts='') {
+          return request(app)
+          .get(`${ressource}${opts}`)
+          .set('Authorization', `JWT ${user.token}`);
+        },
         delete: function(id) {
           return request(app)
           .delete(`${ressource}/${id}`)

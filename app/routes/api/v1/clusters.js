@@ -20,8 +20,7 @@ router
   ).findAndCount(req.pagination).then(res.paginate('clusters')).catch(next);
 })
 .post('/', (req, res, next) => {
-  req.user.createCluster(_.pick(req.body, CLUSTER_PARAMS))
-  .then(cluster => {
+  req.user.createCluster(_.pick(req.body, CLUSTER_PARAMS)).then(cluster => {
     res.status(201).json({ cluster: cluster });
   }).catch(next);
 })
