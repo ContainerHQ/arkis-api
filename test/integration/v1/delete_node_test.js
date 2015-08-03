@@ -15,11 +15,6 @@ describe('DELETE /clusters/:cluster_id/nodes/:node_id', () => {
     }).then(() => {
       node = factory.buildSync('node', { cluster_id: cluster.id });
       return node.save();
-    }).then(() => {
-      /*
-       * Node must be reloaded to ensure that we have its virtual attributes.
-       */
-      return node.reload();
     });
   });
 
@@ -61,7 +56,7 @@ describe('DELETE /clusters/:cluster_id/nodes/:node_id', () => {
     });
   });
 
-  context('when the user specify an invalid node id', () => {
+  context('when the user specifies an invalid node id', () => {
     it('returns a 404 not found ', done => {
       api.clusters(user).nodes(cluster).delete(0).expect(404, {}, done)
     });

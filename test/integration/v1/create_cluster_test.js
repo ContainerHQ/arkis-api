@@ -35,7 +35,7 @@ describe('POST /clusters/', () => {
   });
 
   context('with blacklisted attributes', () => {
-    let cluster, attributes, form;
+    let cluster, form, attributes;
 
     beforeEach(() => {
       cluster = factory.buildSync('forbiddenCluster');

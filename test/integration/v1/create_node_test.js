@@ -51,13 +51,13 @@ describe('POST /clusters/:cluster_id/nodes', () => {
   });
 
   context('with blacklisted attributes', () => {
-    let node, attributes, form;
+    let node, form, attributes;
 
     beforeEach(() => {
       node = factory.buildSync('forbiddenNode');
       form = node.dataValues;
       attributes = _.difference(node.attributes,
-        [ 'name', 'master', 'byon', 'region', 'node_size', 'token', 'fqdn']
+        ['name', 'master', 'byon', 'region', 'node_size', 'token', 'fqdn']
       );
     });
 

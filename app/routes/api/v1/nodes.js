@@ -8,7 +8,8 @@ let _ = require('lodash'),
 
 let router = express.Router();
 
-const CREATE_PARAMS = ['name', 'master', 'byon', 'region', 'node_size'];
+const CREATE_PARAMS = ['name', 'master', 'byon', 'region', 'node_size'],
+      UPDATE_PARAMS = ['name'];
 
 router
 .get('/', middlewares.pagination, (req, res, next) => {
@@ -48,6 +49,11 @@ router
 .route('/:node_id')
 .get((req, res) => {
   res.json({ node: req.node });
+})
+.patch((req, res, next) => {
+  req.node.update(_.pick(req.body, UPDATE_PARAMS)).then(node => {
+    res.json({ node: node });
+  }).catch(next);
 })
 .delete((req, res, next) => {
   req.node.destroy().then(res.noContent).catch(next);

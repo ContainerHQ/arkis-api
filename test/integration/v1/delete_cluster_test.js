@@ -50,7 +50,7 @@ describe('DELETE /clusters/:id', () => {
     });
   });
 
-  context('when the user specify an invalid cluster id', () => {
+  context('when the user specifies an invalid cluster id', () => {
     it('returns a 404 not found ', done => {
       api.clusters(user).delete('whatever').expect(404, {}, done);
     });
