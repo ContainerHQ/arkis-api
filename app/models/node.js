@@ -240,7 +240,10 @@ module.exports = function(sequelize, DataTypes) {
         return machine.deleteFQDN(node.fqdn).then(() => {
           return promise;
         }).then(() => {
-          return node._notifyCluster({ last_state: 'destroyed' });
+          return node._notifyCluster({
+            last_state: 'destroyed',
+            master: node.master
+          });
         });
       },
       afterFind: function(nodes) {

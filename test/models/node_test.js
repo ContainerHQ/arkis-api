@@ -386,7 +386,7 @@ describe('Node Model', () => {
 
       it('reports back the deletion to its cluster', () => {
         expect(cluster.notify)
-          .to.have.been.calledWith({ last_state: 'destroyed' });
+          .to.have.been.calledWith({ last_state: 'destroyed', master: false });
       });
 
       it('removes the machine behind', () => {
@@ -395,6 +395,21 @@ describe('Node Model', () => {
 
       it('removes the fqdn', () => {
         expect(machine.deleteFQDN).to.have.been.calledWith(node.fqdn);
+      });
+    });
+
+    context('with a master node', () => {
+      beforeEach(() => {
+        _.merge(node, { master: true });
+
+        return node.save().then(() => {
+          return node.destroy();
+        });
+      });
+
+      it('reports back the master deletion to its cluster', () => {
+        expect(cluster.notify)
+          .to.have.been.calledWith({ last_state: 'destroyed', master: true });
       });
     });
 
@@ -409,7 +424,7 @@ describe('Node Model', () => {
 
       it('reports back the deletion to its cluster', () => {
         expect(cluster.notify)
-          .to.have.been.calledWith({ last_state: 'destroyed' });
+          .to.have.been.calledWith({ last_state: 'destroyed', master: false });
       });
 
       it("doesn't attempt to remove the machine behind", () => {
