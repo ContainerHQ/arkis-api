@@ -53,8 +53,8 @@ module.exports = function(factory) {
     region: 'test',
     node_size: 'whatever',
     public_ip: '192.168.212.42',
-    last_state: 'upgrading',
-    last_ping: Date.now,
-    fqdn: 'forbidden.node.arkis.io'
+    fqdn: 'forbidden.node.arkis.io',
+    docker_version: '1.6.0',
+    swarm_version: '0.3.0'
   });
 };

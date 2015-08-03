@@ -15,32 +15,16 @@ describe('POST /clusters/', () => {
 
   it('creates a cluster for the user', done => {
     let form = factory.buildSync('cluster').dataValues,
-      params = _.merge(_.omit(form,
-        ['id', 'token', 'docker_version', 'swarm_version']),
-        { user_id: user.id }
-      );
+      params = _.omit(form, ['id', 'token', 'docker_version', 'swarm_version']);
+
     api.clusters(user).create().send(form)
-    .expect(201)
-    .end((err, res) => {
-      if (err) { return done(err); }
-
-      let cluster = format.timestamps(res.body.cluster);
-
-      expect(user.getClusters({ where: { id: cluster.id } })
-      .then(clusters => {
-        return _.first(clusters).toJSON();
-      })).to.eventually.deep.equal(cluster)
-        .and.include(params)
-        .and.have.property('token').that.exist
-        .notify(done);
-    });
+    .expect(201, has.one(user, 'cluster', { with: params }, done));
   });
 
   context('with invalid attributes', () => {
     it('returns a bad request status and validation errors', done => {
       api.clusters(user).create().send()
-      .expect(400)
-      .end((err, res) => {
+      .expect(400, (err, res) => {
         if (err) { return done(err); }
 
         expect(Cluster.create())
@@ -51,32 +35,26 @@ describe('POST /clusters/', () => {
   });
 
   context('with blacklisted attributes', () => {
-    let attributes, form;
+    let cluster, attributes, form;
 
     beforeEach(() => {
-      let cluster = factory.buildSync('forbiddenCluster');
-
-      form = cluster.dataValues;
+      cluster = factory.buildSync('forbiddenCluster');
       attributes = _.difference(cluster.attributes,
-        ['id', 'name', 'strategy', 'created_at', 'updated_at']
+        [ 'name', 'strategy', 'token', 'docker_version', 'swarm_version']
       );
+      form = cluster.dataValues;
     });
 
     it('these attributes are filtered', done => {
       api.clusters(user).create().send(form)
-      .expect(201)
-      .end((err, res) => {
+      .expect(201, (err, res) => {
         if (err) { return done(err); }
 
-        let expected = _.merge({ user_id: user.id },
-          _.omit(form, attributes, 'id')
-        );
-        expect(
-          user.getClusters({ where: { id: res.body.cluster.id } })
-          .then(clusters => {
-            return _.first(clusters).toJSON();
-          })
-        ).to.eventually.include(expected).notify(done);
+        expect(user.getClusters({ where: { name: cluster.name } })
+        .then(clusters => {
+          return _.first(clusters);
+        })).to.eventually.satisfy(has.beenFiltered(cluster, attributes))
+           .notify(done);
       });
     });
   });

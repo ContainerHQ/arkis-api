@@ -8,7 +8,7 @@ let _ = require('lodash'),
 
 let router = express.Router();
 
-const CLUSTER_PARAMS = ['name', 'strategy', 'token'];
+const CREATE_PARAMS = ['name', 'strategy', 'token'];
 
 router
 .get('/', middlewares.pagination, (req, res, next) => {
@@ -20,7 +20,7 @@ router
   ).findAndCount(req.pagination).then(res.paginate('clusters')).catch(next);
 })
 .post('/', (req, res, next) => {
-  req.user.createCluster(_.pick(req.body, CLUSTER_PARAMS)).then(cluster => {
+  req.user.createCluster(_.pick(req.body, CREATE_PARAMS)).then(cluster => {
     res.status(201).json({ cluster: cluster });
   }).catch(next);
 })

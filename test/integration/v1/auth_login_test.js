@@ -67,10 +67,9 @@ describe('POST /auth/login', () => {
     let attributes, form;
 
     beforeEach(() => {
-      attributes = _.difference(user.attributes, [
-        'id', 'email', 'password', 'password_hash',
-        'token', 'token_id', 'created_at', 'updated_at'
-      ]);
+      attributes = _.difference(user.attributes,
+        ['email', 'password', 'password_hash', 'token', 'token_id']
+      );
       form = factory.buildSync('forbiddenUser').dataValues;
     });
 

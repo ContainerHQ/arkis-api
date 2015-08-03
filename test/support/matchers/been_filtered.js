@@ -18,7 +18,11 @@ module.exports = function(original, attributes) {
        * this matcher throw an error to help us identify witch attribute
        * failed and pass through the filters.
        */
-      if (instance.dataValues[attribute] !== original.dataValues[attribute]) {
+       let instanceValue = instance.dataValues[attribute],
+           originalValue = original.dataValues[attribute];
+
+      if (instanceValue !== originalValue &&
+        !!originalValue && !!instanceValue) {
         throw new Error(`${attribute} is not filtered!`);
       }
     });

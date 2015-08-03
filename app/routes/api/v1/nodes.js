@@ -3,11 +3,12 @@
 let _ = require('lodash'),
   express = require('express'),
   validator = require('validator'),
-  handler = require('../../shared/handler'),
   middlewares = require('../../../middlewares'),
   Node = require('../../../models').Node;
 
 let router = express.Router();
+
+const CREATE_PARAMS = ['name', 'master', 'byon', 'region', 'node_size'];
 
 router
 .get('/', middlewares.pagination, (req, res, next) => {
@@ -18,8 +19,16 @@ router
     { method: ['filtered', req.query] }
   ).findAndCount(req.pagination).then(res.paginate('nodes')).catch(next);
 })
-.post('/', handler.notYetImplemented)
-
+/*
+ * Node must be reloaded in order to get its virtual attributes.
+ */
+.post('/', (req, res, next) => {
+  req.cluster.createNode(_.pick(req.body, CREATE_PARAMS)).then(node => {
+    return node.reload();
+  }).then(node => {
+    res.status(201).json({ node: node });
+  }).catch(next);
+})
 .param('node_id', (req, res, next, id) => {
   /*
    * Sequelize is throwing a standard error instead of a validation error when
