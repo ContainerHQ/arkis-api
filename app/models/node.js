@@ -162,6 +162,11 @@ module.exports = function(sequelize, DataTypes) {
       },
       _notifyCluster: function(changes) {
         return this.getCluster().then(cluster => {
+          /*
+           * This ensures that the node won't notify its cluster if it has
+           * been deleted (when the cluster is deleted, it deletes its nodes
+           * in cascade).
+           */
           if (cluster) {
             return cluster.notify(changes);
           }

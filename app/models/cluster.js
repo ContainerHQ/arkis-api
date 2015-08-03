@@ -132,6 +132,10 @@ module.exports = function(sequelize, DataTypes) {
           return _.first(nodes).last_state;
         });
       },
+      /*
+       * If the cluster already has updated its attributes with the same
+       * changes, sequelize won't try to update them again.
+       */
       notify: function(changes={}) {
         if (_.has(changes, 'last_ping')) {
           return this.update({ last_ping: changes.last_ping });

@@ -190,7 +190,6 @@ describe('Cluster Model', () => {
     context('when cluster is running', () => {
       let cluster;
 
-
       beforeEach(() => {
         cluster = factory.buildSync('runningCluster');
         return updateClusterToOldestVersions(cluster);
