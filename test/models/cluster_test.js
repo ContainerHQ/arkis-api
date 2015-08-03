@@ -258,10 +258,6 @@ describe('Cluster Model', () => {
           });
         });
 
-        it('is in upgrading state', () => {
-          expect(cluster.state).to.equal('upgrading');
-        });
-
         it('upgrades all the cluster nodes', () => {
           fakeNodes.forEach(node => {
             expect(node.upgrade).to.have.been.called;

@@ -168,11 +168,15 @@ module.exports = function(sequelize, DataTypes) {
         }
         return this.getNodes().then(nodes => {
           _.invoke(nodes, 'upgrade', versions);
-
+          /*
+           * When a node is updated, the cluster is notified and update its
+           * state accordingly, beside, when every node upgrade call fails,
+           * the cluster state must not changed to. Therefore we don't need
+           * to update the state here. 
+           */
           return this.update({
             docker_version: LATEST_VERSIONS.docker,
             swarm_version:  LATEST_VERSIONS.swarm,
-            last_state: 'upgrading'
           });
         });
       }
