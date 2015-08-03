@@ -24,12 +24,12 @@ router
     res.json(infos);
   }).catch(next);
 })
-.patch('/:token/register', (req, res, next) => {
+.post('/:token/register', (req, res, next) => {
   req.node.register(_.pick(req.body, REGISTER_PARAMS)).then(() => {
     res.noContent();
   }).catch(next);
 })
-.patch('/:token/live', (req, res, next) => {
+.post('/:token/live', (req, res, next) => {
   req.node.update({ last_ping: Date.now() }).then(() => {
     res.noContent();
   }).catch(next);

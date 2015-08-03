@@ -1,6 +1,6 @@
 'use strict';
 
-describe.skip('PATCH /clusters/:cluster_id', () => {
+describe.skip('POST /clusters/:cluster_id/upgrade', () => {
 
   // verify that all nodes are in upgrading state
 

@@ -67,12 +67,12 @@ module.exports.agent = function(token) {
     },
     register: function(form) {
       return request(app)
-      .patch(`${ressource}/${token}/register`)
+      .post(`${ressource}/${token}/register`)
       .send(form);
     },
     live: function() {
       return request(app)
-      .patch(`${ressource}/${token}/live`);
+      .post(`${ressource}/${token}/live`);
     }
   };
 };
