@@ -197,10 +197,13 @@ module.exports = function(sequelize, DataTypes) {
         let infos = {};
 
         return this.getCluster().then(cluster => {
-          _.merge(infos, { versions: {
-            docker: cluster.docker_version,
-            swarm:  cluster.swarm_version
-          }});
+          _.merge(infos, {
+            versions: {
+              docker:   cluster.docker_version,
+              swarm:    cluster.swarm_version
+            },
+            strategy: cluster.strategy
+          });
           return cluster.getCert();
         }).then(cert => {
           _.merge(infos, { cert: cert });

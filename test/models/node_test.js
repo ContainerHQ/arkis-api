@@ -601,6 +601,12 @@ describe('Node Model', () => {
       });
     });
 
+    it('returns node cluster strategy', () => {
+      return node.getCluster().then(cluster => {
+        return expect(agentInfos.strategy).to.deep.equal(cluster.strategy);
+      });
+    });
+
     it('returns node desired versions', () => {
       return node.getCluster().then(cluster => {
         return expect(agentInfos.versions).to.deep.equal({
