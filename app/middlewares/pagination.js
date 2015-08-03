@@ -24,9 +24,9 @@ module.exports = function(req, res, next) {
         meta: _(req.pagination)
           .pick(['limit', 'offset'])
           .merge({ total_count: result.count.length })
+          .value()
       };
       data[entity] = result.rows;
-
       res.json(data);
     };
   };
