@@ -601,6 +601,10 @@ describe('Node Model', () => {
       });
     });
 
+    it('returns the master parameter of the node', () => {
+      expect(agentInfos.master).to.deep.equal(node.master);
+    });
+
     it('returns node cluster strategy', () => {
       return node.getCluster().then(cluster => {
         return expect(agentInfos.strategy).to.deep.equal(cluster.strategy);

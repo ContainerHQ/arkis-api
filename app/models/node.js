@@ -198,6 +198,7 @@ module.exports = function(sequelize, DataTypes) {
 
         return this.getCluster().then(cluster => {
           _.merge(infos, {
+            master: this.master,
             versions: {
               docker:   cluster.docker_version,
               swarm:    cluster.swarm_version
