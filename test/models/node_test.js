@@ -38,6 +38,19 @@ describe('Node Model', () => {
       });
     });
 
+    it('succeeds with the same name on different clusters', () => {
+      let cluster1 = factory.buildSync('cluster'),
+        cluster2 = factory.buildSync('cluster');
+
+      return expect(cluster1.save().then(() => {
+        return factory.buildSync('node', { cluster_id: cluster1.id }).save();
+      }).then(() => {
+        return cluster2.save();
+      }).then(() => {
+        return factory.buildSync('node', { cluster_id: cluster2.id }).save();
+      })).to.be.fulfilled;
+    });
+
     it('fails without a name', () => {
       let node = factory.buildSync('node', { name: null });
 
@@ -56,10 +69,21 @@ describe('Node Model', () => {
       return expect(node.save()).to.be.rejected;
     });
 
-    it('fails with multiple node with the same name', done => {
-      factory.createMany('node', { name: 'test' }, 2, err => {
-        expect(err).to.exist;
-        done();
+    context('when in the same cluster', () => {
+      let cluster;
+
+      beforeEach(() => {
+        cluster = factory.buildSync('cluster');
+        return cluster.save();
+      });
+
+      it('fails with multiple node with the same name', done => {
+        let opts = { name: 'test', cluster_id: cluster.id };
+
+        factory.createMany('node', opts, 2, err => {
+          expect(err).to.exist;
+          done();
+        });
       });
     });
 
@@ -200,9 +224,21 @@ describe('Node Model', () => {
       });
     });
 
+    it('has no download link to get the agent', () => {
+      return expect(node.save())
+        .to.eventually.have.property('agent_cmd', null);
+    });
+
     context('when byon node', () => {
+      const AGENT_CMD = random.string();
+
       beforeEach(() => {
         _.merge(node, { byon: true, region: null, node_size: null });
+        sinon.stub(machine, 'agentCmd').returns(AGENT_CMD);
+      });
+
+      afterEach(() => {
+        machine.agentCmd.restore();
       });
 
       it("doesn't create a machine behind", () => {
@@ -214,6 +250,19 @@ describe('Node Model', () => {
       it('initialized its state to deploying', () => {
         return expect(node.save())
           .to.eventually.have.property('state', 'deploying');
+      });
+
+      it('uses machine to get the command to install the agent', () => {
+        return node.save().then(() => {
+          return node.toJSON();
+        }).then(() => {
+          return expect(machine.agentCmd).to.have.been.calledWith(node.token);
+        });
+      });
+
+      it('has no command to get the agent', () => {
+        return expect(node.save())
+          .to.eventually.have.property('agent_cmd', AGENT_CMD);
       });
     });
   });
@@ -337,7 +386,7 @@ describe('Node Model', () => {
 
       it('reports back the deletion to its cluster', () => {
         expect(cluster.notify)
-          .to.have.been.calledWith({ destroyed: true });
+          .to.have.been.calledWith({ last_state: 'destroyed', master: false });
       });
 
       it('removes the machine behind', () => {
@@ -346,6 +395,21 @@ describe('Node Model', () => {
 
       it('removes the fqdn', () => {
         expect(machine.deleteFQDN).to.have.been.calledWith(node.fqdn);
+      });
+    });
+
+    context('with a master node', () => {
+      beforeEach(() => {
+        _.merge(node, { master: true });
+
+        return node.save().then(() => {
+          return node.destroy();
+        });
+      });
+
+      it('reports back the master deletion to its cluster', () => {
+        expect(cluster.notify)
+          .to.have.been.calledWith({ last_state: 'destroyed', master: true });
       });
     });
 
@@ -360,7 +424,7 @@ describe('Node Model', () => {
 
       it('reports back the deletion to its cluster', () => {
         expect(cluster.notify)
-          .to.have.been.calledWith({ destroyed: true });
+          .to.have.been.calledWith({ last_state: 'destroyed', master: false });
       });
 
       it("doesn't attempt to remove the machine behind", () => {
@@ -534,6 +598,12 @@ describe('Node Model', () => {
         return cluster.getCert();
       }).then(cert => {
         return expect(agentInfos.cert).to.deep.equal(cert);
+      });
+    });
+
+    it('returns node cluster strategy', () => {
+      return node.getCluster().then(cluster => {
+        return expect(agentInfos.strategy).to.deep.equal(cluster.strategy);
       });
     });
 

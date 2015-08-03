@@ -19,7 +19,6 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: null,
-      unique: true,
       validate: { len: [1, 64] }
     },
     token: {
@@ -36,11 +35,11 @@ module.exports = function(sequelize, DataTypes) {
         isUnique: function(master) {
           if (!master || !this.cluster_id) { return Promise.resolve(); }
 
-          return this.findOne({ where:  { cluster_id: this.cluster_id,
+          return Node.findOne({ where:  { cluster_id: this.cluster_id,
             master: true
           }}).then(node => {
             if (node) {
-              return Promise.reject('Cluster already has a master node!');
+              return Promise.reject('This cluster already has a master node!');
             }
           });
         }
@@ -115,6 +114,21 @@ module.exports = function(sequelize, DataTypes) {
     },
     containers_count: DataTypes.VIRTUAL
   }, DataTypes, { default: 'deploying' }), mixins.extend('state', 'options', {
+    defaultScope: {
+      order: [['id', 'ASC']]
+    },
+    scopes: {
+      cluster: function(id) {
+        return { where: { cluster_id: id } };
+      },
+      filtered: function(filters) {
+        let criterias = _.pick(filters, [
+          'byon', 'master', 'name', 'region', 'node_size'
+        ]);
+        return { where: criterias };
+      },
+      nonRunning: { where: { last_state: { $ne: 'running' } } }
+    },
     getterMethods: {
       state_message: function() {
         let state = this.get('state');
@@ -132,6 +146,11 @@ module.exports = function(sequelize, DataTypes) {
             return 'Node is running and reachable';
         }
       },
+      agent_cmd: function() {
+        if (!this.get('byon')) { return null; }
+
+        return machine.agentCmd(this.get('token'));
+      }
     },
     instanceMethods: {
       _generateToken: function() {
@@ -141,13 +160,22 @@ module.exports = function(sequelize, DataTypes) {
         return versions.docker === this.docker_version &&
                versions.swarm  === this.swarm_version;
       },
+      _notifyCluster: function(changes) {
+        return this.getCluster().then(cluster => {
+          if (cluster) {
+            return cluster.notify(changes);
+          }
+          return Promise.resolve();
+        });
+      },
       /*
        * This must update the node in order to notify its
        * affiliated cluster of its new state.
        */
       register: function(attributes={}) {
-        _.merge(attributes, { last_state: 'running' });
-        return this.update(attributes);
+        let opts = { last_state: 'running', last_ping: Date.now() };
+
+        return this.update(_.merge(opts, attributes));
       },
       upgrade: function(versions) {
         let state = this.get('state');
@@ -169,22 +197,17 @@ module.exports = function(sequelize, DataTypes) {
         let infos = {};
 
         return this.getCluster().then(cluster => {
-          _.merge(infos, { versions: {
-            docker: cluster.docker_version,
-            swarm:  cluster.swarm_version
-          }});
+          _.merge(infos, {
+            versions: {
+              docker:   cluster.docker_version,
+              swarm:    cluster.swarm_version
+            },
+            strategy: cluster.strategy
+          });
           return cluster.getCert();
         }).then(cert => {
           _.merge(infos, { cert: cert });
           return Promise.resolve(infos);
-        });
-      },
-      _notifyCluster: function(changes) {
-        return this.getCluster().then(cluster => {
-          if (!cluster) {
-            return Promise.resolve();
-          }
-          return cluster.notify(changes);
         });
       }
     },
@@ -221,7 +244,10 @@ module.exports = function(sequelize, DataTypes) {
         return machine.deleteFQDN(node.fqdn).then(() => {
           return promise;
         }).then(() => {
-          return node._notifyCluster({ destroyed: true });
+          return node._notifyCluster({
+            last_state: 'destroyed',
+            master: node.master
+          });
         });
       },
       afterFind: function(nodes) {

@@ -30,6 +30,10 @@ machine.createFakeCerts = function() {
   };
 };
 
+machine.agentCmd = function(token) {
+  return `curl -Ls https://get.arkis.io/ | sudo -H sh -s ${token}`;
+};
+
 machine.generateFQDN = function() {
   return random.string() + '.node.arkis.io';
 };

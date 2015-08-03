@@ -52,8 +52,16 @@ module.exports = function(sequelize, DataTypes) {
     },
     containers_count: DataTypes.VIRTUAL
   }, DataTypes), mixins.extend('state', 'options', {
-    defaultScope: {
-      order: [['id', 'ASC']]
+    defaultScope: { order: [['id', 'ASC']] },
+    scopes: {
+      user: function(id) {
+        return { where: { user_id: id } };
+      },
+      filtered: function(filters) {
+        let criterias = _.pick(filters, ['name', 'strategy']);
+
+        return { where: criterias };
+      }
     },
     getterMethods: {
       state_message: function() {
@@ -117,31 +125,30 @@ module.exports = function(sequelize, DataTypes) {
         if (this.nodes_count <= 0) {
           return Promise.resolve('empty');
         }
-        return this.getNodes({ where: {
-          last_state: { $ne: 'running' }
-        }}).then(nodes => {
-          if (nodes.length > 0) {
-            return _.first(nodes).last_state;
+        return this.getNodes({ scope: 'nonRunning' }).then(nodes => {
+          if (_.isEmpty(nodes)) {
+            return 'running';
           }
-          return 'running';
+          return _.first(nodes).last_state;
         });
       },
       notify: function(changes={}) {
         if (_.has(changes, 'last_ping')) {
           return this.update({ last_ping: changes.last_ping });
         }
-        if (!!changes.destroyed) {
-          return this._getLastStateFromNodes().then(lastState => {
-            return this.update({ last_state: lastState });
-          });
-        }
         switch (changes.last_state) {
           case 'deploying':
           case 'upgrading':
             return this.update({ last_state: changes.last_state });
+          case 'destroyed':
           case 'running':
             return this._getLastStateFromNodes().then(lastState => {
-              return this.update({ last_state: lastState });
+              let opts = { last_state: lastState };
+
+              if (changes.master && changes.last_state === 'destroyed') {
+                _.merge(opts, { last_ping: null });
+              }
+              return this.update(opts);
             });
         }
         return Promise.resolve(this);
@@ -168,10 +175,12 @@ module.exports = function(sequelize, DataTypes) {
     },
     classMethods: {
       associate: function(models) {
-        Cluster.hasMany(models.Node, { onDelete: 'cascade',
-          counterCache: { as: 'nodes_count' }
+        Cluster.hasMany(models.Node, {
+          onDelete: 'cascade',
+          hooks: true,
+          counterCache: { as: 'nodes_count' },
         });
-        Cluster.hasOne(models.Cert, { onDelete: 'cascade' });
+        Cluster.hasOne(models.Cert, { onDelete: 'cascade', hooks: true });
       }
     }
   }));

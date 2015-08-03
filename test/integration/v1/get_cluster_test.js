@@ -17,7 +17,7 @@ describe('GET /clusters/:id', () => {
 
   context('when the targeted cluster belong to the user', () => {
     it('retrieves the cluster informations', done => {
-      api.clusters(user).get(cluster.id).expect(200).end((err, res) => {
+      api.clusters(user).get(cluster.id).expect(200, (err, res) => {
         if (err) { return done(err); }
 
         let clusterInfos = format.timestamps(res.body.cluster);

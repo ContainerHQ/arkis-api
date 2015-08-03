@@ -22,7 +22,7 @@ error.MismatchError = class extends sequelize.ValidationError {
   }
 };
 
-const PAGINATION_MSG = 'Please provide a positive integer >= 0.';
+const PAGINATION_MSG = 'Please provide a positive integer > 0.';
 
 error.PaginationError = class extends Error {
   constructor(attribute, value) {

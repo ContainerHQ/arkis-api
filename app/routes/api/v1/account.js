@@ -51,17 +51,14 @@ router
 .get((req, res, next) => {
   req.user.getProfile().then(profile => {
     res.json({ profile: profile });
-  })
-  .catch(next);
+  }).catch(next);
 })
 .patch((req, res, next) => {
   req.user.getProfile().then(profile => {
     return profile.update(_.pick(req.body, PROFILE_PARAMS));
-  })
-  .then(profile => {
+  }).then(profile => {
     res.json({ profile: profile });
-  })
-  .catch(next);
+  }).catch(next);
 });
 
 module.exports = router;

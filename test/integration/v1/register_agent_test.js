@@ -61,7 +61,8 @@ describe('PATCH /agent/:token/register', () => {
         attributes = _.difference(node.attributes,
           [
             'public_ip', 'docker_version', 'swarm_version', 'cpu', 'memory',
-            'disk', 'last_state', 'id', 'containers_count', 'created_at', 'updated_at'
+            'disk', 'last_state', 'containers_count',
+            'id', 'created_at', 'updated_at'
           ]
         );
         form = factory.buildSync('forbiddenNode').dataValues;

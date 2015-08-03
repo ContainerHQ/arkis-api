@@ -18,10 +18,10 @@ describe('GET /account/profile', () => {
 
       let profile = format.timestamps(res.body.profile);
 
-      expect(user.getProfile())
-        .to.eventually.have.property('dataValues')
-        .that.deep.equals(profile)
-        .notify(done);
+      user.getProfile().then(userProfile => {
+        expect(profile).to.deep.equal(userProfile.toJSON());
+        done();
+      }).catch(done);
     });
   });
 

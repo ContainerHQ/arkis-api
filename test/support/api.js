@@ -6,100 +6,136 @@ let request = require('supertest'),
 const API_ROUTE = '/api/v1';
 
 module.exports.auth = {
-  _ressource: 'auth',
+  ressource: `${API_ROUTE}/auth`,
 
   login: function(user={}) {
     return request(app)
-    .post(`${API_ROUTE}/${this._ressource}/login`)
+    .post(`${this.ressource}/login`)
     .field('email', user.email || '')
     .field('password', user.password || '');
   },
   github: function() {
     return request(app)
-    .get(`${API_ROUTE}/${this._ressource}/github`);
+    .get(`${this.ressource}/github`);
   }
 };
 
 module.exports.account = function(user={}) {
-  let ressource = 'account';
+  let ressource = `${API_ROUTE}/account`;
 
   return {
     getProfile: function() {
       return request(app)
-      .get(`${API_ROUTE}/${ressource}/profile`)
+      .get(`${ressource}/profile`)
       .set('Authorization', `JWT ${user.token}`);
     },
     updateProfile: function() {
       return request(app)
-      .patch(`${API_ROUTE}/${ressource}/profile`)
+      .patch(`${ressource}/profile`)
       .set('Authorization', `JWT ${user.token}`);
     },
     changePassword: function() {
       return request(app)
-      .patch(`${API_ROUTE}/${ressource}/change_password`)
+      .patch(`${ressource}/change_password`)
       .set('Authorization', `JWT ${user.token}`);
     },
     changeEmail: function() {
       return request(app)
-      .patch(`${API_ROUTE}/${ressource}/change_email`)
+      .patch(`${ressource}/change_email`)
       .set('Authorization', `JWT ${user.token}`);
     },
     cancel: function() {
       return request(app)
-      .delete(`${API_ROUTE}/${ressource}/`)
+      .delete(`${ressource}/`)
       .set('Authorization', `JWT ${user.token}`);
     },
     generateNewToken: function() {
       return request(app)
-      .get(`${API_ROUTE}/${ressource}/new_token`)
+      .get(`${ressource}/new_token`)
       .set('Authorization', `JWT ${user.token}`);
     }
   };
 };
 
 module.exports.agent = function(token) {
-  let ressource = 'agent';
+  let ressource = `${API_ROUTE}/agent`;
 
   return {
     infos: function() {
       return request(app)
-      .get(`${API_ROUTE}/${ressource}/${token}/infos`);
+      .get(`${ressource}/${token}/infos`);
     },
     register: function(form) {
       return request(app)
-      .patch(`${API_ROUTE}/${ressource}/${token}/register`)
+      .patch(`${ressource}/${token}/register`)
       .send(form);
     },
     live: function() {
       return request(app)
-      .patch(`${API_ROUTE}/${ressource}/${token}/live`);
+      .patch(`${ressource}/${token}/live`);
     }
   };
 };
 
 module.exports.clusters = function(user={}) {
-  let ressource = 'clusters';
+  let ressource = `${API_ROUTE}/clusters`;
 
   return {
     get: function(id) {
       return request(app)
-      .get(`${API_ROUTE}/${ressource}/${id}`)
+      .get(`${ressource}/${id}`)
       .set('Authorization', `JWT ${user.token}`);
     },
     getAll: function(opts='') {
       return request(app)
-      .get(`${API_ROUTE}/${ressource}${opts}`)
+      .get(`${ressource}${opts}`)
       .set('Authorization', `JWT ${user.token}`);
     },
     create: function() {
       return request(app)
-      .post(`${API_ROUTE}/${ressource}/`)
+      .post(`${ressource}/`)
+      .set('Authorization', `JWT ${user.token}`);
+    },
+    update: function(id) {
+      return request(app)
+      .patch(`${ressource}/${id}`)
       .set('Authorization', `JWT ${user.token}`);
     },
     delete: function(id) {
       return request(app)
-      .delete(`${API_ROUTE}/${ressource}/${id}`)
+      .delete(`${ressource}/${id}`)
       .set('Authorization', `JWT ${user.token}`);
+    },
+    nodes: function(cluster={}) {
+      ressource = `${ressource}/${cluster.id}/nodes`;
+
+      return {
+        get: function(id) {
+          return request(app)
+          .get(`${ressource}/${id}`)
+          .set('Authorization', `JWT ${user.token}`);
+        },
+        getAll: function(opts='') {
+          return request(app)
+          .get(`${ressource}${opts}`)
+          .set('Authorization', `JWT ${user.token}`);
+        },
+        create: function() {
+          return request(app)
+          .post(`${ressource}/`)
+          .set('Authorization', `JWT ${user.token}`);
+        },
+        update: function(id) {
+          return request(app)
+          .patch(`${ressource}/${id}`)
+          .set('Authorization', `JWT ${user.token}`);
+        },
+        delete: function(id) {
+          return request(app)
+          .delete(`${ressource}/${id}`)
+          .set('Authorization', `JWT ${user.token}`);
+        }
+      }
     }
   };
 };

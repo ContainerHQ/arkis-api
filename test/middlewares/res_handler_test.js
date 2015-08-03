@@ -12,8 +12,8 @@ describe('Response Handler Middleware', () => {
     resHandler({}, res, done);
   });
 
-  describe('Extend the response object with:', () => {
-    describe('.notFound()', () => {
+  describe('Extends the response object with:', () => {
+    describe('#notFound()', () => {
       beforeEach(() => {
         res.notFound();
       });
@@ -27,7 +27,7 @@ describe('Response Handler Middleware', () => {
       });
     });
 
-    describe('.noContent()', () => {
+    describe('#noContent()', () => {
       beforeEach(() => {
         res.noContent();
       });
@@ -41,7 +41,7 @@ describe('Response Handler Middleware', () => {
       });
     });
 
-    describe('.unauthorized()', () => {
+    describe('#unauthorized()', () => {
       beforeEach(() => {
         res.unauthorized();
       });
@@ -55,7 +55,7 @@ describe('Response Handler Middleware', () => {
       });
     });
 
-    describe('.forbidden()', () => {
+    describe('#forbidden()', () => {
       beforeEach(() => {
         res.forbidden();
       });

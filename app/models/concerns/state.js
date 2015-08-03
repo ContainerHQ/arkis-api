@@ -40,11 +40,12 @@ module.exports = function(DataTypes, opts={}) {
       },
       getterMethods: {
         state: function() {
-          let lastPing  = this.getDataValue('last_ping') || moment(),
-              lastState = this.getDataValue('last_state');
+          let lastPing  = this.getDataValue('last_ping'),
+              lastState = this.getDataValue('last_state'),
+              expirationTime = moment().subtract(PING_EXPIRATION, 'minutes');
 
           if (lastState === 'running' &&
-              lastPing < moment().subtract(PING_EXPIRATION, 'minutes')) {
+             (lastPing  === null || lastPing < expirationTime)) {
             return 'unreachable';
           }
           return lastState;

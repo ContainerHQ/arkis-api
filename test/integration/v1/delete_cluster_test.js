@@ -18,11 +18,11 @@ describe('DELETE /clusters/:id', () => {
   context('when the targeted cluster belong to the user', () => {
     it('removes the cluster', done => {
       api.clusters(user).delete(cluster.id)
-      .expect(204).end((err, res) => {
+      .expect(204, (err, res) => {
         if (err) { return done(err); }
 
         expect(models.Cluster.findById(cluster.id))
-          .to.eventually.be.null
+          .to.eventually.not.exist
           .notify(done);
       });
     });
@@ -38,19 +38,19 @@ describe('DELETE /clusters/:id', () => {
       });
     });
 
-    it('returns a 404 not found', done => {
+    it("doesn't delete the cluster and returns a 404 not found", done => {
       api.clusters(defaultUser).delete(cluster.id)
-      .expect(404).end((err, res) => {
+      .expect(404, (err, res) => {
         if (err) { return done(err); }
 
         expect(models.Cluster.findById(cluster.id))
-          .to.eventually.be.not.null
+          .to.eventually.exist
           .notify(done);
       });
     });
   });
 
-  context('when the user specify an invalid cluster id', () => {
+  context('when the user specifies an invalid cluster id', () => {
     it('returns a 404 not found ', done => {
       api.clusters(user).delete('whatever').expect(404, {}, done);
     });

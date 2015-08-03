@@ -1,7 +1,8 @@
 'use strict';
 
-let Node = require('../../app/models').Node,
-  random = require('../support/random');
+let moment = require('moment'),
+  random = require('../support/random'),
+  Node = require('../../app/models').Node;
 
 module.exports = function(factory) {
   factory.define('node', Node, {
@@ -11,7 +12,7 @@ module.exports = function(factory) {
   });
 
   factory.define('byonNode', Node, {
-    name: 'byon',
+    name: random.string,
     byon: true,
   });
 
@@ -30,18 +31,30 @@ module.exports = function(factory) {
     name: random.string,
     region: 'london',
     node_size: 'deathstar',
-    public_ip: '192.168.212.128',
     last_state: 'running',
     last_ping: Date.now
   });
 
+  factory.define('unreachableNode', Node, {
+    name: random.string,
+    region: 'london',
+    node_size: 'deathstar',
+    last_state: 'running',
+    last_ping: moment().subtract(6, 'minutes')
+  });
+
+  /*
+   * Invalid ids are provided to ensure that they are blacklisted.
+   */
   factory.define('forbiddenNode', Node, {
+    id: 0,
+    cluster_id: 0,
     name: random.string,
     region: 'test',
     node_size: 'whatever',
     public_ip: '192.168.212.42',
-    last_state: 'upgrading',
-    last_ping: Date.now,
-    fqdn: 'forbidden.node.arkis.io'
+    fqdn: 'forbidden.node.arkis.io',
+    docker_version: '1.6.0',
+    swarm_version: '0.3.0'
   });
 };

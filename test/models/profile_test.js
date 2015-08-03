@@ -7,21 +7,21 @@ describe('Profile Model', () => {
   db.sync();
 
   describe('validations', () => {
-    it('succeed without attributes', () => {
+    it('succeeds without attributes', () => {
      return expect(Profile.create()).to.be.fulfilled;
     });
 
-    it('succeed with empty attributes', () => {
+    it('succeeds with empty attributes', () => {
       let profile = factory.buildSync('emptyProfile');
 
       return expect(profile.save()).to.be.fulfilled;
     });
 
-    it('succeed with valid attributes', done => {
+    it('succeeds with valid attributes', done => {
       factory.create('profile', done);
     });
 
-    it('succeed with attributes at max size', done => {
+    it('succeeds with attributes at max size', done => {
       factory.create('maxSizeProfile', done);
     });
 

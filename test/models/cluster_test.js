@@ -46,6 +46,19 @@ describe('Cluster Model', () => {
       });
     });
 
+    it('succeeds with the same name for different users', () => {
+      let user1 = factory.buildSync('user'),
+        user2 = factory.buildSync('user', { email: 'user2@arkis.io' } );
+
+      return expect(user1.save().then(() => {
+        return factory.buildSync('cluster', { user_id: user1.id }).save();
+      }).then(() => {
+        return user2.save();
+      }).then(() => {
+        return factory.buildSync('cluster', { user_id: user2.id }).save();
+      })).to.be.fulfilled;
+    });
+
     it('fails without a name', () => {
       let cluster = factory.buildSync('cluster', { name: null });
 
@@ -64,12 +77,24 @@ describe('Cluster Model', () => {
       return expect(cluster.save()).to.be.rejected;
     });
 
-    it('fails with multiple node with the same name', done => {
-      factory.createMany('cluster', { name: 'test' }, 2, err => {
-        expect(err).to.exist;
-        done();
+    context('when it belongs to the same user', () => {
+      let user;
+
+      beforeEach(() => {
+        user = factory.buildSync('user');
+        return user.save();
+      });
+
+      it('fails with multiple node with the same name', done => {
+        let opts = { name: 'test', user_id: user.id };
+
+        factory.createMany('cluster', opts, 2, err => {
+          expect(err).to.exist;
+          done();
+        });
       });
     });
+
 
     it('fails with an empty strategy', () => {
       let cluster = factory.buildSync('cluster', { strategy: null });
@@ -371,7 +396,7 @@ describe('Cluster Model', () => {
             .then(() => {
               return addNodeTo(cluster, 'runningNode');
             }).then(() => {
-              return cluster.notify({ destroyed: true })
+              return cluster.notify({ last_state: 'destroyed' })
             });
           });
 
@@ -385,20 +410,34 @@ describe('Cluster Model', () => {
         beforeEach(() => {
           return addNodeTo(cluster, 'runningNode').then(() => {
             return cluster.update({ last_state: 'upgrading' })
-          }).then(() => {
-            return cluster.notify({ destroyed: true })
           });
         });
 
-        it(`is in running state`, () => {
-          expect(cluster.state).to.equal('running');
+        context('when master is destroyed', () => {
+          beforeEach(() => {
+            return cluster.notify({ last_state: 'destroyed', master: true });
+          });
+
+          it(`is in unreachable state`, () => {
+            expect(cluster.state).to.equal('unreachable');
+          });
+        });
+
+        context('when a slave is destroyed', () => {
+          beforeEach(() => {
+            return cluster.notify({ last_state: 'destroyed', master: false });
+          });
+
+          it(`is in running state`, () => {
+            expect(cluster.state).to.equal('running');
+          });
         });
       });
 
       context('when cluster has no longer any node', () => {
         beforeEach(() => {
           return cluster.update({ last_state: 'upgrading' }).then(() => {
-            return cluster.notify({ destroyed: true });
+            return cluster.notify({ last_state: 'destroyed' });
           });
         });
 
