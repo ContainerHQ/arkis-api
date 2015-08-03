@@ -8,7 +8,8 @@ let _ = require('lodash'),
 
 let router = express.Router();
 
-const CREATE_PARAMS = ['name', 'strategy', 'token'];
+const CREATE_PARAMS = ['name', 'strategy', 'token'],
+      UPDATE_PARAMS = ['name'];
 
 router
 .get('/', middlewares.pagination, (req, res, next) => {
@@ -43,6 +44,11 @@ router
 .route('/:cluster_id')
 .get((req, res) => {
   res.json({ cluster: req.cluster });
+})
+.patch((req, res, next) => {
+  req.cluster.update(_.pick(req.body, UPDATE_PARAMS)).then(cluster => {
+    res.json({ cluster: cluster });
+  }).catch(next);
 })
 .delete((req, res, next) => {
   req.cluster.destroy().then(res.noContent).catch(next);
