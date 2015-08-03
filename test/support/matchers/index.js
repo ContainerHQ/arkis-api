@@ -6,5 +6,6 @@ module.exports = {
   hashPassword: require('./hash_password'),
   beenFiltered: require('./been_filtered'),
   one: require('./one'),
-  many: require('./many')
+  many: require('./many'),
+  manyFiltered: require('./many_filtered')
 };

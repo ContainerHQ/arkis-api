@@ -97,17 +97,7 @@ describe('GET /clusters/:cluster_id/nodes', () => {
 
       it(`retrieves only user cluster nodes with ${value} ${name}`, done => {
         api.clusters(user).nodes(cluster).getAll(`?${name}=${value}`)
-        .expect(200, (err, res) => {
-          if (err) { return done(err); }
-
-          if (_.isEmpty(res.body.nodes)) {
-            return done(new Error('nodes list is empty!'));
-          }
-          expect(_.all(res.body.nodes, node => {
-            return node[name] === value;
-          })).to.be.true;
-          done();
-        });
+        .expect(200, has.manyFiltered('nodes', name, value, done));
       });
     });
   });

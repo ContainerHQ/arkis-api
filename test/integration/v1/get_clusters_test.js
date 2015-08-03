@@ -76,17 +76,7 @@ describe('GET /clusters/', () => {
 
       it(`retrieves only user clusters with ${value} ${name}`, done => {
         api.clusters(user).getAll(`?${name}=${value}`)
-        .expect(200, (err, res) => {
-          if (err) { return done(err); }
-
-          if (_.isEmpty(res.body.clusters)) {
-            return done(new Error('clusters list is empty!'));
-          }
-          expect(_.all(res.body.clusters, cluster => {
-            return cluster[name] === value;
-          })).to.be.true;
-          done();
-        });
+        .expect(200, has.manyFiltered('clusters', name, value, done));
       });
     });
   });
