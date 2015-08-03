@@ -20,19 +20,21 @@ describe('Pagination Middleware', () => {
     });
   });
 
-  context('when limit is not specified', () => {
-    let req = { query: { offset: 12 } };
+  [0, null].forEach(value => {
+    context(`with a limit of ${value}`, () => {
+      let req = { query: { limit: value, offset: 12 } };
 
-    it('has a default limit', done => {
-      pagination(req, {}, () => {
-        expect(req.pagination).to.deep.equal({
-          limit: 25,
-          offset: req.query.offset,
-          group: ['id']
+      it('has a default limit', done => {
+        pagination(req, {}, () => {
+          expect(req.pagination).to.deep.equal({
+            limit: DEFAULT_LIMIT,
+            offset: req.query.offset,
+            group: ['id']
+          });
+          done();
         });
-        done();
-      });
-    })
+      })
+    });
   });
 
   context('when offset is not specified', () => {
@@ -42,7 +44,7 @@ describe('Pagination Middleware', () => {
       pagination(req, {}, () => {
         expect(req.pagination).to.deep.equal({
           limit: req.query.limit,
-          offset: 0,
+          offset: DEFAULT_OFFSET,
           group: ['id']
         });
         done();
@@ -68,8 +70,11 @@ describe('Pagination Middleware', () => {
   });
 
   describe('Extends the response object with:', () => {
-    let req = { query: { limit: 10, offset: 12 } },
-        res = {};
+    let res = {},
+      req = { query: {
+        limit:  random.positiveInt(10),
+        offset: random.positiveInt(12)
+      }};
 
     beforeEach(done => {
       res.json = sinon.stub();
@@ -78,20 +83,22 @@ describe('Pagination Middleware', () => {
 
     describe('#paginate()', () => {
       it('returns a function to send the paginated models', () => {
-        let send = res.paginate('nodes'),
+        let entity = random.string(),
+          send = res.paginate(entity),
           result = {
-            rows:  ['a', 'b', 'c'],
-            count: [{ count: 1 }, { count: 1 }, { count: 1 }, { count: 1 }]
-          };
-        send(result);
-        expect(res.json).to.have.been.calledWith({
-          meta: {
+            rows:  random.string(),
+            count: random.string()
+          },
+          expected = { meta: {
             limit: req.query.limit,
             offset: req.query.offset,
             total_count: result.count.length
-          },
-          nodes: result.rows
-        });
+          }};
+        expected[entity] = result.rows;
+
+        send(result);
+
+        expect(res.json).to.have.been.calledWith(expected);
       });
     });
   });
