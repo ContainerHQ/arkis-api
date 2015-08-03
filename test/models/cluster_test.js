@@ -410,13 +410,27 @@ describe('Cluster Model', () => {
         beforeEach(() => {
           return addNodeTo(cluster, 'runningNode').then(() => {
             return cluster.update({ last_state: 'upgrading' })
-          }).then(() => {
-            return cluster.notify({ last_state: 'destroyed' })
           });
         });
 
-        it(`is in running state`, () => {
-          expect(cluster.state).to.equal('running');
+        context('when master is destroyed', () => {
+          beforeEach(() => {
+            return cluster.notify({ last_state: 'destroyed', master: true });
+          });
+
+          it(`is in unreachable state`, () => {
+            expect(cluster.state).to.equal('unreachable');
+          });
+        });
+
+        context('when a slave is destroyed', () => {
+          beforeEach(() => {
+            return cluster.notify({ last_state: 'destroyed', master: false });
+          });
+
+          it(`is in running state`, () => {
+            expect(cluster.state).to.equal('running');
+          });
         });
       });
 

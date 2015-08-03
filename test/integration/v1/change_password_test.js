@@ -91,7 +91,7 @@ describe('PATCH /account/change_password', () => {
 
     beforeEach(() => {
       attributes = _.difference(user.attributes,
-        ['id', 'password', 'password_hash']
+        ['password', 'password_hash', 'id', 'created_at', 'updated_at']
       );
       form = factory.buildSync('forbiddenUser').dataValues;
     });

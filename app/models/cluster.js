@@ -140,10 +140,15 @@ module.exports = function(sequelize, DataTypes) {
           case 'deploying':
           case 'upgrading':
             return this.update({ last_state: changes.last_state });
-          case 'running':
           case 'destroyed':
+          case 'running':
             return this._getLastStateFromNodes().then(lastState => {
-              return this.update({ last_state: lastState });
+              let opts = { last_state: lastState };
+
+              if (changes.master && changes.last_state === 'destroyed') {
+                _.merge(opts, { last_ping: null });
+              }
+              return this.update(opts);
             });
         }
         return Promise.resolve(this);

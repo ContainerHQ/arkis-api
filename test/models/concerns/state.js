@@ -48,6 +48,28 @@ module.exports = function(factoryName, opts={}) {
           });
         });
 
+        context('when last ping is null' ,() => {
+          let model;
+
+           beforeEach(() => {
+            model = factory.buildSync(factoryName, {
+              last_state: state,
+              last_ping: null
+            });
+            return model.save();
+          });
+
+          if (state === 'running') {
+            it('is unreachable', () => {
+              expect(model.state).to.equal('unreachable');
+            });
+          } else {
+            it(`has a state equals to ${state}`, () => {
+              expect(model.state).to.equal(state);
+            });
+          }
+        });
+
         context('when last ping has expired', () => {
           let model;
 

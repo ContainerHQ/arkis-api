@@ -173,8 +173,9 @@ module.exports = function(sequelize, DataTypes) {
        * affiliated cluster of its new state.
        */
       register: function(attributes={}) {
-        _.merge(attributes, { last_state: 'running' });
-        return this.update(attributes);
+        let opts = { last_state: 'running', last_ping: Date.now() };
+
+        return this.update(_.merge(opts, attributes));
       },
       upgrade: function(versions) {
         let state = this.get('state');
