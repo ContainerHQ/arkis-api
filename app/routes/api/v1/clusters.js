@@ -40,7 +40,14 @@ router
     next();
   }).catch(next);
 })
+.post('/:cluster_id/upgrade', (req, res, next) => {
+  req.cluster.upgrade().then(() => {
+    res.noContent();
+  }).catch(next);
+})
+
 .use('/:cluster_id/nodes', require('./nodes'))
+
 .route('/:cluster_id')
 .get((req, res) => {
   res.json({ cluster: req.cluster });

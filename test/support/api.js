@@ -106,6 +106,11 @@ module.exports.clusters = function(user={}) {
       .delete(`${ressource}/${id}`)
       .set('Authorization', `JWT ${user.token}`);
     },
+    upgrade: function(id) {
+      return request(app)
+      .post(`${ressource}/${id}/upgrade`)
+      .set('Authorization', `JWT ${user.token}`);
+    },
     nodes: function(cluster={}) {
       ressource = `${ressource}/${cluster.id}/nodes`;
 

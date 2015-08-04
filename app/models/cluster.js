@@ -178,7 +178,9 @@ module.exports = function(sequelize, DataTypes) {
            * When a node is updated, the cluster is notified and update its
            * state accordingly, beside, when every node upgrade call fails,
            * the cluster state must not changed to. Therefore we don't need
-           * to update the state here.
+           * to update the state here. However, versions must be updated,
+           * the node agent will automatically get these informations when
+           * the node will be restarted.
            */
           return this.update({
             docker_version: LATEST_VERSIONS.docker,

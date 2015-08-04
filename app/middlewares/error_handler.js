@@ -11,6 +11,10 @@ module.exports = function(err, req, res, next) {
     case 'PaginationError':
       res.status(400).json({ error: err.message });
       break;
+    case 'StateError':
+    case 'AlreadyUpgradedError':
+      res.status(409).json({ error: err });
+      break;
     default:
       console.error(err.message);
       res.status(500).json({ error: INTERNAL_SERVER_ERROR });
