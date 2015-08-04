@@ -15,7 +15,7 @@ describe('POST /clusters/:cluster_id/upgrade', () => {
     });
   });
 
-  context('when the cluster is running', () => {
+  context('when cluster is running', () => {
     beforeEach(() => {
       return cluster.update({ last_state: 'running', last_ping: Date.now() });
     });
@@ -27,14 +27,14 @@ describe('POST /clusters/:cluster_id/upgrade', () => {
     });
 
     context('when cluster has old versions', () => {
-      beforeEach(() => { 
+      beforeEach(() => {
         let versions = { docker_version: '0.0.0', swarm_version: '0.0.0' };
 
         return cluster.update(versions);
       });
 
       context('when cluster has no reachable node', () => {
-        it("doens't upgrade the cluster", done => {
+        it("doesn't upgrade the cluster", done => {
           let previousState = cluster.state;
 
           api.clusters(user).upgrade(cluster.id)

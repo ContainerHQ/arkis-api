@@ -46,6 +46,15 @@ router
     next();
   }).catch(next);
 })
+.post('/:node_id/upgrade', (req, res, next) => {
+  req.node.upgrade({
+    docker: req.cluster.docker_version,
+    swarm:  req.cluster.swarm_version
+  }).then(() => {
+    res.noContent();
+  }).catch(next);
+})
+
 .route('/:node_id')
 .get((req, res) => {
   res.json({ node: req.node });

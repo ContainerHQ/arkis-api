@@ -139,6 +139,11 @@ module.exports.clusters = function(user={}) {
           return request(app)
           .delete(`${ressource}/${id}`)
           .set('Authorization', `JWT ${user.token}`);
+        },
+        upgrade: function(id) {
+          return request(app)
+          .post(`${ressource}/${id}/upgrade`)
+          .set('Authorization', `JWT ${user.token}`);
         }
       }
     }
