@@ -246,10 +246,9 @@ describe('Node Model', () => {
 
       it("doesn't save the node", done => {
         node.save().then(done).catch(err => {
-          Node.findById(node.id).then(node => {
-            expect(node).to.not.exist;
-            done();
-          }).catch(done);
+          expect(Node.findById(node.id))
+            .to.eventually.not.exist
+            .notify(done);
         });
       });
     });
@@ -330,10 +329,9 @@ describe('Node Model', () => {
           let opts = { public_ip: '192.168.1.90' };
 
           return node.update(opts).then(done).catch(err => {
-            node.reload().then(() => {
-              expect(node.public_ip).to.not.equal(opts.public_ip);
-              done();
-            }).catch(done);
+            expect(node.reload())
+              .to.eventually.not.have.property('public_ip', opts.public_ip)
+              .notify(done);
           });
         });
       });
@@ -479,8 +477,9 @@ describe('Node Model', () => {
 
         it("doesn't delete the node", done => {
           node.destroy().then(done).catch(err => {
-            expect(Node.findById(node.id)).to.eventually.exist;
-            done();
+            expect(Node.findById(node.id))
+              .to.eventually.exist
+              .notify(done);
           });
         });
       });

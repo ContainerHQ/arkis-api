@@ -92,8 +92,8 @@ module.exports = function(sequelize, DataTypes) {
       afterCreate: function(cluster) {
         return cluster._initializeCert();
       },
-      afterDestroy: function(cluster) {
-        return cluster._destroyToken();
+      beforeDestroy: function(cluster) {
+        return machine.deleteToken(cluster.token);
       },
     },
     instanceMethods: {
@@ -114,9 +114,6 @@ module.exports = function(sequelize, DataTypes) {
           return this.createCert(params);
         });
       },
-      _destroyToken: function() {
-        return machine.deleteToken(this.token);
-      },
       _hasLatestVersions: function() {
         return LATEST_VERSIONS.docker === this.docker_version &&
                LATEST_VERSIONS.swarm  === this.swarm_version;
@@ -131,6 +128,9 @@ module.exports = function(sequelize, DataTypes) {
           }
           return _.first(nodes).last_state;
         });
+      },
+      _removeLastPing: function() {
+        this.last_ping = null;
       },
       /*
        * If the cluster already has updated its attributes with the same
@@ -147,12 +147,10 @@ module.exports = function(sequelize, DataTypes) {
           case 'destroyed':
           case 'running':
             return this._getLastStateFromNodes().then(lastState => {
-              let opts = { last_state: lastState };
-
               if (changes.master && changes.last_state === 'destroyed') {
-                _.merge(opts, { last_ping: null });
+                this._removeLastPing();
               }
-              return this.update(opts);
+              return this.update({ last_state: lastState });
             });
         }
         return Promise.resolve(this);
@@ -172,7 +170,7 @@ module.exports = function(sequelize, DataTypes) {
            * When a node is updated, the cluster is notified and update its
            * state accordingly, beside, when every node upgrade call fails,
            * the cluster state must not changed to. Therefore we don't need
-           * to update the state here. 
+           * to update the state here.
            */
           return this.update({
             docker_version: LATEST_VERSIONS.docker,

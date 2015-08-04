@@ -123,46 +123,73 @@ describe('Cluster Model', () => {
     let cluster;
 
     beforeEach(() => {
-      sinon.stub(machine, 'createToken').returns(Promise.resolve(FAKE_TOKEN));
       sinon.stub(machine, 'createCerts').returns(Promise.resolve(FAKE_CERTS));
       cluster = factory.buildSync('cluster');
-      return cluster.save();
     });
 
     afterEach(() => {
-      machine.createToken.restore();
       machine.createCerts.restore();
     });
 
-    it('initializes its token', () => {
-      expect(cluster.token).to.equal(FAKE_TOKEN);
-    });
-
-    it('initializes its ssl certificates', () => {
-      return expect(cluster.getCert())
-        .to.eventually.satisfy(has.certificate(FAKE_CERTS));
-    });
-
-    ['docker', 'swarm'].forEach(binary => {
-      it(`initializes ${binary} with the latest version available`, () => {
-        expect(cluster[`${binary}_version`]).to.equal(LATEST_VERSIONS[binary]);
-      });
-    });
-
-    context('adding a node to this cluster', () => {
-      let previousNodesCount;
-
+    context('when token creation succeeded', () => {
       beforeEach(() => {
-        previousNodesCount = cluster.nodes_count;
+        sinon.stub(machine, 'createToken').returns(Promise.resolve(FAKE_TOKEN));
+        return cluster.save();
+      });
 
-        return factory.buildSync('node', { cluster_id: cluster.id })
-        .save().then(() => {
-          return cluster.reload();
+      afterEach(() => {
+        machine.createToken.restore();
+      });
+
+      it('initializes its token', () => {
+        expect(cluster.token).to.equal(FAKE_TOKEN);
+      });
+
+      it('initializes its ssl certificates', () => {
+        return expect(cluster.getCert())
+          .to.eventually.satisfy(has.certificate(FAKE_CERTS));
+      });
+
+      ['docker', 'swarm'].forEach(binary => {
+        it(`initializes ${binary} with the latest version available`, () => {
+          expect(cluster[`${binary}_version`])
+            .to.equal(LATEST_VERSIONS[binary]);
         });
       });
 
-      it('increases its node counter cache', () => {
-        expect(cluster.nodes_count).to.equal(previousNodesCount + 1);
+      context('adding a node to this cluster', () => {
+        let previousNodesCount;
+
+        beforeEach(() => {
+          previousNodesCount = cluster.nodes_count;
+
+          return factory.buildSync('node', { cluster_id: cluster.id })
+          .save().then(() => {
+            return cluster.reload();
+          });
+        });
+
+        it('increases its node counter cache', () => {
+          expect(cluster.nodes_count).to.equal(previousNodesCount + 1);
+        });
+      });
+    });
+
+    context('when token creation failed', () => {
+      beforeEach(() => {
+        sinon.stub(machine, 'createToken').returns(Promise.reject());
+      });
+
+      afterEach(() => {
+        machine.createToken.restore();
+      });
+
+      it("doesn't create the cluster", done => {
+        cluster.save().then(done).catch(err => {
+          expect(models.Cluster.findById(cluster.id))
+            .to.eventually.not.exist
+            .notify(done);
+        });
       });
     });
   });
@@ -289,37 +316,66 @@ describe('Cluster Model', () => {
     let cluster, nodesId;
 
     beforeEach(done => {
-      sinon.stub(machine, 'deleteToken', machine.deleteToken);
+      cluster = factory.buildSync('cluster');
+      cluster.save().then(() => {
+        let opts = { cluster_id: cluster.id };
 
-      factory.create('cluster', (err, clusterCreated) => {
-        if (err) { return done(err); };
-
-        cluster = clusterCreated;
-        factory.createMany('node', { cluster_id: cluster.id }, 10,
-          (err, nodes) => {
-            nodesId = _.pluck(nodes, 'id');
-            done(err);
+        factory.createMany('node', opts, 10, (err, nodes) => {
+          nodesId = _.pluck(nodes, 'id');
+          done(err);
         });
-      });
-    });
-
-    afterEach(() => {
-      machine.deleteToken.restore();
-    });
-
-    it('deletes its token', done => {
-      let token = cluster.token;
-
-      cluster.destroy().then(() => {
-        expect(machine.deleteToken).to.have.been.calledWith(token);
-        done();
       }).catch(done);
     });
 
-    it('removes its nodes', () => {
-      return expect(cluster.destroy().then(() => {
-        return models.Node.findAll({ where: { id: nodesId } });
-      })).to.be.fulfilled.and.to.eventually.be.empty;
+    context('when token deletion succeeded', () => {
+      beforeEach(() => {
+        sinon.stub(machine, 'deleteToken').returns(Promise.resolve());
+      });
+
+      afterEach(() => {
+        machine.deleteToken.restore();
+      });
+
+      it('deletes its token', done => {
+        let token = cluster.token;
+
+        cluster.destroy().then(() => {
+          expect(machine.deleteToken).to.have.been.calledWith(token);
+          done();
+        }).catch(done);
+      });
+
+      it('removes its nodes', () => {
+        return expect(cluster.destroy().then(() => {
+          return models.Node.findAll({ where: { id: nodesId } });
+        })).to.be.fulfilled.and.to.eventually.be.empty;
+      });
+    });
+
+    context('when token deletion failed', () => {
+      beforeEach(() => {
+        sinon.stub(machine, 'deleteToken').returns(Promise.reject());
+      });
+
+      afterEach(() => {
+        machine.deleteToken.restore();
+      });
+
+      it("doesn't remove the cluster", done => {
+        cluster.destroy().then(done).catch(() => {
+          expect(models.Cluster.findById(cluster.id))
+            .to.eventually.exist
+            .notify(done);
+        });
+      });
+
+      it("doesn't remove its nodes", done => {
+        cluster.destroy().then(done).catch(() => {
+          expect(models.Node.findAll({ where: { id: nodesId } }))
+            .to.eventually.not.be.empty
+            .notify(done);
+        });
+      });
     });
   });
 
