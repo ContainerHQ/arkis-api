@@ -65,7 +65,7 @@ describe('PATCH /clusters/:cluster_id/nodes/:node_id', () => {
     });
   });
 
-  context('when the user specifies an invalid node id', () => {
+  context('when node id is invalid', () => {
     it('returns a 404 not found ', done => {
       api.clusters(user).nodes(cluster).update().expect(404, {}, done)
     });

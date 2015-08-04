@@ -4,8 +4,9 @@ let _ = require('lodash'),
   moment = require('moment'),
   errors = require('../../app/routes/shared/errors'),
   machine = require('../support/machine'),
-  Node = require('../../app/models').Node,
-  concerns = require('./concerns');
+  concerns = require('./concerns'),
+  config = require('../../config'),
+  Node = require('../../app/models').Node;
 
 describe('Node Model', () => {
   db.sync();
@@ -601,15 +602,13 @@ describe('Node Model', () => {
     });
 
     context('when node is running', () => {
-      const VERSIONS = { docker: '1.7.0', swarm: '0.3.0' };
-
       let node;
 
       beforeEach(() => {
         node = factory.buildSync('runningNode');
 
         return node.save().then(() => {
-          return node.upgrade(VERSIONS);
+          return node.upgrade(config.latestVersions);
         });
       });
 
@@ -618,7 +617,7 @@ describe('Node Model', () => {
       });
 
       it('upgrades the machine behind', () => {
-        expect(machine.upgrade).to.have.been.calledWith(VERSIONS);
+        expect(machine.upgrade).to.have.been.calledWith(config.latestVersions);
       });
     });
 

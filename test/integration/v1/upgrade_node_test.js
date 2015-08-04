@@ -1,6 +1,7 @@
 'use strict';
 
-let  _ = require('lodash');
+let  _ = require('lodash'),
+  config = require('../../../config');
 
 describe('POST /clusters/:cluster_id/nodes/:node_id/upgrade', () => {
   db.sync();
@@ -27,9 +28,12 @@ describe('POST /clusters/:cluster_id/nodes/:node_id/upgrade', () => {
      * To verify that our node is properly updated with its cluster versions,
      * we are changing the cluster version to an oldest version.
      */
-    context('when node already has the latest version', () => {
+    context('when node already has the same versions than its cluster', () => {
       beforeEach(() => {
-        let versions = { docker_version: '1.2.3', swarm_version: '1.1.2' };
+        let versions = {
+          docker_version: config.oldestVersions.docker,
+          swarm_version:  config.oldestVersions.swarm
+        };
 
         return cluster.update(versions).then(() => {
           return node.update(versions);
@@ -41,7 +45,15 @@ describe('POST /clusters/:cluster_id/nodes/:node_id/upgrade', () => {
       });
     });
 
-    context('when cluster has old versions', () => {
+    context('when node has different versions than its cluster', () => {
+      beforeEach(() => {
+        let versions = {
+          docker_version: config.oldestVersions.docker,
+          swarm_version:  config.oldestVersions.swarm
+        };
+        return node.update(versions);
+      });
+
       it('upgrades the node to its cluster versions', done => {
         api.clusters(user).nodes(cluster).upgrade(node.id)
         .expect(204, (err, res) => {
@@ -72,7 +84,7 @@ describe('POST /clusters/:cluster_id/nodes/:node_id/upgrade', () => {
     });
   });
 
-  context('when the user specify an invalid node id', () => {
+  context('when node id is invalid', () => {
     it('returns a 404 not found', done => {
       api.clusters(user).nodes(cluster).upgrade(0).expect(404, {}, done);
     });

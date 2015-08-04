@@ -1,6 +1,7 @@
 'use strict';
 
-let  _ = require('lodash');
+let  _ = require('lodash'),
+  config = require('../../../config');
 
 describe('POST /clusters/:cluster_id/upgrade', () => {
   db.sync();
@@ -21,6 +22,14 @@ describe('POST /clusters/:cluster_id/upgrade', () => {
     });
 
     context('when cluster already has the latest version', () => {
+      beforeEach(() => {
+        let versions = {
+          docker_version: config.latestVersions.docker,
+          swarm_version:  config.latestVersions.swarm
+        };
+        return cluster.update(versions);
+      });
+
       it("doesn't upgrade the cluster and returns an error", done => {
         api.clusters(user).upgrade(cluster.id).expect(409, done);
       });
@@ -28,8 +37,10 @@ describe('POST /clusters/:cluster_id/upgrade', () => {
 
     context('when cluster has old versions', () => {
       beforeEach(() => {
-        let versions = { docker_version: '0.0.0', swarm_version: '0.0.0' };
-
+        let versions = {
+          docker_version: config.oldestVersions.docker,
+          swarm_version:  config.oldestVersions.swarm
+        };
         return cluster.update(versions);
       });
 
@@ -75,7 +86,7 @@ describe('POST /clusters/:cluster_id/upgrade', () => {
     });
   });
 
-  context('when the user specify an invalid cluster id', () => {
+  context('when cluster id is invalid', () => {
     it('returns a 404 not found', done => {
       api.clusters(user).upgrade(0).expect(404, {}, done);
     });

@@ -4,9 +4,7 @@ let _ = require('lodash'),
   errors = require('../routes/shared/errors'),
   mixins = require('./concerns'),
   machine = require('../../config/machine'),
-  versions = require('../../config/versions');
-
-const LATEST_VERSIONS = _.first(versions);
+  config = require('../../config');
 
 module.exports = function(sequelize, DataTypes) {
   let Cluster = sequelize.define('Cluster', mixins.extend('state', 'attributes', {
@@ -89,8 +87,8 @@ module.exports = function(sequelize, DataTypes) {
     hooks: {
       beforeCreate: function(cluster) {
         _.merge(cluster, {
-          docker_version: LATEST_VERSIONS.docker,
-          swarm_version:  LATEST_VERSIONS.swarm
+          docker_version: config.latestVersions.docker,
+          swarm_version:  config.latestVersions.swarm
         });
         /*
          * We first try to create the ssl certificates, to avoid an
@@ -123,8 +121,8 @@ module.exports = function(sequelize, DataTypes) {
         });
       },
       _hasLatestVersions: function() {
-        return LATEST_VERSIONS.docker === this.docker_version &&
-               LATEST_VERSIONS.swarm  === this.swarm_version;
+        return config.latestVersions.docker === this.docker_version &&
+               config.latestVersions.swarm  === this.swarm_version;
       },
       _getLastStateFromNodes: function() {
         if (this.nodes_count <= 0) {
@@ -173,7 +171,7 @@ module.exports = function(sequelize, DataTypes) {
           return Promise.reject(new errors.AlreadyUpgradedError());
         }
         return this.getNodes().then(nodes => {
-          _.invoke(nodes, 'upgrade', versions);
+          _.invoke(nodes, 'upgrade', config.latestVersions);
           /*
            * When a node is updated, the cluster is notified and update its
            * state accordingly, beside, when every node upgrade call fails,
@@ -183,8 +181,8 @@ module.exports = function(sequelize, DataTypes) {
            * the node will be restarted.
            */
           return this.update({
-            docker_version: LATEST_VERSIONS.docker,
-            swarm_version:  LATEST_VERSIONS.swarm,
+            docker_version: config.latestVersions.docker,
+            swarm_version:  config.latestVersions.swarm,
           });
         });
       }

@@ -6,11 +6,10 @@ let _ = require('lodash'),
   machine = require('../support/machine'),
   models = require('../../app/models'),
   concerns = require('./concerns'),
-  versions = require('../../config/versions');
+  config = require('../../config');
 
 const DEFAULT_STRATEGY = 'spread',
-      VALID_STRATEGIES = [DEFAULT_STRATEGY, 'binpack', 'random'],
-      LATEST_VERSIONS  = _.first(versions);
+      VALID_STRATEGIES = [DEFAULT_STRATEGY, 'binpack', 'random'];
 
 describe('Cluster Model', () => {
   db.sync();
@@ -149,7 +148,7 @@ describe('Cluster Model', () => {
       ['docker', 'swarm'].forEach(binary => {
         it(`initializes ${binary} with the latest version available`, () => {
           expect(cluster[`${binary}_version`])
-            .to.equal(LATEST_VERSIONS[binary]);
+            .to.equal(config.latestVersions[binary]);
         });
       });
 
@@ -249,8 +248,8 @@ describe('Cluster Model', () => {
         context(`when cluster already has the latest ${binary} version`, () => {
           beforeEach(() => {
             return cluster.update({
-              docker_version: LATEST_VERSIONS.docker,
-              swarm_version:  LATEST_VERSIONS.swarm
+              docker_version:  config.latestVersions.docker,
+              swarm_version:   config.latestVersions.swarm
             });
           });
 
@@ -268,7 +267,7 @@ describe('Cluster Model', () => {
               throw new Error('Upgrade should be rejected!');
             }).catch(() => {
               expect(cluster[`${binary}_version`])
-                .to.equal(LATEST_VERSIONS[binary]);
+                .to.equal(config.latestVersions[binary]);
             });
           });
         });
@@ -302,9 +301,7 @@ describe('Cluster Model', () => {
 
         ['docker', 'swarm'].forEach(binary => {
           it(`has the latest ${binary} version available`, () => {
-            let latestVersion = LATEST_VERSIONS[binary];
-
-            expect(cluster[`${binary}_version`], latestVersion);
+            expect(cluster[`${binary}_version`], config.latestVersions[binary]);
           });
         });
 
@@ -329,8 +326,8 @@ describe('Cluster Model', () => {
   function updateClusterToOldestVersions(cluster) {
     return cluster.save().then(() => {
       return cluster.update({
-        docker_version: '0.0.0',
-        swarm_version:  '0.0.0'
+        docker_version: config.oldestVersions.docker,
+        swarm_version:  config.latestVersions.swarm
       });
     });
   }
