@@ -4,6 +4,7 @@ let _ = require('lodash'),
   moment = require('moment'),
   errors = require('../../app/routes/shared/errors'),
   machine = require('../support/machine'),
+  Node = require('../../app/models').Node,
   concerns = require('./concerns');
 
 describe('Node Model', () => {
@@ -176,57 +177,81 @@ describe('Node Model', () => {
       cluster = { notify: sinon.stub() };
       node = factory.buildSync('node');
       node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
-      sinon.stub(machine, 'generateFQDN').returns(FQDN);
-      sinon.stub(machine, 'create', machine.create);
     });
 
-    afterEach(() => {
-      machine.generateFQDN.restore();
-      machine.create.restore();
-    });
+    context('when machine creation succeeded', () => {
+      beforeEach(() => {
+        sinon.stub(machine, 'generateFQDN').returns(FQDN);
+        sinon.stub(machine, 'create', machine.create);
+      });
 
-    it('is not a master node by default', () => {
-      let node = factory.buildSync('node');
+      afterEach(() => {
+        machine.generateFQDN.restore();
+        machine.create.restore();
+      });
 
-      return expect(node.save()).to.eventually.have.property('master', false);
-    });
+      it('is not a master node by default', () => {
+        let node = factory.buildSync('node');
 
-    it('initializes its fqdn', () => {
-      return expect(node.save()).to.eventually.have.property('fqdn', FQDN);
-    });
+        return expect(node.save()).to.eventually.have.property('master', false);
+      });
 
-    it('initializes its jwt token', () => {
-      return expect(node.save())
-        .to.eventually.satisfy(has.validJWT);
-    });
+      it('initializes its fqdn', () => {
+        return expect(node.save()).to.eventually.have.property('fqdn', FQDN);
+      });
 
-    it('generates its fqdn through machine', () => {
-      return node.save().then(() => {
-        return expect(machine.generateFQDN).to.have.been.calledWith({});
+      it('initializes its jwt token', () => {
+        return expect(node.save())
+          .to.eventually.satisfy(has.validJWT);
+      });
+
+      it('generates its fqdn through machine', () => {
+        return node.save().then(() => {
+          return expect(machine.generateFQDN).to.have.been.calledWith({});
+        });
+      });
+
+      it('initialized its state to deploying', () => {
+        return expect(node.save())
+          .to.eventually.have.property('state', 'deploying');
+      });
+
+      it('creates a machine behind', () => {
+        return node.save().then(() => {
+          return expect(machine.create).to.have.been.calledWith({});
+        });
+      });
+
+      it('reports back its last_state to its cluster', () => {
+        return node.save().then(() => {
+          return expect(cluster.notify)
+            .to.have.been.calledWith({ last_state: node.last_state });
+        });
+      });
+
+      it('has no download link to get the agent', () => {
+        return expect(node.save())
+          .to.eventually.have.property('agent_cmd', null);
       });
     });
 
-    it('initialized its state to deploying', () => {
-      return expect(node.save())
-        .to.eventually.have.property('state', 'deploying');
-    });
-
-    it('creates a machine behind', () => {
-      return node.save().then(() => {
-        return expect(machine.create).to.have.been.calledWith({});
+    context('when machine creation failed', () => {
+      beforeEach(() => {
+        sinon.stub(machine, 'create').returns(Promise.reject());
       });
-    });
 
-    it('reports back its last_state to its cluster', () => {
-      return node.save().then(() => {
-        return expect(cluster.notify)
-          .to.have.been.calledWith({ last_state: node.last_state });
+      afterEach(() => {
+        machine.create.restore();
       });
-    });
 
-    it('has no download link to get the agent', () => {
-      return expect(node.save())
-        .to.eventually.have.property('agent_cmd', null);
+      it("doesn't save the node", done => {
+        node.save().then(done).catch(err => {
+          Node.findById(node.id).then(node => {
+            expect(node).to.not.exist;
+            done();
+          }).catch(done);
+        });
+      });
     });
 
     context('when byon node', () => {
@@ -235,10 +260,12 @@ describe('Node Model', () => {
       beforeEach(() => {
         _.merge(node, { byon: true, region: null, node_size: null });
         sinon.stub(machine, 'agentCmd').returns(AGENT_CMD);
+        sinon.stub(machine, 'create', machine.create);
       });
 
       afterEach(() => {
         machine.agentCmd.restore();
+        machine.create.restore();
       });
 
       it("doesn't create a machine behind", () => {
@@ -260,7 +287,7 @@ describe('Node Model', () => {
         });
       });
 
-      it('has no command to get the agent', () => {
+      it('has a command to get the agent', () => {
         return expect(node.save())
           .to.eventually.have.property('agent_cmd', AGENT_CMD);
       });
@@ -272,24 +299,55 @@ describe('Node Model', () => {
 
     beforeEach(() => {
       node = factory.buildSync('node');
-      sinon.stub(machine, 'registerFQDN', machine.registerFQDN);
       return node.save();
     });
 
-    afterEach(() => {
-      machine.registerFQDN.restore();
-    });
-
     context('when updating public_ip', () => {
-      it('registers this ip for the fqdn', () => {
-        return node.update({ public_ip: '192.168.1.90' }).then(() => {
-          return expect(machine.registerFQDN)
-            .to.have.been.calledWithMatch(_.pick(node, ['fqdn', 'public_ip']));
+      afterEach(() => {
+        machine.registerFQDN.restore();
+      });
+
+      context('when machine fqdn registration succeeded', () => {
+        beforeEach(() => {
+          sinon.stub(machine, 'registerFQDN', machine.registerFQDN);
+        });
+
+        it('registers this ip for the fqdn', () => {
+          return node.update({ public_ip: '192.168.1.90' }).then(() => {
+            return expect(machine.registerFQDN)
+              .to.have.been
+              .calledWithMatch(_.pick(node, ['fqdn', 'public_ip']));
+          });
+        });
+      });
+
+      context('when machine fqdn registration failed', () => {
+        beforeEach(() => {
+          sinon.stub(machine, 'registerFQDN').returns(Promise.reject());
+        });
+
+        it("doesn't update the node", done => {
+          let opts = { public_ip: '192.168.1.90' };
+
+          return node.update(opts).then(done).catch(err => {
+            node.reload().then(() => {
+              expect(node.public_ip).to.not.equal(opts.public_ip);
+              done();
+            }).catch(done);
+          });
         });
       });
     });
 
     context('when not updating public_ip', () => {
+      beforeEach(() => {
+        sinon.stub(machine, 'registerFQDN', machine.registerFQDN);
+      });
+
+      afterEach(() => {
+        machine.registerFQDN.restore();
+      });
+
       it("doesn't registers the public_ip for the fqdn", () => {
         return node.update({ name: 'test' }).then(() => {
           return expect(machine.registerFQDN).not.to.have.been.called;
@@ -368,40 +426,86 @@ describe('Node Model', () => {
       cluster = { notify: sinon.stub() };
       node = factory.buildSync('node');
       node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
-      sinon.stub(machine, 'destroy', machine.destroy);
-      sinon.stub(machine, 'deleteFQDN', machine.deleteFQDN);
-    });
-
-    afterEach(() => {
-      machine.destroy.restore();
-      machine.deleteFQDN.restore();
     });
 
     context('with a non byon node', () => {
       beforeEach(() => {
-        return node.save().then(() => {
+        return node.save();
+      });
+
+      context('when machine destruction and fqdn deletion succeeds', () => {
+        beforeEach(() => {
+          sinon.stub(machine, 'destroy', machine.destroy);
+          sinon.stub(machine, 'deleteFQDN', machine.deleteFQDN);
           return node.destroy();
+        });
+
+        afterEach(() => {
+          machine.destroy.restore();
+          machine.deleteFQDN.restore();
+        });
+
+        it('reports back the deletion to its cluster', () => {
+          expect(cluster.notify)
+            .to.have.been.calledWith({ last_state: 'destroyed', master: false });
+        });
+
+        it('removes the machine behind', () => {
+          expect(machine.destroy).to.have.been.calledWith({});
+        });
+
+        it('removes the fqdn', () => {
+          expect(machine.deleteFQDN).to.have.been.calledWith(node.fqdn);
         });
       });
 
-      it('reports back the deletion to its cluster', () => {
-        expect(cluster.notify)
-          .to.have.been.calledWith({ last_state: 'destroyed', master: false });
+      context('when machine destruction failed', () => {
+        beforeEach(() => {
+          sinon.stub(machine, 'destroy').returns(Promise.reject());
+          sinon.stub(machine, 'deleteFQDN', machine.deleteFQDN);
+        });
+
+        afterEach(() => {
+          machine.destroy.restore();
+          machine.deleteFQDN.restore();
+        });
+
+        it("doesn't delete the fqdn", done => {
+          node.destroy().then(done).catch(err => {
+            expect(machine.deleteFQDN).to.not.have.been.called;
+            done();
+          });
+        });
+
+        it("doesn't delete the node", done => {
+          node.destroy().then(done).catch(err => {
+            expect(Node.findById(node.id)).to.eventually.exist;
+            done();
+          });
+        });
       });
 
-      it('removes the machine behind', () => {
-        expect(machine.destroy).to.have.been.calledWith({});
-      });
+      context('when machine fqdn deletion failed', () => {
+        beforeEach(() => {
+          sinon.stub(machine, 'deleteFQDN').returns(Promise.reject());
+        });
 
-      it('removes the fqdn', () => {
-        expect(machine.deleteFQDN).to.have.been.calledWith(node.fqdn);
+        afterEach(() => {
+          machine.deleteFQDN.restore();
+        });
+
+        it("doesn't delete the node", done => {
+          node.destroy().then(done).catch(err => {
+            expect(Node.findById(node.id)).to.eventually.exist;
+            done();
+          });
+        });
       });
     });
 
     context('with a master node', () => {
       beforeEach(() => {
-        _.merge(node, { master: true });
-
+        node.master = true;
         return node.save().then(() => {
           return node.destroy();
         });
@@ -417,9 +521,15 @@ describe('Node Model', () => {
       beforeEach(() => {
         _.merge(node, { byon: true, region: null, node_size: null });
 
+        sinon.stub(machine, 'destroy', machine.destroy);
+
         return node.save().then(() => {
           return node.destroy();
         });
+      });
+
+      afterEach(() => {
+        machine.destroy.restore();
       });
 
       it('reports back the deletion to its cluster', () => {

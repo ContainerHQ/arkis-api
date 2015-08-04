@@ -251,7 +251,7 @@ module.exports = function(sequelize, DataTypes) {
         if (!node.byon) { promise = machine.destroy({}); }
 
         return promise.then(() => {
-          machine.deleteFQDN(node.fqdn);
+          return machine.deleteFQDN(node.fqdn);
         });
       },
       afterDestroy: function(node) {
