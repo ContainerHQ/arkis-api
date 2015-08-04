@@ -2,7 +2,7 @@
 
 let moment = require('moment');
 
-describe('PATCH /agent/:token/live', () => {
+describe('POST /agent/:token/live', () => {
   db.sync();
 
   context('when the node exists', () => {

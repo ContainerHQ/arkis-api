@@ -78,6 +78,29 @@ describe('ErrorHandler Middleware', () => {
     });
   });
 
+  [
+    'StateError',
+    'AlreadyUpgradedError'
+  ].forEach(errorName => {
+    context(`with a ${errorName}`, () => {
+      let err = new errors[errorName]();
+
+      it('sends a conflict request status', done => {
+        errorHandler(err, {}, res, () => {
+          expect(res.status).to.have.been.calledWith(409);
+          done();
+        });
+      });
+
+      it('sends the error back', done => {
+        errorHandler(err, {}, res, () => {
+          expect(res.json).to.have.been.calledWith({ error: err });
+          done();
+        });
+      });
+    });
+  });
+
   context('with any other error', () => {
     let err = new Error('whatever');
 

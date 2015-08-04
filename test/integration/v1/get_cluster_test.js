@@ -29,17 +29,15 @@ describe('GET /clusters/:id', () => {
   });
 
   context("when the targeted cluster doesn't belong to the user", () => {
-    let defaultUser;
+    let otherUser;
 
     beforeEach(() => {
-      return models.User.findOne({ where: { id: { $ne: user.id } } })
-      .then(user => {
-        defaultUser = user;
-      });
+      otherUser = factory.buildSync('user');
+      return otherUser.save();
     });
 
     it('returns a 404 not found', done => {
-      api.clusters(defaultUser).get(cluster.id).expect(404, {}, done);
+      api.clusters(otherUser).get(cluster.id).expect(404, {}, done);
     });
   });
 

@@ -9,10 +9,6 @@ module.exports = function(factory) {
     name: random.string,
   });
 
-  factory.define('defaultCluster', Cluster, {
-    name: random.string,
-  });
-
   factory.define('unreachableCluster', Cluster, {
     name: random.string,
     last_state: 'running',

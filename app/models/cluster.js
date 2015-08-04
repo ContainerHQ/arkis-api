@@ -4,9 +4,7 @@ let _ = require('lodash'),
   errors = require('../routes/shared/errors'),
   mixins = require('./concerns'),
   machine = require('../../config/machine'),
-  versions = require('../../config/versions');
-
-const LATEST_VERSIONS = _.first(versions);
+  config = require('../../config');
 
 module.exports = function(sequelize, DataTypes) {
   let Cluster = sequelize.define('Cluster', mixins.extend('state', 'attributes', {
@@ -28,6 +26,11 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true,
       defaultValue: null,
       unique: true
+    },
+    cert: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: null
     },
     strategy: {
       type: DataTypes.STRING,
@@ -84,16 +87,19 @@ module.exports = function(sequelize, DataTypes) {
     hooks: {
       beforeCreate: function(cluster) {
         _.merge(cluster, {
-          docker_version: LATEST_VERSIONS.docker,
-          swarm_version:  LATEST_VERSIONS.swarm
+          docker_version: config.latestVersions.docker,
+          swarm_version:  config.latestVersions.swarm
         });
-        return cluster._initializeToken();
+        /*
+         * We first try to create the ssl certificates, to avoid an
+         * unnecessary call to the docker hub discovery service.ss
+         */
+        return cluster._initializeCert().then(() => {
+          return cluster._initializeToken();
+        });
       },
-      afterCreate: function(cluster) {
-        return cluster._initializeCert();
-      },
-      afterDestroy: function(cluster) {
-        return cluster._destroyToken();
+      beforeDestroy: function(cluster) {
+        return machine.deleteToken(cluster.token);
       },
     },
     instanceMethods: {
@@ -104,22 +110,19 @@ module.exports = function(sequelize, DataTypes) {
       },
       _initializeCert: function() {
         return machine.createCerts().then(certs => {
-          let params = {};
+          this.cert = {};
 
           _.keys(certs).forEach(type => {
             _.keys(certs[type]).forEach(name => {
-              params[`${type}_${name}`] = certs[type][name];
+              this.cert[`${type}_${name}`] = certs[type][name];
             });
           });
-          return this.createCert(params);
+          return this;
         });
       },
-      _destroyToken: function() {
-        return machine.deleteToken(this.token);
-      },
       _hasLatestVersions: function() {
-        return LATEST_VERSIONS.docker === this.docker_version &&
-               LATEST_VERSIONS.swarm  === this.swarm_version;
+        return config.latestVersions.docker === this.docker_version &&
+               config.latestVersions.swarm  === this.swarm_version;
       },
       _getLastStateFromNodes: function() {
         if (this.nodes_count <= 0) {
@@ -132,6 +135,13 @@ module.exports = function(sequelize, DataTypes) {
           return _.first(nodes).last_state;
         });
       },
+      _removeLastPing: function() {
+        this.last_ping = null;
+      },
+      /*
+       * If the cluster already has updated its attributes with the same
+       * changes, sequelize won't try to update them again.
+       */
       notify: function(changes={}) {
         if (_.has(changes, 'last_ping')) {
           return this.update({ last_ping: changes.last_ping });
@@ -143,12 +153,10 @@ module.exports = function(sequelize, DataTypes) {
           case 'destroyed':
           case 'running':
             return this._getLastStateFromNodes().then(lastState => {
-              let opts = { last_state: lastState };
-
               if (changes.master && changes.last_state === 'destroyed') {
-                _.merge(opts, { last_ping: null });
+                this._removeLastPing();
               }
-              return this.update(opts);
+              return this.update({ last_state: lastState });
             });
         }
         return Promise.resolve(this);
@@ -163,12 +171,18 @@ module.exports = function(sequelize, DataTypes) {
           return Promise.reject(new errors.AlreadyUpgradedError());
         }
         return this.getNodes().then(nodes => {
-          _.invoke(nodes, 'upgrade', versions);
-
+          _.invoke(nodes, 'upgrade', config.latestVersions);
+          /*
+           * When a node is updated, the cluster is notified and update its
+           * state accordingly, beside, when every node upgrade call fails,
+           * the cluster state must not changed to. Therefore we don't need
+           * to update the state here. However, versions must be updated,
+           * the node agent will automatically get these informations when
+           * the node will be restarted.
+           */
           return this.update({
-            docker_version: LATEST_VERSIONS.docker,
-            swarm_version:  LATEST_VERSIONS.swarm,
-            last_state: 'upgrading'
+            docker_version: config.latestVersions.docker,
+            swarm_version:  config.latestVersions.swarm,
           });
         });
       }
@@ -180,7 +194,6 @@ module.exports = function(sequelize, DataTypes) {
           hooks: true,
           counterCache: { as: 'nodes_count' },
         });
-        Cluster.hasOne(models.Cert, { onDelete: 'cascade', hooks: true });
       }
     }
   }));

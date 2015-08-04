@@ -67,12 +67,12 @@ module.exports.agent = function(token) {
     },
     register: function(form) {
       return request(app)
-      .patch(`${ressource}/${token}/register`)
+      .post(`${ressource}/${token}/register`)
       .send(form);
     },
     live: function() {
       return request(app)
-      .patch(`${ressource}/${token}/live`);
+      .post(`${ressource}/${token}/live`);
     }
   };
 };
@@ -106,6 +106,11 @@ module.exports.clusters = function(user={}) {
       .delete(`${ressource}/${id}`)
       .set('Authorization', `JWT ${user.token}`);
     },
+    upgrade: function(id) {
+      return request(app)
+      .post(`${ressource}/${id}/upgrade`)
+      .set('Authorization', `JWT ${user.token}`);
+    },
     nodes: function(cluster={}) {
       ressource = `${ressource}/${cluster.id}/nodes`;
 
@@ -133,6 +138,11 @@ module.exports.clusters = function(user={}) {
         delete: function(id) {
           return request(app)
           .delete(`${ressource}/${id}`)
+          .set('Authorization', `JWT ${user.token}`);
+        },
+        upgrade: function(id) {
+          return request(app)
+          .post(`${ressource}/${id}/upgrade`)
           .set('Authorization', `JWT ${user.token}`);
         }
       }

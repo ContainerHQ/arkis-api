@@ -3,7 +3,7 @@
 let _ = require('lodash'),
   Node = require('../../../app/models').Node;
 
-describe('PATCH /agent/:token/register', () => {
+describe('POST /agent/:token/register', () => {
   db.sync();
 
   context('when the node exists', () => {

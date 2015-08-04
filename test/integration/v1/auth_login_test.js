@@ -11,7 +11,6 @@ describe('POST /auth/login', () => {
   /*
    * We need a non save user in order to login
    * with the original password (before hashing).
-   *
    */
   beforeEach(() => {
     user = factory.buildSync('user');
@@ -32,16 +31,13 @@ describe('POST /auth/login', () => {
   });
 
   context('when user already exists', () => {
-    let userToken;
-
-    beforeEach((done) => {
-      factory.create('user', (err, user) => {
-        userToken = user.token;
-        done(err);
-      });
+    beforeEach(() => {
+      return user.save();
     });
 
     it('returns the user token', done => {
+      let userToken = user.token;
+
       api.auth.login(user)
       .expect(200, { token: userToken }, done);
     });
@@ -58,11 +54,6 @@ describe('POST /auth/login', () => {
     });
   });
 
-  /*
-   * Before login, the tested user is not yet created.
-   * Therefore, Id field must be in the attributes
-   * whitelist.
-   */
   context('with blacklisted attributes', () => {
     let attributes, form;
 

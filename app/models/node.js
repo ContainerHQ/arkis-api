@@ -162,6 +162,11 @@ module.exports = function(sequelize, DataTypes) {
       },
       _notifyCluster: function(changes) {
         return this.getCluster().then(cluster => {
+          /*
+           * This ensures that the node won't notify its cluster if it has
+           * been deleted (when the cluster is deleted, it deletes its nodes
+           * in cascade).
+           */
           if (cluster) {
             return cluster.notify(changes);
           }
@@ -194,20 +199,16 @@ module.exports = function(sequelize, DataTypes) {
         return this.update({ last_ping: moment() });
       },
       agentInfos: function() {
-        let infos = {};
-
         return this.getCluster().then(cluster => {
-          _.merge(infos, {
+          return {
+            master: this.master,
+            cert: cluster.cert,
             versions: {
               docker:   cluster.docker_version,
               swarm:    cluster.swarm_version
             },
             strategy: cluster.strategy
-          });
-          return cluster.getCert();
-        }).then(cert => {
-          _.merge(infos, { cert: cert });
-          return Promise.resolve(infos);
+          };
         });
       }
     },
@@ -224,30 +225,34 @@ module.exports = function(sequelize, DataTypes) {
       afterCreate: function(node) {
         return node._notifyCluster({ last_state: node.last_state });
       },
-      afterUpdate: function(node, options) {
+      beforeUpdate: function(node, options) {
         if (_.includes(options.fields, 'public_ip')) {
           return machine.registerFQDN(node);
         }
+        return Promise.resolve(node);
+      },
+      afterUpdate: function(node, options) {
         if (node.master && _.includes(options.fields, 'last_ping')) {
           return node._notifyCluster({ last_ping: node.last_ping });
         }
         if (_.includes(options.fields, 'last_state')) {
           return node._notifyCluster({ last_state: node.last_state });
         }
-        return sequelize.Promise.resolve(node);
+        return Promise.resolve(node);
       },
-      afterDestroy: function(node) {
-        let promise = Promise.resolve();
+      beforeDestroy: function(node) {
+        let promise = Promise.resolve(node);
 
         if (!node.byon) { promise = machine.destroy({}); }
 
-        return machine.deleteFQDN(node.fqdn).then(() => {
-          return promise;
-        }).then(() => {
-          return node._notifyCluster({
-            last_state: 'destroyed',
-            master: node.master
-          });
+        return promise.then(() => {
+          return machine.deleteFQDN(node.fqdn);
+        });
+      },
+      afterDestroy: function(node) {
+        return node._notifyCluster({
+          last_state: 'destroyed',
+          master: node.master
         });
       },
       afterFind: function(nodes) {
