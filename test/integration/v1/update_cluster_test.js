@@ -44,7 +44,7 @@ describe('PATCH /clusters/:cluster_id', () => {
     beforeEach(() => {
       form = factory.buildSync('forbiddenCluster').dataValues;
       attributes = _.difference(cluster.attributes,
-        ['name', 'created_at', 'updated_at']
+        ['name', 'cert', 'created_at', 'updated_at']
       );
     });
 

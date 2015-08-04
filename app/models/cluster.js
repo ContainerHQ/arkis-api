@@ -29,6 +29,11 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: null,
       unique: true
     },
+    cert: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: null
+    },
     strategy: {
       type: DataTypes.STRING,
       allowNull: false,

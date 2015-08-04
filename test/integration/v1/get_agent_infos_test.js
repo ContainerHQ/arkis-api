@@ -18,11 +18,7 @@ describe('GET /agent/:token/infos', () => {
       .expect(200, (err, res) => {
         if (err) { return done(err); }
 
-        res.body.cert = format.timestamps(res.body.cert);
-
         node.agentInfos().then(infos => {
-          infos.cert = infos.cert.toJSON();
-
           expect(res.body).to.deep.equal(infos);
           done();
         }).catch(done);

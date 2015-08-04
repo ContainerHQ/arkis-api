@@ -29,17 +29,15 @@ describe('DELETE /clusters/:id', () => {
   });
 
   context("when the targeted cluster doesn't belong to the user", () => {
-    let defaultUser;
+    let otherUser;
 
     beforeEach(() => {
-      return models.User.findOne({ where: { id: { $ne: user.id } } })
-      .then(user => {
-        defaultUser = user;
-      });
+      otherUser = factory.buildSync('user');
+      return otherUser.save();
     });
 
     it("doesn't delete the cluster and returns a 404 not found", done => {
-      api.clusters(defaultUser).delete(cluster.id)
+      api.clusters(otherUser).delete(cluster.id)
       .expect(404, (err, res) => {
         if (err) { return done(err); }
 

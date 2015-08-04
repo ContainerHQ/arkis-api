@@ -56,12 +56,14 @@ describe('User Model', () => {
     });
 
     context('when email address is already taken', () => {
+      const OPTS = { email: 'max@furyroad.io' };
+
       beforeEach(() => {
-        return factory.buildSync('user').save();
+        return factory.buildSync('user', OPTS).save();
       });
 
-      it('fail', () => {
-        let user = factory.buildSync('user');
+      it('fails', () => {
+        let user = factory.buildSync('user', OPTS);
 
         return expect(user.save()).to.be.rejected;
       });

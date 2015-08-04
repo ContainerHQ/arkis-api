@@ -1,16 +1,12 @@
 'use strict';
 
-let User = require('../../app/models').User;
+let random = require('../support/random'),
+  User = require('../../app/models').User;
 
 module.exports = function(factory) {
   factory.define('user', User, {
-    email: 'max@furyroad.io',
+    email: random.email,
     password: 'allm8tyMax',
-  });
-
-  factory.define('defaultUser', User, {
-    email: 'default@arkis.io',
-    password: 'allm8tyMax'
   });
 
   /*
@@ -18,7 +14,7 @@ module.exports = function(factory) {
    */
   factory.define('forbiddenUser', User, {
     id: 0,
-    email: 'forbidden@arkis.io',
+    email: random.email,
     password: 'azerty28',
     password_hash: 'whatever',
     provider: 'whatever',

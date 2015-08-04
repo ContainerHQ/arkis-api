@@ -48,7 +48,7 @@ describe('Cluster Model', () => {
 
     it('succeeds with the same name for different users', () => {
       let user1 = factory.buildSync('user'),
-        user2 = factory.buildSync('user', { email: 'user2@arkis.io' } );
+        user2 = factory.buildSync('user');
 
       return expect(user1.save().then(() => {
         return factory.buildSync('cluster', { user_id: user1.id }).save();
