@@ -21,7 +21,9 @@ app
 .use('/v:version', routes.docker)
 .use('/api', routes.api)
 .listen(config.port, () => {
-  console.log('Listenning on port: %s', config.port);
+  if (config.logging) {
+    console.log('Listenning on port: %s', config.port);
+  }
 })
 .on('upgrade', routes.upgrade);
 
