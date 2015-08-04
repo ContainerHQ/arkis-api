@@ -1,5 +1,5 @@
 let jwt = require('jsonwebtoken'),
-  secrets = require('./secrets');
+  secrets = require('./index').secrets;
 
 module.exports.generate = function(jit) {
   return jwt.sign({ jit: jit }, secrets.jwt);

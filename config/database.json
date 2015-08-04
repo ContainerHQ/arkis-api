@@ -2,21 +2,21 @@
   "development": {
     "username": "postgres",
     "password": "mysecretpassword",
-    "database": "postgres",
+    "adapter": "postgres",
     "host": "db",
     "dialect": "postgres"
   },
   "test": {
     "username": "postgres",
     "password": "mysecretpassword",
-    "database": "postgres",
+    "adapter": "postgres",
     "host": "dbtest",
     "dialect": "postgres"
   },
   "production": {
     "username": "postgres",
     "password": "mysecretpassword",
-    "database": "postgres",
+    "adapter": "postgres",
     "host": "db",
     "dialect": "postgres"
   }

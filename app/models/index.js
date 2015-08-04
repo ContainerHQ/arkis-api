@@ -4,21 +4,14 @@ let fs      = require('fs'),
   path      = require('path'),
   Sequelize = require('sequelize'),
   basename  = path.basename(module.filename),
-  env       = process.env.NODE_ENV || 'development',
-  config    = require(__dirname + '/../../config/database.json')[env],
+  config    = require('../../config'),
   db        = {};
 
-if (env === 'test') {
-  config.logging = false;
-}
-
-config.define = { underscored: true };
-
 let sequelize = new Sequelize(
-  config.database,
-  config.username,
-  config.password,
-  config
+  config.db.adapter,
+  config.db.username,
+  config.db.password,
+  config.db
 );
 
 fs
