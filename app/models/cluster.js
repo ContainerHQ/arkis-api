@@ -87,10 +87,13 @@ module.exports = function(sequelize, DataTypes) {
           docker_version: LATEST_VERSIONS.docker,
           swarm_version:  LATEST_VERSIONS.swarm
         });
-        return cluster._initializeToken();
-      },
-      afterCreate: function(cluster) {
-        return cluster._initializeCert();
+        /*
+         * We first try to create the ssl certificates, to avoid an
+         * unnecessary call to the docker hub discovery service.ss
+         */
+        return cluster._initializeCert().then(() => {
+          return cluster._initializeToken();
+        });
       },
       beforeDestroy: function(cluster) {
         return machine.deleteToken(cluster.token);
@@ -104,14 +107,14 @@ module.exports = function(sequelize, DataTypes) {
       },
       _initializeCert: function() {
         return machine.createCerts().then(certs => {
-          let params = {};
+          this.cert = {};
 
           _.keys(certs).forEach(type => {
             _.keys(certs[type]).forEach(name => {
-              params[`${type}_${name}`] = certs[type][name];
+              this.cert[`${type}_${name}`] = certs[type][name];
             });
           });
-          return this.createCert(params);
+          return this;
         });
       },
       _hasLatestVersions: function() {
@@ -186,7 +189,6 @@ module.exports = function(sequelize, DataTypes) {
           hooks: true,
           counterCache: { as: 'nodes_count' },
         });
-        Cluster.hasOne(models.Cert, { onDelete: 'cascade', hooks: true });
       }
     }
   }));

@@ -123,22 +123,19 @@ describe('Cluster Model', () => {
     let cluster;
 
     beforeEach(() => {
-      sinon.stub(machine, 'createCerts').returns(Promise.resolve(FAKE_CERTS));
       cluster = factory.buildSync('cluster');
     });
 
-    afterEach(() => {
-      machine.createCerts.restore();
-    });
-
-    context('when token creation succeeded', () => {
+    context('when machine token and cert creation succeeded', () => {
       beforeEach(() => {
         sinon.stub(machine, 'createToken').returns(Promise.resolve(FAKE_TOKEN));
+        sinon.stub(machine, 'createCerts').returns(Promise.resolve(FAKE_CERTS));
         return cluster.save();
       });
 
       afterEach(() => {
         machine.createToken.restore();
+        machine.createCerts.restore();
       });
 
       it('initializes its token', () => {
@@ -146,8 +143,7 @@ describe('Cluster Model', () => {
       });
 
       it('initializes its ssl certificates', () => {
-        return expect(cluster.getCert())
-          .to.eventually.satisfy(has.certificate(FAKE_CERTS));
+        expect(cluster.cert).to.satisfy(has.certificate(FAKE_CERTS));
       });
 
       ['docker', 'swarm'].forEach(binary => {
@@ -175,7 +171,34 @@ describe('Cluster Model', () => {
       });
     });
 
-    context('when token creation failed', () => {
+    context('when machine cert creation failed', () => {
+      beforeEach(() => {
+        sinon.stub(machine, 'createCerts').returns(Promise.reject());
+        sinon.stub(machine, 'createToken').returns(Promise.resolve());
+      });
+
+      afterEach(() => {
+        machine.createCerts.restore();
+        machine.createToken.restore();
+      });
+
+      it("doesn't create the cluster", done => {
+        cluster.save().then(done).catch(err => {
+          expect(models.Cluster.findById(cluster.id))
+            .to.eventually.not.exist
+            .notify(done);
+        });
+      });
+
+      it("doesn't create the token", done => {
+        cluster.save().then(done).catch(err => {
+          expect(machine.createToken).to.not.have.been.called;
+          done();
+        });
+      });
+    });
+
+    context('when machine token creation failed', () => {
       beforeEach(() => {
         sinon.stub(machine, 'createToken').returns(Promise.reject());
       });

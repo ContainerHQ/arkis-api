@@ -199,21 +199,16 @@ module.exports = function(sequelize, DataTypes) {
         return this.update({ last_ping: moment() });
       },
       agentInfos: function() {
-        let infos = {};
-
         return this.getCluster().then(cluster => {
-          _.merge(infos, {
+          return {
             master: this.master,
+            cert: cluster.cert,
             versions: {
               docker:   cluster.docker_version,
               swarm:    cluster.swarm_version
             },
             strategy: cluster.strategy
-          });
-          return cluster.getCert();
-        }).then(cert => {
-          _.merge(infos, { cert: cert });
-          return Promise.resolve(infos);
+          };
         });
       }
     },

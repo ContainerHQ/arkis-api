@@ -689,44 +689,37 @@ describe('Node Model', () => {
   });
 
   describe('#agentInfos', () => {
-    let node, agentInfos;
+    let cluster, node;
 
     beforeEach(() => {
-      return factory.buildSync('cluster').save().then(cluster => {
+      cluster = factory.buildSync('cluster')
+      return cluster.save().then(cluster => {
         node = factory.buildSync('node', { cluster_id: cluster.id });
         return node.save();
-      }).then(() => {
-        return node.agentInfos();
-      }).then(infos => {
-        agentInfos = infos;
       });
     });
 
     it('returns node certificates', () => {
-      return node.getCluster().then(cluster => {
-        return cluster.getCert();
-      }).then(cert => {
-        return expect(agentInfos.cert).to.deep.equal(cert);
-      });
+      return expect(node.agentInfos())
+        to.eventually.have.property('cert').that.deep.equals(cluster.cert);
     });
 
     it('returns the master parameter of the node', () => {
-      expect(agentInfos.master).to.deep.equal(node.master);
+      return expect(node.agentInfos())
+        to.eventually.have.property('master', node.master);
     });
 
     it('returns node cluster strategy', () => {
-      return node.getCluster().then(cluster => {
-        return expect(agentInfos.strategy).to.deep.equal(cluster.strategy);
-      });
+      return expect(node.agentInfos())
+        to.eventually.have.property('strategy', cluster.cluster);
     });
 
     it('returns node desired versions', () => {
-      return node.getCluster().then(cluster => {
-        return expect(agentInfos.versions).to.deep.equal({
+      return expect(node.agentInfos())
+        to.eventually.have.property('versions').that.deep.equals({
           docker: cluster.docker_version,
-          swarm: cluster.swarm_version
+          swarm:  cluster.swarm_version
         });
-      });
     });
   });
 });
