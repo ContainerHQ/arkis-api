@@ -1,7 +1,7 @@
 'use strict';
 
 let jwt = require('jsonwebtoken'),
-  secrets = require('../../../config/secrets');
+  secrets = require('../../../config').secrets;
 
 /*
  * Verify that the decoded json web token includes an

@@ -5,11 +5,10 @@ let express = require('express'),
   bodyParser = require('body-parser'),
   morgan = require('morgan'),
   multer = require('multer'),
+  config = require('../config'),
   middlewares = require('./middlewares'),
   routes = require('./routes'),
   app = express();
-
-let port = process.env.PORT || 4000;
 
 app
 .use(cors())
@@ -21,18 +20,13 @@ app
 .use('/', routes.docker)
 .use('/v:version', routes.docker)
 .use('/api', routes.api)
-.listen(port, () => {
-  console.log('Listenning on port: %s', port);
+.listen(config.port, () => {
+  console.log('Listenning on port: %s', config.port);
 })
 .on('upgrade', routes.upgrade);
 
-switch (process.env.NODE_ENV || 'development') {
-  case 'development':
-    app.use(morgan('dev'));
-    break;
-  case 'production':
-    app.use(morgan('combined'));
-    break;
+if (config.logging) {
+  app.use(morgan(config.logger));
 }
 
 module.exports = app;
