@@ -698,26 +698,17 @@ describe('Node Model', () => {
       });
     });
 
-    it('returns node certificates', () => {
+    it('returns informations needed by the agent', () => {
       return expect(node.agentInfos())
-        to.eventually.have.property('cert').that.deep.equals(cluster.cert);
-    });
-
-    it('returns the master parameter of the node', () => {
-      return expect(node.agentInfos())
-        to.eventually.have.property('master', node.master);
-    });
-
-    it('returns node cluster strategy', () => {
-      return expect(node.agentInfos())
-        to.eventually.have.property('strategy', cluster.cluster);
-    });
-
-    it('returns node desired versions', () => {
-      return expect(node.agentInfos())
-        to.eventually.have.property('versions').that.deep.equals({
-          docker: cluster.docker_version,
-          swarm:  cluster.swarm_version
+        .to.eventually.deep.equal({
+          master: node.master,
+          name: node.name,
+          cert: cluster.cert,
+          strategy: cluster.strategy,
+          versions: {
+            docker: cluster.docker_version,
+            swarm:  cluster.swarm_version
+          }
         });
     });
   });

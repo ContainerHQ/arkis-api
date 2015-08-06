@@ -202,6 +202,7 @@ module.exports = function(sequelize, DataTypes) {
         return this.getCluster().then(cluster => {
           return {
             master: this.master,
+            name:   this.name,
             cert: cluster.cert,
             versions: {
               docker:   cluster.docker_version,
