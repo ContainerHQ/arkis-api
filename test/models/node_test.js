@@ -546,7 +546,7 @@ describe('Node Model', () => {
   describe('#change', () => {
     let node, attributes = { name: random.string() };
 
-    context('when is not in running state', () => {
+    context('when node is not in running state', () => {
       beforeEach(() => {
         node = factory.buildSync('node');
         sinon.stub(machine, 'update', machine.update);
@@ -583,10 +583,41 @@ describe('Node Model', () => {
       });
     });
 
-    context('when is in running state', () => {
+    context('when node is in running state', () => {
       beforeEach(() => {
         node = factory.buildSync('runningNode');
         return node.save();
+      });
+
+      context('when validation failed', () => {
+        let badAttributes = { master: 'lol' };
+
+        beforeEach(() => {
+          node = factory.buildSync('node');
+          sinon.stub(machine, 'update', machine.update);
+          return node.save();
+        });
+
+        afterEach(() => {
+          machine.update.restore();
+        });
+
+        it("doesn't update the node", done => {
+          let notExpected = _.merge({ last_state: 'updating' }, badAttributes);
+
+          node.change(badAttributes).then(done).catch(() => {
+            expect(node.reload())
+              .to.eventually.not.include(notExpected)
+              .notify(done);
+          });
+        });
+
+        it("doesn't update the machine behind", done => {
+          node.change(badAttributes).then(done).catch(() => {
+            expect(machine.update).to.not.have.been.called;
+            done();
+          });
+        });
       });
 
       context('when machine update succeeds', () => {

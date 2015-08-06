@@ -33,7 +33,7 @@ module.exports = function(sequelize, DataTypes) {
          * that password_hash validations must never fail if the
          * password validations already failed.
          */
-        let hash = bcrypt.hashSync(password || '', 10);
+        let hash = bcrypt.hashSync(password || '*', 10);
 
         this.setDataValue('password', password);
         this.setDataValue('password_hash', hash);

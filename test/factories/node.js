@@ -50,6 +50,7 @@ module.exports = function(factory) {
     id: 0,
     cluster_id: 0,
     name: random.string,
+    master: true,
     region: 'test',
     node_size: 'whatever',
     public_ip: '192.168.212.42',

@@ -1,4 +1,7 @@
 'use strict';
+
+let _ = require('lodash');
+
 /*
  *  Verify that the tested instance hasn't been created or
  *  updated with a specified blacklist of attributes.
@@ -20,9 +23,11 @@ module.exports = function(original, attributes) {
        */
        let instanceValue = instance.dataValues[attribute],
            originalValue = original.dataValues[attribute];
-
-      if (instanceValue !== originalValue &&
-        !!originalValue && !!instanceValue) {
+      if (
+          !_.isEqual(instanceValue, originalValue) &&
+          !_.isUndefined(originalValue) && !_.isNull(originalValue) &&
+          !_.isUndefined(instanceValue) && !_.isNull(instanceValue)
+        ) {
         throw new Error(`${attribute} is not filtered!`);
       }
     });

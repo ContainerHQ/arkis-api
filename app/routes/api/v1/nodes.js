@@ -9,7 +9,7 @@ let _ = require('lodash'),
 let router = express.Router();
 
 const CREATE_PARAMS = ['name', 'master', 'byon', 'region', 'node_size'],
-      UPDATE_PARAMS = ['name'];
+      UPDATE_PARAMS = ['name', 'master'];
 
 router
 .get('/', middlewares.pagination, (req, res, next) => {
@@ -60,7 +60,7 @@ router
   res.json({ node: req.node });
 })
 .patch((req, res, next) => {
-  req.node.update(_.pick(req.body, UPDATE_PARAMS)).then(node => {
+  req.node.change(_.pick(req.body, UPDATE_PARAMS)).then(node => {
     res.json({ node: node });
   }).catch(next);
 })

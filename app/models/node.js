@@ -142,7 +142,7 @@ module.exports = function(sequelize, DataTypes) {
             return 'Node is being deployed';
           case 'upgrading':
             return 'Node is being upgraded';
-          case 'updated':
+          case 'updating':
             return 'Node is being updated';
           case 'running':
             return 'Node is running and reachable';
@@ -179,8 +179,12 @@ module.exports = function(sequelize, DataTypes) {
         if (this.state !== 'running') {
           return Promise.reject(new errors.StateError('update', this.state));
         }
-        return machine.update(attributes).then(() => {
-          return this.update(_.merge({ last_state: 'updating' }, attributes));
+        _.merge(this, { last_state: 'updating' }, attributes);
+
+        return this.validate().then(() => {
+          return machine.update(attributes);
+        }).then(() => {
+          return this.save();
         });
       },
       /*
