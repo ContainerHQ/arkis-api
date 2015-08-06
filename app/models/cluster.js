@@ -53,7 +53,6 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true,
       defaultValue: null,
     },
-    containers_count: DataTypes.VIRTUAL
   }, DataTypes), mixins.extend('state', 'options', {
     defaultScope: { order: [['id', 'ASC']] },
     scopes: {

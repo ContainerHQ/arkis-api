@@ -35,7 +35,8 @@ module.exports = function(sequelize, DataTypes) {
         isUnique: function(master) {
           if (!master || !this.cluster_id) { return Promise.resolve(); }
 
-          return Node.findOne({ where:  { cluster_id: this.cluster_id,
+          return Node.findOne({ where:  {
+            cluster_id: this.cluster_id,
             master: true
           }}).then(node => {
             if (node) {
@@ -112,7 +113,6 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true,
       defaultValue: null,
     },
-    containers_count: DataTypes.VIRTUAL
   }, DataTypes, { default: 'deploying' }), mixins.extend('state', 'options', {
     defaultScope: {
       order: [['id', 'ASC']]
@@ -254,16 +254,6 @@ module.exports = function(sequelize, DataTypes) {
         return node._notifyCluster({
           last_state: 'destroyed',
           master: node.master
-        });
-      },
-      afterFind: function(nodes) {
-        if (!nodes) { return Promise.resolve(); }
-
-        if (!_.isArray(nodes)) {
-          nodes = [nodes];
-        }
-        nodes.forEach(node => {
-          node.containers_count = 2;
         });
       }
     },
