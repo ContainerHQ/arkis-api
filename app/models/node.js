@@ -175,14 +175,16 @@ module.exports = function(sequelize, DataTypes) {
           return Promise.resolve();
         });
       },
-      change: function(attributes={}) {
+      change: function(changes={}) {
         if (this.state !== 'running') {
           return Promise.reject(new errors.StateError('update', this.state));
         }
-        _.merge(this, { last_state: 'updating' }, attributes);
+        if (_.isEmpty(changes)) { return Promise.resolve(this); }
+
+        _.merge(this, { last_state: 'updating' }, changes);
 
         return this.validate().then(() => {
-          return machine.update(attributes);
+          return machine.update(changes);
         }).then(() => {
           return this.save();
         });
@@ -191,10 +193,10 @@ module.exports = function(sequelize, DataTypes) {
        * This must update the node in order to notify its
        * affiliated cluster of its new state.
        */
-      register: function(attributes={}) {
+      register: function(infos={}) {
         let opts = { last_state: 'running', last_ping: Date.now() };
 
-        return this.update(_.merge(opts, attributes));
+        return this.update(_.merge(opts, infos));
       },
       upgrade: function(versions) {
         let state = this.get('state');

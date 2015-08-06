@@ -589,6 +589,29 @@ describe('Node Model', () => {
         return node.save();
       });
 
+      context('when there is no changes', () => {
+        beforeEach(() => {
+          sinon.stub(machine, 'update', machine.update);
+        });
+
+        afterEach(() => {
+          machine.update.restore();
+        });
+
+        it("doesn't update the node", () => {
+          let expected = node.dataValues;
+
+          return expect(node.change({}))
+            .to.eventually.have.property('dataValues', expected);
+        });
+
+        it("doesn't update the machine behind", () => {
+          return node.change({}).then(() => {
+            return expect(machine.update).to.not.have.been.called;
+          });
+        });
+      });
+
       context('when validation failed', () => {
         let badAttributes = { master: 'lol' };
 
