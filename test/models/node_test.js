@@ -543,6 +543,97 @@ describe('Node Model', () => {
     });
   });
 
+  describe('#change', () => {
+    let node, attributes = { name: random.string() };
+
+    context('when is not in running state', () => {
+      beforeEach(() => {
+        node = factory.buildSync('node');
+        sinon.stub(machine, 'update', machine.update);
+        return node.save();
+      });
+
+      afterEach(() => {
+        machine.update.restore();
+      });
+
+      it("doesn't update the node", done => {
+        let notExpected = _.merge({ last_state: 'updating' }, attributes);
+
+        node.change(attributes).then(done).catch(() => {
+          expect(node.reload())
+            .to.eventually.not.include(notExpected)
+            .notify(done);
+        });
+      });
+
+      it("doesn't update the machine behind", done => {
+        node.change(attributes).then(done).catch(() => {
+          expect(machine.update).to.not.have.been.called;
+          done();
+        });
+      });
+
+      it('returns an error', done => {
+        node.change(attributes).then(done).catch(err => {
+          expect(err)
+            .to.deep.equal(new errors.StateError('update', node.state));
+          done();
+        });
+      });
+    });
+
+    context('when is in running state', () => {
+      beforeEach(() => {
+        node = factory.buildSync('runningNode');
+        return node.save();
+      });
+
+      context('when machine update succeeds', () => {
+        beforeEach(() => {
+          sinon.stub(machine, 'update').returns(Promise.resolve());
+          return node.change(attributes);
+        });
+
+        afterEach(() => {
+          machine.update.restore();
+        });
+
+        it('updates the attributes', () => {
+          expect(node).to.include(attributes);
+        });
+
+        it('set the node state to updating', () => {
+          expect(node.state).to.equal('updating');
+        });
+
+        it('updates the machine behind', () => {
+          expect(machine.update).to.have.been.calledWith(attributes);
+        });
+      });
+
+      context('when machine update failed', () => {
+        beforeEach(() => {
+          sinon.stub(machine, 'update').returns(Promise.reject());
+        });
+
+        afterEach(() => {
+          machine.update.restore();
+        });
+
+        it("doesn't update the node", done => {
+          let notExpected = _.merge({ last_state: 'updating' }, attributes);
+
+          node.change(attributes).then(done).catch(err => {
+            expect(node.reload())
+              .to.eventually.not.include(notExpected)
+              .notify(done);
+          });
+        });
+      });
+    });
+  });
+
   describe('#ping', () => {
     let node, clock;
 

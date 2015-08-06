@@ -175,6 +175,14 @@ module.exports = function(sequelize, DataTypes) {
           return Promise.resolve();
         });
       },
+      change: function(attributes={}) {
+        if (this.state !== 'running') {
+          return Promise.reject(new errors.StateError('update', this.state));
+        }
+        return machine.update(attributes).then(() => {
+          return this.update(_.merge({ last_state: 'updating' }, attributes));
+        });
+      },
       /*
        * This must update the node in order to notify its
        * affiliated cluster of its new state.

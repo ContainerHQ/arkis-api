@@ -44,6 +44,7 @@ machine.generateFQDN = function() {
   'deleteFQDN',
   'create',
   'upgrade',
+  'update',
   'destroy'
 ].forEach(method => {
   machine[method] = function() {
