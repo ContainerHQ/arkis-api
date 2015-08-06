@@ -78,6 +78,8 @@ module.exports = function(sequelize, DataTypes) {
             return 'One or more node(s) are beeing deployed';
           case 'upgrading':
             return 'One or more node(s) are beeing upgraded';
+          case 'updating':
+            return 'One or more node(s) are beeing updated';
           case 'running':
             return 'Cluster is running and reachable';
         }
@@ -148,6 +150,7 @@ module.exports = function(sequelize, DataTypes) {
         switch (changes.last_state) {
           case 'deploying':
           case 'upgrading':
+          case 'updating':
             return this.update({ last_state: changes.last_state });
           case 'destroyed':
           case 'running':

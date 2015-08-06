@@ -400,6 +400,9 @@ describe('Cluster Model', () => {
   });
 
   describe('#notify', () => {
+    const BUSY_STATES = ['deploying', 'upgrading', 'updating'];
+
+
     let cluster;
 
     beforeEach(() => {
@@ -407,7 +410,7 @@ describe('Cluster Model', () => {
       return cluster.save();
     });
 
-    ['deploying', 'upgrading'].forEach(state => {
+    BUSY_STATES.forEach(state => {
       context(`with a last state equal to ${state}`, () => {
         let lastPing;
 
@@ -427,7 +430,7 @@ describe('Cluster Model', () => {
     });
 
     context('with a last state equal to running', () => {
-      ['deploying', 'upgrading'].forEach(state => {
+      BUSY_STATES.forEach(state => {
         context(`when cluster has at least one node in state ${state}`, () => {
           beforeEach(() => {
             return addNodeTo(cluster, 'node', { last_state: state })
@@ -460,7 +463,7 @@ describe('Cluster Model', () => {
     });
 
     context('with destroyed', () => {
-      ['deploying', 'upgrading'].forEach(state => {
+      BUSY_STATES.forEach(state => {
         context(`when cluster has at least one node in state ${state}`, () => {
           beforeEach(() => {
             return addNodeTo(cluster, 'node', { last_state: state })

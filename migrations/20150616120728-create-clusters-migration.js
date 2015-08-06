@@ -54,7 +54,9 @@ module.exports = {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: 'empty',
-        validate: { isIn: [['empty', 'deploying', 'upgrading', 'running']] }
+        validate: {
+          isIn: [['empty', 'deploying', 'upgrading', 'updating', 'running']]
+        }
       },
       last_ping: {
         type: DataTypes.DATE,

@@ -142,6 +142,8 @@ module.exports = function(sequelize, DataTypes) {
             return 'Node is being deployed';
           case 'upgrading':
             return 'Node is being upgraded';
+          case 'updated':
+            return 'Node is being updated';
           case 'running':
             return 'Node is running and reachable';
         }

@@ -5,7 +5,7 @@ let _ = require('lodash'),
 
 module.exports = function(factoryName, opts={}) {
   let defaultState = opts.default || 'empty',
-    validStates = ['empty', 'deploying', 'upgrading', 'running'];
+    validStates = ['empty', 'deploying', 'upgrading', 'updating', 'running'];
 
   if (defaultState !== 'empty') {
     validStates = _.remove(validStates, 'empty');

@@ -14,7 +14,9 @@ module.exports = function(DataTypes, opts={}) {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: opts.default || 'empty',
-        validate: { isIn: [['empty', 'deploying', 'upgrading', 'running']] }
+        validate: {
+          isIn: [['empty', 'deploying', 'upgrading', 'updating', 'running']]
+        }
       },
       last_ping: {
         type: DataTypes.DATE,
