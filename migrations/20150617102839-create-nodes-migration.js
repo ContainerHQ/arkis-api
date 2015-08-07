@@ -49,13 +49,6 @@ module.exports = {
         allowNull: true,
         defaultValue: null,
       },
-      fqdn: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        defaultValue: null,
-        unique: true,
-        validate: { isUrl: true }
-      },
       public_ip: {
         type: DataTypes.STRING,
         allowNull: true,

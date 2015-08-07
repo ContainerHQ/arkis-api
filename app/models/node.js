@@ -5,6 +5,7 @@ let _ = require('lodash'),
   errors = require('../routes/shared/errors'),
   machine = require('../../config/machine'),
   token = require('../../config/token'),
+  config = require('../../config'),
   mixins = require('./concerns');
 
 module.exports = function(sequelize, DataTypes) {
@@ -70,13 +71,6 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: true,
       defaultValue: null,
-    },
-    fqdn: {
-      type: DataTypes.STRING,
-      unique: true,
-      allowNull: true,
-      defaultValue: null,
-      validate: { isUrl: true }
     },
     public_ip: {
       type: DataTypes.STRING,
@@ -152,6 +146,13 @@ module.exports = function(sequelize, DataTypes) {
         if (!this.get('byon')) { return null; }
 
         return machine.agentCmd(this.get('token'));
+      },
+      fqdn: function() {
+        if (!this.cluster_id) { return null; }
+
+        let clusterShortId = this.cluster_id.slice(0, 8);
+
+        return `${this.name}-${clusterShortId}.${config.nodeDomain}`;
       }
     },
     instanceMethods: {
@@ -254,7 +255,6 @@ module.exports = function(sequelize, DataTypes) {
     hooks: {
       beforeCreate: function(node) {
         node._generateToken();
-        node.fqdn = machine.generateFQDN({});
 
         if (!node.byon) {
           return machine.create({});

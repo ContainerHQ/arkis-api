@@ -89,12 +89,6 @@ describe('Node Model', () => {
       });
     });
 
-    it('fails with an invalid fqdn', () => {
-      let node = factory.buildSync('node', { fqdn: _.repeat('*', 10) });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
     it('fails with an invalid public_ip', () => {
       let node = factory.buildSync('node', { public_ip: _.repeat('*', 10) });
 
@@ -175,41 +169,41 @@ describe('Node Model', () => {
     let node, cluster;
 
     beforeEach(() => {
-      cluster = { notify: sinon.stub() };
-      node = factory.buildSync('node');
-      node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+      cluster = factory.buildSync('cluster');
+      cluster.notify = sinon.stub();
+
+      return cluster.save().then(() => {
+        node = factory.buildSync('node', { cluster_id: cluster.id });
+        node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+      });
+    });
+
+    it('has a fqdn', () => {
+      let shortId = cluster.id.slice(0, 8),
+        expected  = `${node.name}-${shortId}.${config.nodeDomain}`;
+
+        console.log(expected);
+      return expect(node.save())
+        .to.eventually.have.property('fqdn', expected);
     });
 
     context('when machine creation succeeded', () => {
       beforeEach(() => {
-        sinon.stub(machine, 'generateFQDN').returns(FQDN);
         sinon.stub(machine, 'create', machine.create);
       });
 
       afterEach(() => {
-        machine.generateFQDN.restore();
         machine.create.restore();
       });
 
       it('is not a master node by default', () => {
-        let node = factory.buildSync('node');
-
         return expect(node.save()).to.eventually.have.property('master', false);
       });
 
-      it('initializes its fqdn', () => {
-        return expect(node.save()).to.eventually.have.property('fqdn', FQDN);
-      });
 
       it('initializes its jwt token', () => {
         return expect(node.save())
           .to.eventually.satisfy(has.validJWT);
-      });
-
-      it('generates its fqdn through machine', () => {
-        return node.save().then(() => {
-          return expect(machine.generateFQDN).to.have.been.calledWith({});
-        });
       });
 
       it('initialized its state to deploying', () => {
