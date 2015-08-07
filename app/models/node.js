@@ -198,14 +198,18 @@ module.exports = function(sequelize, DataTypes) {
         });
       },
       /*
-       * This must update the node in order to notify its
-       * affiliated cluster of its new state.
+       * Registers new informations of a node and ensures to put the node
+       * in running state. Must be called whenever an agent has finished
+       * its pending work.
        */
       register: function(infos={}) {
         let opts = { last_state: 'running', last_ping: Date.now() };
 
         return this.update(_.merge(opts, infos));
       },
+      /*
+       * Upgrade a node to specific versions.
+       */
       upgrade: function(versions) {
         let state = this.get('state');
 
@@ -219,15 +223,25 @@ module.exports = function(sequelize, DataTypes) {
           return this.update({ last_state: 'upgrading' });
         });
       },
+      /*
+       * Updates the last_ping of a node to current date and time.
+       */
       ping: function() {
         return this.update({ last_ping: moment() });
       },
+      /*
+       * Informations required by the agent to provision the node.
+       */
       agentInfos: function() {
         return this.getCluster().then(cluster => {
           return {
             master: this.master,
             name:   this.name,
-            cert: cluster.cert,
+            cert: {
+              ca:   cluster.cert.server_ca,
+              cert: cluster.cert.server_cert,
+              key:  cluster.cert.server_key,
+            },
             versions: {
               docker:   cluster.docker_version,
               swarm:    cluster.swarm_version

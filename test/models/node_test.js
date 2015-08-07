@@ -936,7 +936,11 @@ describe('Node Model', () => {
         .to.eventually.deep.equal({
           master: node.master,
           name: node.name,
-          cert: cluster.cert,
+          cert: {
+            ca:   cluster.cert.server_ca,
+            cert: cluster.cert.server_cert,
+            key:  cluster.cert.server_key,
+          },
           strategy: cluster.strategy,
           versions: {
             docker: cluster.docker_version,
