@@ -175,6 +175,14 @@ module.exports = function(sequelize, DataTypes) {
           return Promise.resolve();
         });
       },
+      /*
+       * Changes commits to the machine some changes and update the node
+       * accordingly and also ensures to put the node in updating state, until
+       * the node agent registers that it has finished to process the changes.
+       *
+       * This method is agnostic from changes nature. It's up to the caller
+       * to filter the changes that must be processed.
+       */
       change: function(changes={}) {
         if (this.state !== 'running') {
           return Promise.reject(new errors.StateError('update', this.state));
