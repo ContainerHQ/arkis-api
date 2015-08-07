@@ -248,8 +248,17 @@ module.exports = function(sequelize, DataTypes) {
         }
         return Promise.resolve(node);
       },
+      /*
+       * If a field is set to its prior value, it won't appears in
+       * options.field.
+       */
       afterUpdate: function(node, options) {
-        if (node.master && _.includes(options.fields, 'last_ping')) {
+        /*
+         * If a master node updated its ping or a node is promoted to master,
+         * we must notify the cluster to update its last ping.
+         */
+        if ((_.includes(options.fields, 'last_ping') ||
+             _.includes(options.fields, 'master')) && node.master) {
           return node._notifyCluster({ last_ping: node.last_ping });
         }
         if (_.includes(options.fields, 'last_state')) {

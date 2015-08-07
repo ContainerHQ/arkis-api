@@ -295,14 +295,14 @@ describe('Node Model', () => {
   });
 
   describe('#update', () => {
-    let node;
-
-    beforeEach(() => {
-      node = factory.buildSync('node');
-      return node.save();
-    });
-
     context('when updating public_ip', () => {
+      let node;
+
+      beforeEach(() => {
+        node = factory.buildSync('node');
+        return node.save();
+      });
+
       afterEach(() => {
         machine.registerFQDN.restore();
       });
@@ -339,6 +339,13 @@ describe('Node Model', () => {
     });
 
     context('when not updating public_ip', () => {
+      let node;
+
+      beforeEach(() => {
+        node = factory.buildSync('node');
+        return node.save();
+      });
+
       beforeEach(() => {
         sinon.stub(machine, 'registerFQDN', machine.registerFQDN);
       });
@@ -364,39 +371,86 @@ describe('Node Model', () => {
        * necessary.
        */
       beforeEach(() => {
-          cluster = { notify: sinon.stub() };
-          node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+        cluster = { notify: sinon.stub() };
+      });
+
+      context('when updating master', () => {
+        let node;
+
+        beforeEach(() => {
+          node = factory.buildSync('node');
+          return node.save().then(() => {
+            node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+          });
+        });
+
+        beforeEach(() => {
+          return node.update({ master: true });
+        });
+
+        it('reports back its last ping to its cluster', () => {
+          expect(cluster.notify)
+            .to.have.been.calledWith({ last_ping: node.last_ping });
+        });
       });
 
       context('when updating last_state', () => {
+        let node;
+
+        beforeEach(() => {
+          node = factory.buildSync('node');
+          return node.save().then(() => {
+            node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+          });
+        });
+
         /*
          * Be careful here, sequelize doesn't add a field in options.fields
          * if we are providing a value for the field equal to its prior value.
          */
-        let opts = { last_state: 'upgrading' };
+        const OPTS = { last_state: 'upgrading' };
 
         beforeEach(() => {
-          return node.update(opts);
+          return node.update(OPTS);
         });
 
         it('reports back the new state to its cluster', () => {
-          expect(cluster.notify).to.have.been.calledWith(opts);
+          expect(cluster.notify).to.have.been.calledWith(OPTS);
         });
       });
 
       context('when updating last_ping', () => {
         context('when slave node', () => {
+          let node;
+
           beforeEach(() => {
-            return node.update({ master: false, last_ping: Date.now() });
+            node = factory.buildSync('node', { master: false });
+            return node.save().then(() => {
+              node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+            });;
+          });
+
+          beforeEach(() => {
+            return node.update({ last_ping: Date.now() });
           });
 
           it("doesn't report back the ping to its cluster", () => {
             expect(cluster.notify).to.not.have.been.called;
           });
         });
+
         context('when master node', () => {
+          let node;
+
           beforeEach(() => {
-            return node.update({ master: true, last_ping: Date.now() });
+            node = factory.buildSync('node', { master: true });
+            return node.save().then(() => {
+              node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+            });;
+          });
+
+          beforeEach(() => {
+            return node.update({ last_ping: Date.now() });
           });
 
           it('reports back the ping to its cluster', () => {
@@ -407,6 +461,15 @@ describe('Node Model', () => {
       });
 
       context('when updating a field different than last fields', () => {
+        let node;
+
+        beforeEach(() => {
+          node = factory.buildSync('node');
+          return node.save().then(() => {
+            node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+          });
+        });
+
         beforeEach(() => {
           return node.update({ public_ip: '127.0.0.1' });
         });
@@ -424,12 +487,13 @@ describe('Node Model', () => {
     beforeEach(() => {
       cluster = { notify: sinon.stub() };
       node = factory.buildSync('node');
-      node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
     });
 
     context('with a non byon node', () => {
       beforeEach(() => {
-        return node.save();
+        return node.save().then(() => {
+          node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+        });
       });
 
       context('when machine destruction and fqdn deletion succeeds', () => {
@@ -507,6 +571,7 @@ describe('Node Model', () => {
       beforeEach(() => {
         node.master = true;
         return node.save().then(() => {
+          node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
           return node.destroy();
         });
       });
@@ -524,6 +589,7 @@ describe('Node Model', () => {
         sinon.stub(machine, 'destroy', machine.destroy);
 
         return node.save().then(() => {
+          node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
           return node.destroy();
         });
       });
