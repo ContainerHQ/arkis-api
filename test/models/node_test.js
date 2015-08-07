@@ -375,22 +375,44 @@ describe('Node Model', () => {
       });
 
       context('when updating master', () => {
-        let node;
+        context('with true', () => {
+          let node;
 
-        beforeEach(() => {
-          node = factory.buildSync('node');
-          return node.save().then(() => {
-            node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+          beforeEach(() => {
+            node = factory.buildSync('node', { master: false });
+            return node.save().then(() => {
+              node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+            });
+          });
+
+          beforeEach(() => {
+            return node.update({ master: true });
+          });
+
+          it('reports back its last ping to its cluster', () => {
+            expect(cluster.notify)
+              .to.have.been.calledWith({ last_ping: node.last_ping });
           });
         });
 
-        beforeEach(() => {
-          return node.update({ master: true });
-        });
+        context('with false', () => {
+          let node;
 
-        it('reports back its last ping to its cluster', () => {
-          expect(cluster.notify)
-            .to.have.been.calledWith({ last_ping: node.last_ping });
+          beforeEach(() => {
+            node = factory.buildSync('node', { master: true });
+            return node.save().then(() => {
+              node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+            });
+          });
+
+          beforeEach(() => {
+            return node.update({ master: false });
+          });
+
+          it('reports back its downgrade its cluster', () => {
+            expect(cluster.notify)
+              .to.have.been.calledWith({ last_ping: null });
+          });
         });
       });
 

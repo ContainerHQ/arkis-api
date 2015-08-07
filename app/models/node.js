@@ -261,6 +261,9 @@ module.exports = function(sequelize, DataTypes) {
              _.includes(options.fields, 'master')) && node.master) {
           return node._notifyCluster({ last_ping: node.last_ping });
         }
+        if (_.includes(options.fields, 'master') && !node.master) {
+          return node._notifyCluster({ last_ping: null });
+        }
         if (_.includes(options.fields, 'last_state')) {
           return node._notifyCluster({ last_state: node.last_state });
         }
