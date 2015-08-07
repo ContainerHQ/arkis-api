@@ -171,14 +171,20 @@ describe('Cluster Model', () => {
     });
 
     context('when machine cert creation failed', () => {
+      const ERROR = random.error();
+
       beforeEach(() => {
-        sinon.stub(machine, 'createCerts').returns(Promise.reject());
+        sinon.stub(machine, 'createCerts').returns(Promise.reject(ERROR));
         sinon.stub(machine, 'createToken').returns(Promise.resolve());
       });
 
       afterEach(() => {
         machine.createCerts.restore();
         machine.createToken.restore();
+      });
+
+      it('returns the error', () => {
+        return expect(cluster.save()).to.be.rejectedWith(ERROR);
       });
 
       it("doesn't create the cluster", done => {
@@ -198,12 +204,18 @@ describe('Cluster Model', () => {
     });
 
     context('when machine token creation failed', () => {
+      const ERROR = random.error();
+
       beforeEach(() => {
-        sinon.stub(machine, 'createToken').returns(Promise.reject());
+        sinon.stub(machine, 'createToken').returns(Promise.reject(ERROR));
       });
 
       afterEach(() => {
         machine.createToken.restore();
+      });
+
+      it('returns the error', () => {
+        return expect(cluster.save()).to.be.rejectedWith(ERROR);
       });
 
       it("doesn't create the cluster", done => {
@@ -373,12 +385,18 @@ describe('Cluster Model', () => {
     });
 
     context('when token deletion failed', () => {
+      const ERROR = random.error();
+
       beforeEach(() => {
-        sinon.stub(machine, 'deleteToken').returns(Promise.reject());
+        sinon.stub(machine, 'deleteToken').returns(Promise.reject(ERROR));
       });
 
       afterEach(() => {
         machine.deleteToken.restore();
+      });
+
+      it('returns the error', () => {
+        return expect(cluster.destroy()).to.be.rejectedWith(ERROR);
       });
 
       it("doesn't remove the cluster", done => {

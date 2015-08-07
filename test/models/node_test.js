@@ -182,7 +182,6 @@ describe('Node Model', () => {
       let shortId = cluster.id.slice(0, 8),
         expected  = `${node.name}-${shortId}.${config.nodeDomain}`;
 
-        console.log(expected);
       return expect(node.save())
         .to.eventually.have.property('fqdn', expected);
     });
@@ -231,12 +230,18 @@ describe('Node Model', () => {
     });
 
     context('when machine creation failed', () => {
+      const ERROR = random.error();
+
       beforeEach(() => {
-        sinon.stub(machine, 'create').returns(Promise.reject());
+        sinon.stub(machine, 'create').returns(Promise.reject(ERROR));
       });
 
       afterEach(() => {
         machine.create.restore();
+      });
+
+      it('returns the error', () => {
+        return expect(node.save()).to.be.rejectedWith(ERROR);
       });
 
       it("doesn't save the node", done => {
@@ -316,16 +321,21 @@ describe('Node Model', () => {
       });
 
       context('when machine fqdn registration failed', () => {
+        const ERROR = random.error(),
+              OPTS  = { public_ip: '192.168.1.90' };
+
         beforeEach(() => {
-          sinon.stub(machine, 'registerFQDN').returns(Promise.reject());
+          sinon.stub(machine, 'registerFQDN').returns(Promise.reject(ERROR));
+        });
+
+        it('returns the error', () => {
+          return expect(node.update(OPTS)).to.be.rejectedWith(ERROR);
         });
 
         it("doesn't update the node", done => {
-          let opts = { public_ip: '192.168.1.90' };
-
-          return node.update(opts).then(done).catch(err => {
+          return node.update(OPTS).then(done).catch(err => {
             expect(node.reload())
-              .to.eventually.not.have.property('public_ip', opts.public_ip)
+              .to.eventually.not.include(OPTS)
               .notify(done);
           });
         });
@@ -539,14 +549,20 @@ describe('Node Model', () => {
       });
 
       context('when machine destruction failed', () => {
+        const ERROR = random.error();
+
         beforeEach(() => {
-          sinon.stub(machine, 'destroy').returns(Promise.reject());
+          sinon.stub(machine, 'destroy').returns(Promise.reject(ERROR));
           sinon.stub(machine, 'deleteFQDN', machine.deleteFQDN);
         });
 
         afterEach(() => {
           machine.destroy.restore();
           machine.deleteFQDN.restore();
+        });
+
+        it('returns the error', () => {
+          return expect(node.destroy()).to.be.rejectedWith(ERROR);
         });
 
         it("doesn't delete the fqdn", done => {
@@ -566,12 +582,19 @@ describe('Node Model', () => {
       });
 
       context('when machine fqdn deletion failed', () => {
+        const ERROR = random.error();
+
         beforeEach(() => {
-          sinon.stub(machine, 'deleteFQDN').returns(Promise.reject());
+          sinon.stub(machine, 'deleteFQDN').returns(Promise.reject(ERROR));
         });
 
         afterEach(() => {
           machine.deleteFQDN.restore();
+        });
+
+        it('returns the error', () => {
+          return expect(node.destroy())
+            .to.be.rejectedWith(ERROR);
         });
 
         it("doesn't delete the node", done => {
@@ -749,18 +772,24 @@ describe('Node Model', () => {
       });
 
       context('when machine update failed', () => {
+        const ERROR = random.error();
+
         beforeEach(() => {
-          sinon.stub(machine, 'update').returns(Promise.reject());
+          sinon.stub(machine, 'update').returns(Promise.reject(ERROR));
         });
 
         afterEach(() => {
           machine.update.restore();
         });
 
+        it('returns the error', () => {
+          return expect(node.change(attributes)).to.be.rejectedWith(ERROR);
+        });
+
         it("doesn't update the node", done => {
           let notExpected = _.merge({ last_state: 'updating' }, attributes);
 
-          node.change(attributes).then(done).catch(err => {
+          node.change(attributes).then(done).catch(() => {
             expect(node.reload())
               .to.eventually.not.include(notExpected)
               .notify(done);

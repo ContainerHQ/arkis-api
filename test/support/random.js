@@ -6,6 +6,10 @@ random.string = function() {
   return Math.random().toString(36).substr(2);
 };
 
+random.error = function() {
+  return new Error(random.string());
+};
+
 random.positiveInt = function(max) {
   return Math.floor(Math.random() * (max + 2));
 };
