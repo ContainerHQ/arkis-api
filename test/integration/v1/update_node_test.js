@@ -44,6 +44,15 @@ describe('PATCH /clusters/:cluster_id/nodes/:node_id', () => {
     });
   });
 
+  context('with empty parameters', () => {
+    it("doesn't change the node", done => {
+      let expected = node.dataValues;
+
+      api.clusters(user).nodes(cluster).update(node.id).send({})
+      .expect(200, has.one(cluster, 'node', { with: expected }, done));
+    });
+  });
+
   context('when node is not running', () => {
     beforeEach(() => {
       return node.update({ last_state: 'deploying' });
