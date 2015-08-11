@@ -53,8 +53,32 @@ describe('Node Model', () => {
       })).to.be.fulfilled;
     });
 
-    it('fails without a name', () => {
+    it('fails with null name', () => {
       let node = factory.buildSync('node', { name: null });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with null labels', () => {
+      let node = factory.buildSync('node', { labels: null });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with a string of labels', () => {
+      let node = factory.buildSync('node', { labels: 'lol' });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with an integer label', () => {
+      let node = factory.buildSync('node', { labels: 2 });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with an array of labels', () => {
+      let node = factory.buildSync('node', { labels: [] });
 
       return expect(node.save()).to.be.rejected;
     });
@@ -186,6 +210,31 @@ describe('Node Model', () => {
         .to.eventually.have.property('fqdn', expected);
     });
 
+    it('initializes its jwt token', () => {
+      return expect(node.save())
+        .to.eventually.satisfy(has.validJWT);
+    });
+
+    it('initialized its state to deploying', () => {
+      return expect(node.save())
+        .to.eventually.have.property('state', 'deploying');
+    });
+
+    it('is not a master node by default', () => {
+      return expect(node.save()).to.eventually.have.property('master', false);
+    });
+
+    it('has no download link to get the agent', () => {
+      return expect(node.save())
+        .to.eventually.have.property('agent_cmd', null);
+    });
+
+    it('has empty json labels by default', () => {
+      return expect(node.save().then(node => {
+        return expect(node.labels).to.deep.equal({});
+      }));
+    });
+
     context('when machine creation succeeded', () => {
       beforeEach(() => {
         sinon.stub(machine, 'create', machine.create);
@@ -193,21 +242,6 @@ describe('Node Model', () => {
 
       afterEach(() => {
         machine.create.restore();
-      });
-
-      it('is not a master node by default', () => {
-        return expect(node.save()).to.eventually.have.property('master', false);
-      });
-
-
-      it('initializes its jwt token', () => {
-        return expect(node.save())
-          .to.eventually.satisfy(has.validJWT);
-      });
-
-      it('initialized its state to deploying', () => {
-        return expect(node.save())
-          .to.eventually.have.property('state', 'deploying');
       });
 
       it('creates a machine behind', () => {
@@ -221,11 +255,6 @@ describe('Node Model', () => {
           return expect(cluster.notify)
             .to.have.been.calledWith({ last_state: node.last_state });
         });
-      });
-
-      it('has no download link to get the agent', () => {
-        return expect(node.save())
-          .to.eventually.have.property('agent_cmd', null);
       });
     });
 
@@ -271,11 +300,6 @@ describe('Node Model', () => {
         return node.save().then(() => {
           return expect(machine.create).not.to.have.been.called;
         });
-      });
-
-      it('initialized its state to deploying', () => {
-        return expect(node.save())
-          .to.eventually.have.property('state', 'deploying');
       });
 
       it('uses machine to get the command to install the agent', () => {

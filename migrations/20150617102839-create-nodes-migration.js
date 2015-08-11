@@ -74,6 +74,11 @@ module.exports = {
         allowNull: true,
         validate: { min: 1.0 }
       },
+      labels: {
+        type: DataTypes.JSONB,
+        allowNull: false,
+        defaultValue: {}
+      },
       docker_version: {
         type: DataTypes.STRING,
         allowNull: true,

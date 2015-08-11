@@ -25,6 +25,11 @@ module.exports = function(factory) {
     memory: 128,
     disk: 1.0,
     public_ip: '192.168.212.128',
+    labels: {
+      environment: 'production',
+      storage: 'ssd',
+      tags: ['small']
+    }
   });
 
   factory.define('runningNode', Node, {

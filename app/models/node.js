@@ -97,6 +97,18 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true,
       validate: { min: 1.0 }
     },
+    labels: {
+      type: DataTypes.JSONB,
+      allowNull: false,
+      defaultValue: {},
+      validate: {
+        isKeyValue: function(labels) {
+          if (!_.isPlainObject(labels)) {
+            throw new Error('Labels must only contain key/value pairs!');
+          }
+        }
+      }
+    },
     docker_version: {
       type: DataTypes.STRING,
       allowNull: true,
