@@ -60,6 +60,15 @@ module.exports = function(factory) {
     node_size: 'whatever',
     public_ip: '192.168.212.42',
     fqdn: 'forbidden.node.arkis.io',
+    last_state: 'running',
+    last_ping: moment().subtract(3, 'minutes'),
+    cpu: 2,
+    memory: 256,
+    disk: 2.0,
+    labels: {
+      storage: 'floppy',
+      environment: 'staging'
+    },
     docker_version: '1.6.0',
     swarm_version: '0.3.0'
   });

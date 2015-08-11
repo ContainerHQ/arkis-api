@@ -86,7 +86,7 @@ describe('PATCH /account/change_email', () => {
         if (err) { return done(err); }
 
         expect(User.findById(user.id))
-          .to.eventually.satisfy(has.beenFiltered(user, attributes))
+          .to.eventually.satisfy(has.beenFiltered(user, attributes, false))
           .notify(done);
       });
     });

@@ -8,8 +8,8 @@ let _ = require('lodash'),
 
 let router = express.Router();
 
-const CREATE_PARAMS = ['name', 'master', 'byon', 'region', 'node_size'],
-      UPDATE_PARAMS = ['name', 'master'];
+const CREATE_PARAMS = ['name', 'master', 'labels', 'byon', 'region', 'node_size'],
+      UPDATE_PARAMS = ['name', 'master', 'labels'];
 
 router
 .get('/', middlewares.pagination, (req, res, next) => {

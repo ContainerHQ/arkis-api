@@ -17,7 +17,9 @@ describe('POST /clusters/:cluster_id/nodes', () => {
   });
 
   context('with a byon slave node', () => {
-    let form = { name: 'create', master: false, byon: true };
+    let form = { name: 'create', master: false, byon: true, labels: {
+      environment: 'production', storage: 'hdd'
+    }};
 
     it('creates a byon slave node for the cluster', done => {
       api.clusters(user).nodes(cluster).create().send(form)
@@ -57,7 +59,10 @@ describe('POST /clusters/:cluster_id/nodes', () => {
       node = factory.buildSync('forbiddenNode');
       form = node.dataValues;
       attributes = _.difference(node.attributes,
-        ['name', 'master', 'byon', 'region', 'node_size', 'token', 'fqdn']
+        [
+          'id', 'cluster_id', 'token', 'fqdn',
+          'name', 'master', 'labels', 'byon', 'region', 'node_size',
+        ]
       );
     });
 

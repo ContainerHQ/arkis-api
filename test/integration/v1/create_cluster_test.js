@@ -42,7 +42,7 @@ describe('POST /clusters/', () => {
     beforeEach(() => {
       cluster = factory.buildSync('forbiddenCluster');
       attributes = _.difference(cluster.attributes,
-        [ 'name', 'strategy', 'token', 'docker_version', 'swarm_version']
+        ['name', 'strategy', 'token', 'docker_version', 'swarm_version']
       );
       form = cluster.dataValues;
     });

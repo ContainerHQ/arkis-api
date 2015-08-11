@@ -55,18 +55,18 @@ describe('POST /auth/login', () => {
   });
 
   context('with blacklisted attributes', () => {
-    let attributes, form;
+    let attributes;
 
     beforeEach(() => {
       attributes = _.difference(user.attributes,
-        ['email', 'password', 'password_hash', 'token', 'token_id']
+        ['id', 'email', 'password', 'password_hash', 'token', 'token_id']
       );
-      form = factory.buildSync('forbiddenUser').dataValues;
+      user = factory.buildSync('forbiddenUser');
     });
 
     it('these attributes are filtered', done => {
       api.auth.login(user)
-      .send(form)
+      .send(user)
       .expect(201)
       .end((err, res) => {
         if (err) { return done(err); }

@@ -61,7 +61,7 @@ describe('POST /agent/:token/register', () => {
         attributes = _.difference(node.attributes,
           [
             'public_ip', 'docker_version', 'swarm_version', 'cpu', 'memory',
-            'disk', 'last_state', 'containers_count',
+            'disk', 'last_state', 'last_ping', 'containers_count',
             'id', 'created_at', 'updated_at'
           ]
         );
@@ -74,7 +74,7 @@ describe('POST /agent/:token/register', () => {
           if (err) { return done(err); }
 
           expect(Node.findById(node.id))
-            .to.eventually.satisfy(has.beenFiltered(node, attributes))
+            .to.eventually.satisfy(has.beenFiltered(node, attributes, false))
             .notify(done);
         });
       });

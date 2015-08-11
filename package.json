@@ -49,6 +49,7 @@
   "devDependencies": {
     "chai": "2.2.x",
     "chai-as-promised": "5.0.x",
+    "chai-subset": "1.0.x",
     "codeclimate-test-reporter": "0.1.x",
     "factory-girl": "1.5.x",
     "factory-girl-sequelize": "1.0.x",

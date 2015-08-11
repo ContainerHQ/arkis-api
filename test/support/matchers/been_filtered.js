@@ -10,11 +10,12 @@ let _ = require('lodash');
  * @attributes: Attributes that should be filtered
  *
  */
-module.exports = function(original, attributes) {
+module.exports = function(original, attributes, created=true) {
   return function(instance) {
     if (instance === null) {
       throw new Error('Model instance is null');
     }
+    attributes = _.difference(attributes, ['created_at', 'updated_at']);
     attributes.forEach(attribute => {
       /*
        * If an attribute has been updated on the targeted instance,
@@ -24,10 +25,11 @@ module.exports = function(original, attributes) {
        let instanceValue = instance.dataValues[attribute],
            originalValue = original.dataValues[attribute];
       if (
-          !_.isEqual(instanceValue, originalValue) &&
-          !_.isUndefined(originalValue) && !_.isNull(originalValue) &&
-          !_.isUndefined(instanceValue) && !_.isNull(instanceValue)
-        ) {
+        (!created && !_.isEqual(instanceValue, originalValue)) ||
+        ( created &&  _.isEqual(instanceValue, originalValue))
+      ) {
+        console.log(instanceValue, '-', originalValue);
+        
         throw new Error(`${attribute} is not filtered!`);
       }
     });
