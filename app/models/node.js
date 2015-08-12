@@ -6,6 +6,7 @@ let _ = require('lodash'),
   machine = require('../../config/machine'),
   token = require('../../config/token'),
   config = require('../../config'),
+  is = require('./validators'),
   mixins = require('./concerns');
 
 module.exports = function(sequelize, DataTypes) {
@@ -16,11 +17,18 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: DataTypes.UUIDV1,
       unique: true
     },
+    /*
+     * The name is used to creates the fqdn, therefore it should only
+     * include a-z, 0-9 and hypens and must not start/end with a hypen.
+     *
+     * There is also an indexe on the database to prevent having a node
+     * with the same name and the same cluster.
+     */
     name: {
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: null,
-      validate: { len: [1, 64] }
+      validate: is.subdomainable
     },
     token: {
       type: DataTypes.TEXT,

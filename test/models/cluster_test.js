@@ -26,13 +26,13 @@ describe('Cluster Model', () => {
     });
 
     it('succeeds with a min size name', () => {
-      let cluster = factory.buildSync('cluster', { name: _.repeat('*', 1) });
+      let cluster = factory.buildSync('cluster', { name: _.repeat('a', 1) });
 
       return expect(cluster.save()).to.be.fulfilled;
     });
 
     it('succeeds with a max size name', () => {
-      let cluster = factory.buildSync('cluster', { name: _.repeat('*', 64) });
+      let cluster = factory.buildSync('cluster', { name: _.repeat('b', 64) });
 
       return expect(cluster.save()).to.be.fulfilled;
     });
@@ -58,6 +58,12 @@ describe('Cluster Model', () => {
       })).to.be.fulfilled;
     });
 
+    it('succeeds with a name including a hyphen', () => {
+      let cluster = factory.buildSync('cluster', { name: 'test-prod' });
+
+      return expect(cluster.save()).to.be.fulfilled;
+    });
+
     it('fails without a name', () => {
       let cluster = factory.buildSync('cluster', { name: null });
 
@@ -72,6 +78,26 @@ describe('Cluster Model', () => {
 
     it('fails with a too long name', () => {
       let cluster = factory.buildSync('cluster', { name: _.repeat('*', 65) });
+
+      return expect(cluster.save()).to.be.rejected;
+    });
+
+    ['/', '\\', '"', "'", '*'].forEach(value => {
+      it(`failed with a name including a ${value}`, () => {
+        let cluster = factory.buildSync('cluster', { name: `te${value}st` });
+
+        return expect(cluster.save()).to.be.rejected;
+      });
+    });
+
+    it('fails with a name starting with a hyphen', () => {
+      let cluster = factory.buildSync('cluster', { name: '-test' });
+
+      return expect(cluster.save()).to.be.rejected;
+    });
+
+    it('fails with a name ending with a hyphen', () => {
+      let cluster = factory.buildSync('cluster', { name: 'test-' });
 
       return expect(cluster.save()).to.be.rejected;
     });

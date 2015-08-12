@@ -53,8 +53,58 @@ describe('Node Model', () => {
       })).to.be.fulfilled;
     });
 
+    it('succeeds with a name including a hyphen', () => {
+      let node = factory.buildSync('node', { name: 'test-prod' });
+
+      return expect(node.save()).to.be.fulfilled;
+    });
+
+    it('succeeds with a min size name', () => {
+      let node = factory.buildSync('node', { name: _.repeat('a', 1) });
+
+      return expect(node.save()).to.be.fulfilled;
+    });
+
+    it('succeeds with a max size name', () => {
+      let node = factory.buildSync('node', { name: _.repeat('b', 64) });
+
+      return expect(node.save()).to.be.fulfilled;
+    });
+
+    it('fails with a name starting with a hyphen', () => {
+      let node = factory.buildSync('node', { name: '-test' });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with a name ending with a hyphen', () => {
+      let node = factory.buildSync('node', { name: 'test-' });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    ['/', '\\', '"', "'", '*'].forEach(value => {
+      it(`failed with a name including a ${value}`, () => {
+        let node = factory.buildSync('node', { name: `te${value}st` });
+
+        return expect(node.save()).to.be.rejected;
+      });
+    });
+
     it('fails with null name', () => {
       let node = factory.buildSync('node', { name: null });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with an empty name', () => {
+      let node = factory.buildSync('node', { name: '' });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with a too long name', () => {
+      let node = factory.buildSync('node', { name: _.repeat('a', 65) });
 
       return expect(node.save()).to.be.rejected;
     });
@@ -79,18 +129,6 @@ describe('Node Model', () => {
 
     it('fails with an array of labels', () => {
       let node = factory.buildSync('node', { labels: [] });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    it('fails with an empty name', () => {
-      let node = factory.buildSync('node', { name: '' });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    it('fails with a too long name', () => {
-      let node = factory.buildSync('node', { name: _.repeat('*', 65) });
 
       return expect(node.save()).to.be.rejected;
     });

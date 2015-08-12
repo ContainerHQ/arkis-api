@@ -4,7 +4,8 @@ let _ = require('lodash'),
   errors = require('../routes/shared/errors'),
   mixins = require('./concerns'),
   machine = require('../../config/machine'),
-  config = require('../../config');
+  config = require('../../config'),
+  is = require('./validators');
 
 module.exports = function(sequelize, DataTypes) {
   let Cluster = sequelize.define('Cluster', mixins.extend('state', 'attributes', {
@@ -19,7 +20,7 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       defaultValue: null,
       unique: true,
-      validate: { len: [1, 64] }
+      validate: is.subdomainable
     },
     token: {
       type: DataTypes.TEXT,
