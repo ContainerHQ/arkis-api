@@ -129,7 +129,7 @@ module.exports = function(sequelize, DataTypes) {
       },
       filtered: function(filters) {
         let criterias = _.pick(filters, [
-          'byon', 'master', 'name', 'region', 'node_size'
+          'byon', 'master', 'name', 'region', 'node_size', 'labels'
         ]);
         return { where: criterias };
       },

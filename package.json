@@ -55,6 +55,7 @@
     "factory-girl-sequelize": "1.0.x",
     "istanbul": "0.3.x",
     "mocha": "2.2.x",
+    "qs": "4.0.x",
     "rewire": "2.3.x",
     "sinon": "1.14.x",
     "sinon-chai": "2.8.x",

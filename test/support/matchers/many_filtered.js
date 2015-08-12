@@ -12,7 +12,7 @@ module.exports = function (entity, filterName, filterValue, done) {
       return done(new Error(`response ${entity} is empty!`));
     }
     expect(_.all(models, model => {
-      return model[filterName] === filterValue;
+      return _.isEqual(model[filterName], filterValue);
     })).to.be.true;
     done();
   };
