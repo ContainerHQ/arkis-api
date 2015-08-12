@@ -160,11 +160,13 @@ module.exports = function(sequelize, DataTypes) {
         return machine.agentCmd(this.get('token'));
       },
       fqdn: function() {
-        if (!this.cluster_id) { return null; }
+        let clusterId = this.get('cluster_id');
 
-        let clusterShortId = this.cluster_id.slice(0, 8);
+        if (!clusterId) { return null; }
 
-        return `${this.name}-${clusterShortId}.${config.nodeDomain}`;
+        let clusterShortId = clusterId.slice(0, 8);
+
+        return `${this.get('name')}-${clusterShortId}.${config.nodeDomain}`;
       }
     },
     instanceMethods: {
