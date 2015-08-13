@@ -1,6 +1,6 @@
 'use strict';
-let _ = require('lodash'),
-  config = require('../../../config');
+
+let config = require('../../../config');
 
 module.exports = function(model) {
   ['docker', 'swarm'].forEach(binary => {

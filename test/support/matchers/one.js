@@ -1,6 +1,9 @@
+/* globals expect: true */
+
 'use strict';
 
-let _ = require('lodash');
+let _ = require('lodash'),
+  format = require('../format');
 
 module.exports = function (owner, modelName, opts, done) {
   return function(err, res) {

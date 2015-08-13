@@ -10,7 +10,7 @@ if [ "$GITHUB_CLIENT_ID" = "" ] || [ "$GITHUB_SECRET_KEY" = "" ]; then
 fi
 
 # Detect errors and potential problems.
-jshint app
+jshint app test/support
 
 # Launch mocha with istanbul coverage reports.
 NODE_ENV=test istanbul cover \

@@ -63,7 +63,7 @@ describe('GET /clusters/', () => {
     ['strategy', 'binpack'],
     ['strategy', 'spread'],
     ['name', 'whatever'],
-    ['name', 'john doe'],
+    ['name', 'john-doe'],
     ['state', 'unreachable'],
     ['state', 'running'],
   ].forEach(([name, value]) => {

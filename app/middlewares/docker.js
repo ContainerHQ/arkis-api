@@ -1,6 +1,7 @@
 'use strict';
 
-let http = require('http'),
+let _ =require('lodash'),
+  http = require('http'),
   Docker = require('dockerode');
 
 http.globalAgent.maxSockets = 1000;

@@ -150,7 +150,7 @@ module.exports.clusters = function(user={}) {
           .post(`${ressource}/${id}/upgrade`)
           .set('Authorization', `JWT ${user.token}`);
         }
-      }
+      };
     }
   };
 };
