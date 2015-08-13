@@ -11,12 +11,9 @@ let _ = require('lodash'),
 describe('Node Model', () => {
   db.sync();
 
-  /*
-   * A non byon node has a default state set to 'deploying',
-   * we must use a byon node wich has a default state set to
-   * 'empty'.
-   */
-  concerns.behavesAsAStateMachine('byonNode', { default: 'deploying' });
+  concerns('node').behavesAsAStateMachine({ default: 'deploying' });
+
+  concerns('node').hasSubdomainable('name');
 
   describe('validations', () => {
     /*
@@ -53,20 +50,26 @@ describe('Node Model', () => {
       })).to.be.fulfilled;
     });
 
-    it('fails without a name', () => {
-      let node = factory.buildSync('node', { name: null });
+    it('fails with null labels', () => {
+      let node = factory.buildSync('node', { labels: null });
 
       return expect(node.save()).to.be.rejected;
     });
 
-    it('fails with an empty name', () => {
-      let node = factory.buildSync('node', { name: '' });
+    it('fails with a string of labels', () => {
+      let node = factory.buildSync('node', { labels: 'lol' });
 
       return expect(node.save()).to.be.rejected;
     });
 
-    it('fails with a too long name', () => {
-      let node = factory.buildSync('node', { name: _.repeat('*', 65) });
+    it('fails with an integer label', () => {
+      let node = factory.buildSync('node', { labels: 2 });
+
+      return expect(node.save()).to.be.rejected;
+    });
+
+    it('fails with an array of labels', () => {
+      let node = factory.buildSync('node', { labels: [] });
 
       return expect(node.save()).to.be.rejected;
     });
@@ -87,12 +90,6 @@ describe('Node Model', () => {
           done();
         });
       });
-    });
-
-    it('fails with an invalid fqdn', () => {
-      let node = factory.buildSync('node', { fqdn: _.repeat('*', 10) });
-
-      return expect(node.save()).to.be.rejected;
     });
 
     it('fails with an invalid public_ip', () => {
@@ -175,46 +172,55 @@ describe('Node Model', () => {
     let node, cluster;
 
     beforeEach(() => {
-      cluster = { notify: sinon.stub() };
-      node = factory.buildSync('node');
-      node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+      cluster = factory.buildSync('cluster');
+      cluster.notify = sinon.stub();
+
+      return cluster.save().then(() => {
+        node = factory.buildSync('node', { cluster_id: cluster.id });
+        node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+      });
+    });
+
+    it('has a fqdn', () => {
+      let shortId = cluster.id.slice(0, 8),
+        expected  = `${node.name}-${shortId}.${config.nodeDomain}`;
+
+      return expect(node.save())
+        .to.eventually.have.property('fqdn', expected);
+    });
+
+    it('initializes its jwt token', () => {
+      return expect(node.save())
+        .to.eventually.satisfy(has.validJWT);
+    });
+
+    it('initialized its state to deploying', () => {
+      return expect(node.save())
+        .to.eventually.have.property('state', 'deploying');
+    });
+
+    it('is not a master node by default', () => {
+      return expect(node.save()).to.eventually.have.property('master', false);
+    });
+
+    it('has no download link to get the agent', () => {
+      return expect(node.save())
+        .to.eventually.have.property('agent_cmd', null);
+    });
+
+    it('has empty json labels by default', () => {
+      return expect(node.save().then(node => {
+        return expect(node.labels).to.deep.equal({});
+      }));
     });
 
     context('when machine creation succeeded', () => {
       beforeEach(() => {
-        sinon.stub(machine, 'generateFQDN').returns(FQDN);
         sinon.stub(machine, 'create', machine.create);
       });
 
       afterEach(() => {
-        machine.generateFQDN.restore();
         machine.create.restore();
-      });
-
-      it('is not a master node by default', () => {
-        let node = factory.buildSync('node');
-
-        return expect(node.save()).to.eventually.have.property('master', false);
-      });
-
-      it('initializes its fqdn', () => {
-        return expect(node.save()).to.eventually.have.property('fqdn', FQDN);
-      });
-
-      it('initializes its jwt token', () => {
-        return expect(node.save())
-          .to.eventually.satisfy(has.validJWT);
-      });
-
-      it('generates its fqdn through machine', () => {
-        return node.save().then(() => {
-          return expect(machine.generateFQDN).to.have.been.calledWith({});
-        });
-      });
-
-      it('initialized its state to deploying', () => {
-        return expect(node.save())
-          .to.eventually.have.property('state', 'deploying');
       });
 
       it('creates a machine behind', () => {
@@ -229,20 +235,21 @@ describe('Node Model', () => {
             .to.have.been.calledWith({ last_state: node.last_state });
         });
       });
-
-      it('has no download link to get the agent', () => {
-        return expect(node.save())
-          .to.eventually.have.property('agent_cmd', null);
-      });
     });
 
     context('when machine creation failed', () => {
+      const ERROR = random.error();
+
       beforeEach(() => {
-        sinon.stub(machine, 'create').returns(Promise.reject());
+        sinon.stub(machine, 'create').returns(Promise.reject(ERROR));
       });
 
       afterEach(() => {
         machine.create.restore();
+      });
+
+      it('returns the error', () => {
+        return expect(node.save()).to.be.rejectedWith(ERROR);
       });
 
       it("doesn't save the node", done => {
@@ -274,11 +281,6 @@ describe('Node Model', () => {
         });
       });
 
-      it('initialized its state to deploying', () => {
-        return expect(node.save())
-          .to.eventually.have.property('state', 'deploying');
-      });
-
       it('uses machine to get the command to install the agent', () => {
         return node.save().then(() => {
           return node.toJSON();
@@ -295,14 +297,14 @@ describe('Node Model', () => {
   });
 
   describe('#update', () => {
-    let node;
-
-    beforeEach(() => {
-      node = factory.buildSync('node');
-      return node.save();
-    });
-
     context('when updating public_ip', () => {
+      let node;
+
+      beforeEach(() => {
+        node = factory.buildSync('node');
+        return node.save();
+      });
+
       afterEach(() => {
         machine.registerFQDN.restore();
       });
@@ -322,16 +324,21 @@ describe('Node Model', () => {
       });
 
       context('when machine fqdn registration failed', () => {
+        const ERROR = random.error(),
+              OPTS  = { public_ip: '192.168.1.90' };
+
         beforeEach(() => {
-          sinon.stub(machine, 'registerFQDN').returns(Promise.reject());
+          sinon.stub(machine, 'registerFQDN').returns(Promise.reject(ERROR));
+        });
+
+        it('returns the error', () => {
+          return expect(node.update(OPTS)).to.be.rejectedWith(ERROR);
         });
 
         it("doesn't update the node", done => {
-          let opts = { public_ip: '192.168.1.90' };
-
-          return node.update(opts).then(done).catch(err => {
+          return node.update(OPTS).then(done).catch(err => {
             expect(node.reload())
-              .to.eventually.not.have.property('public_ip', opts.public_ip)
+              .to.eventually.not.include(OPTS)
               .notify(done);
           });
         });
@@ -339,6 +346,13 @@ describe('Node Model', () => {
     });
 
     context('when not updating public_ip', () => {
+      let node;
+
+      beforeEach(() => {
+        node = factory.buildSync('node');
+        return node.save();
+      });
+
       beforeEach(() => {
         sinon.stub(machine, 'registerFQDN', machine.registerFQDN);
       });
@@ -364,39 +378,108 @@ describe('Node Model', () => {
        * necessary.
        */
       beforeEach(() => {
-          cluster = { notify: sinon.stub() };
-          node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+        cluster = { notify: sinon.stub() };
+      });
+
+      context('when updating master', () => {
+        context('with true', () => {
+          let node;
+
+          beforeEach(() => {
+            node = factory.buildSync('node', { master: false });
+            return node.save().then(() => {
+              node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+            });
+          });
+
+          beforeEach(() => {
+            return node.update({ master: true });
+          });
+
+          it('reports back its last ping to its cluster', () => {
+            expect(cluster.notify)
+              .to.have.been.calledWith({ last_ping: node.last_ping });
+          });
+        });
+
+        context('with false', () => {
+          let node;
+
+          beforeEach(() => {
+            node = factory.buildSync('node', { master: true });
+            return node.save().then(() => {
+              node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+            });
+          });
+
+          beforeEach(() => {
+            return node.update({ master: false });
+          });
+
+          it('reports back its downgrade its cluster', () => {
+            expect(cluster.notify)
+              .to.have.been.calledWith({ last_ping: null });
+          });
+        });
       });
 
       context('when updating last_state', () => {
+        let node;
+
+        beforeEach(() => {
+          node = factory.buildSync('node');
+          return node.save().then(() => {
+            node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+          });
+        });
+
         /*
          * Be careful here, sequelize doesn't add a field in options.fields
          * if we are providing a value for the field equal to its prior value.
          */
-        let opts = { last_state: 'upgrading' };
+        const OPTS = { last_state: 'upgrading' };
 
         beforeEach(() => {
-          return node.update(opts);
+          return node.update(OPTS);
         });
 
         it('reports back the new state to its cluster', () => {
-          expect(cluster.notify).to.have.been.calledWith(opts);
+          expect(cluster.notify).to.have.been.calledWith(OPTS);
         });
       });
 
       context('when updating last_ping', () => {
         context('when slave node', () => {
+          let node;
+
           beforeEach(() => {
-            return node.update({ master: false, last_ping: Date.now() });
+            node = factory.buildSync('node', { master: false });
+            return node.save().then(() => {
+              node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+            });;
+          });
+
+          beforeEach(() => {
+            return node.update({ last_ping: Date.now() });
           });
 
           it("doesn't report back the ping to its cluster", () => {
             expect(cluster.notify).to.not.have.been.called;
           });
         });
+
         context('when master node', () => {
+          let node;
+
           beforeEach(() => {
-            return node.update({ master: true, last_ping: Date.now() });
+            node = factory.buildSync('node', { master: true });
+            return node.save().then(() => {
+              node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+            });;
+          });
+
+          beforeEach(() => {
+            return node.update({ last_ping: Date.now() });
           });
 
           it('reports back the ping to its cluster', () => {
@@ -407,6 +490,15 @@ describe('Node Model', () => {
       });
 
       context('when updating a field different than last fields', () => {
+        let node;
+
+        beforeEach(() => {
+          node = factory.buildSync('node');
+          return node.save().then(() => {
+            node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+          });
+        });
+
         beforeEach(() => {
           return node.update({ public_ip: '127.0.0.1' });
         });
@@ -424,12 +516,13 @@ describe('Node Model', () => {
     beforeEach(() => {
       cluster = { notify: sinon.stub() };
       node = factory.buildSync('node');
-      node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
     });
 
     context('with a non byon node', () => {
       beforeEach(() => {
-        return node.save();
+        return node.save().then(() => {
+          node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+        });
       });
 
       context('when machine destruction and fqdn deletion succeeds', () => {
@@ -459,14 +552,20 @@ describe('Node Model', () => {
       });
 
       context('when machine destruction failed', () => {
+        const ERROR = random.error();
+
         beforeEach(() => {
-          sinon.stub(machine, 'destroy').returns(Promise.reject());
+          sinon.stub(machine, 'destroy').returns(Promise.reject(ERROR));
           sinon.stub(machine, 'deleteFQDN', machine.deleteFQDN);
         });
 
         afterEach(() => {
           machine.destroy.restore();
           machine.deleteFQDN.restore();
+        });
+
+        it('returns the error', () => {
+          return expect(node.destroy()).to.be.rejectedWith(ERROR);
         });
 
         it("doesn't delete the fqdn", done => {
@@ -486,12 +585,19 @@ describe('Node Model', () => {
       });
 
       context('when machine fqdn deletion failed', () => {
+        const ERROR = random.error();
+
         beforeEach(() => {
-          sinon.stub(machine, 'deleteFQDN').returns(Promise.reject());
+          sinon.stub(machine, 'deleteFQDN').returns(Promise.reject(ERROR));
         });
 
         afterEach(() => {
           machine.deleteFQDN.restore();
+        });
+
+        it('returns the error', () => {
+          return expect(node.destroy())
+            .to.be.rejectedWith(ERROR);
         });
 
         it("doesn't delete the node", done => {
@@ -507,6 +613,7 @@ describe('Node Model', () => {
       beforeEach(() => {
         node.master = true;
         return node.save().then(() => {
+          node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
           return node.destroy();
         });
       });
@@ -524,6 +631,7 @@ describe('Node Model', () => {
         sinon.stub(machine, 'destroy', machine.destroy);
 
         return node.save().then(() => {
+          node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
           return node.destroy();
         });
       });
@@ -539,6 +647,157 @@ describe('Node Model', () => {
 
       it("doesn't attempt to remove the machine behind", () => {
         expect(machine.destroy).to.not.have.been.called;
+      });
+    });
+  });
+
+  describe('#change', () => {
+    let node, attributes = { name: random.string() };
+
+    context('when node is not in running state', () => {
+      beforeEach(() => {
+        node = factory.buildSync('node');
+        sinon.stub(machine, 'update', machine.update);
+        return node.save();
+      });
+
+      afterEach(() => {
+        machine.update.restore();
+      });
+
+      it("doesn't update the node", done => {
+        let notExpected = _.merge({ last_state: 'updating' }, attributes);
+
+        node.change(attributes).then(done).catch(() => {
+          expect(node.reload())
+            .to.eventually.not.include(notExpected)
+            .notify(done);
+        });
+      });
+
+      it("doesn't update the machine behind", done => {
+        node.change(attributes).then(done).catch(() => {
+          expect(machine.update).to.not.have.been.called;
+          done();
+        });
+      });
+
+      it('returns an error', done => {
+        node.change(attributes).then(done).catch(err => {
+          expect(err)
+            .to.deep.equal(new errors.StateError('update', node.state));
+          done();
+        });
+      });
+    });
+
+    context('when node is in running state', () => {
+      beforeEach(() => {
+        node = factory.buildSync('runningNode');
+        return node.save();
+      });
+
+      context('when there is no changes', () => {
+        beforeEach(() => {
+          sinon.stub(machine, 'update', machine.update);
+        });
+
+        afterEach(() => {
+          machine.update.restore();
+        });
+
+        it("doesn't update the node", () => {
+          let expected = node.dataValues;
+
+          return expect(node.change({}))
+            .to.eventually.have.property('dataValues', expected);
+        });
+
+        it("doesn't update the machine behind", () => {
+          return node.change({}).then(() => {
+            return expect(machine.update).to.not.have.been.called;
+          });
+        });
+      });
+
+      context('when validation failed', () => {
+        let badAttributes = { master: 'lol' };
+
+        beforeEach(() => {
+          node = factory.buildSync('node');
+          sinon.stub(machine, 'update', machine.update);
+          return node.save();
+        });
+
+        afterEach(() => {
+          machine.update.restore();
+        });
+
+        it("doesn't update the node", done => {
+          let notExpected = _.merge({ last_state: 'updating' }, badAttributes);
+
+          node.change(badAttributes).then(done).catch(() => {
+            expect(node.reload())
+              .to.eventually.not.include(notExpected)
+              .notify(done);
+          });
+        });
+
+        it("doesn't update the machine behind", done => {
+          node.change(badAttributes).then(done).catch(() => {
+            expect(machine.update).to.not.have.been.called;
+            done();
+          });
+        });
+      });
+
+      context('when machine update succeeds', () => {
+        beforeEach(() => {
+          sinon.stub(machine, 'update').returns(Promise.resolve());
+          return node.change(attributes);
+        });
+
+        afterEach(() => {
+          machine.update.restore();
+        });
+
+        it('updates the attributes', () => {
+          expect(node).to.include(attributes);
+        });
+
+        it('set the node state to updating', () => {
+          expect(node.state).to.equal('updating');
+        });
+
+        it('updates the machine behind', () => {
+          expect(machine.update).to.have.been.calledWith(attributes);
+        });
+      });
+
+      context('when machine update failed', () => {
+        const ERROR = random.error();
+
+        beforeEach(() => {
+          sinon.stub(machine, 'update').returns(Promise.reject(ERROR));
+        });
+
+        afterEach(() => {
+          machine.update.restore();
+        });
+
+        it('returns the error', () => {
+          return expect(node.change(attributes)).to.be.rejectedWith(ERROR);
+        });
+
+        it("doesn't update the node", done => {
+          let notExpected = _.merge({ last_state: 'updating' }, attributes);
+
+          node.change(attributes).then(done).catch(() => {
+            expect(node.reload())
+              .to.eventually.not.include(notExpected)
+              .notify(done);
+          });
+        });
       });
     });
   });
@@ -703,7 +962,12 @@ describe('Node Model', () => {
         .to.eventually.deep.equal({
           master: node.master,
           name: node.name,
-          cert: cluster.cert,
+          labels: node.labels,
+          cert: {
+            ca:   cluster.cert.server_ca,
+            cert: cluster.cert.server_cert,
+            key:  cluster.cert.server_key,
+          },
           strategy: cluster.strategy,
           versions: {
             docker: cluster.docker_version,

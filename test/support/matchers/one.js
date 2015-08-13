@@ -13,8 +13,7 @@ module.exports = function (owner, modelName, opts, done) {
       return _.first(ownerModels).toJSON();
     }).then(ownerModel => {
       expect(model)
-        .to.deep.equal(ownerModel)
-        .and.include(opts.with)
+        .to.deep.equal(ownerModel).and.to.containSubset(opts.with);
       done();
     }).catch(done);
   };

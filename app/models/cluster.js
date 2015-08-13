@@ -4,7 +4,8 @@ let _ = require('lodash'),
   errors = require('../routes/shared/errors'),
   mixins = require('./concerns'),
   machine = require('../../config/machine'),
-  config = require('../../config');
+  config = require('../../config'),
+  is = require('./validators');
 
 module.exports = function(sequelize, DataTypes) {
   let Cluster = sequelize.define('Cluster', mixins.extend('state', 'attributes', {
@@ -19,7 +20,7 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       defaultValue: null,
       unique: true,
-      validate: { len: [1, 64] }
+      validate: is.subdomainable
     },
     token: {
       type: DataTypes.TEXT,
@@ -53,7 +54,6 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true,
       defaultValue: null,
     },
-    containers_count: DataTypes.VIRTUAL
   }, DataTypes), mixins.extend('state', 'options', {
     defaultScope: { order: [['id', 'ASC']] },
     scopes: {
@@ -79,6 +79,8 @@ module.exports = function(sequelize, DataTypes) {
             return 'One or more node(s) are beeing deployed';
           case 'upgrading':
             return 'One or more node(s) are beeing upgraded';
+          case 'updating':
+            return 'One or more node(s) are beeing updated';
           case 'running':
             return 'Cluster is running and reachable';
         }
@@ -149,6 +151,7 @@ module.exports = function(sequelize, DataTypes) {
         switch (changes.last_state) {
           case 'deploying':
           case 'upgrading':
+          case 'updating':
             return this.update({ last_state: changes.last_state });
           case 'destroyed':
           case 'running':

@@ -2,7 +2,7 @@
 
 let _ = require('lodash');
 
-const TIMESTAMPS = ['created_at', 'updated_at'];
+const TIMESTAMPS = ['created_at', 'updated_at', 'last_ping'];
 
 /*
  * Format timestamps strings of a JSON response to real
@@ -11,7 +11,9 @@ const TIMESTAMPS = ['created_at', 'updated_at'];
  */
 module.exports.timestamps = function(model) {
   TIMESTAMPS.forEach(timestamp => {
-    model[timestamp] = new Date(model[timestamp]);
+    if (!!model[timestamp]) {
+      model[timestamp] = new Date(model[timestamp]);
+    }
   });
   return model;
 };

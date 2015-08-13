@@ -1,6 +1,7 @@
 'use strict';
 
 let request = require('supertest'),
+  qs = require('qs'),
   app = require('../../app');
 
 const API_ROUTE = '/api/v1';
@@ -86,9 +87,11 @@ module.exports.clusters = function(user={}) {
       .get(`${ressource}/${id}`)
       .set('Authorization', `JWT ${user.token}`);
     },
-    getAll: function(opts='') {
+    getAll: function(opts={}) {
+      let params = qs.stringify(opts);
+
       return request(app)
-      .get(`${ressource}${opts}`)
+      .get(`${ressource}?${params}`)
       .set('Authorization', `JWT ${user.token}`);
     },
     create: function() {
@@ -120,9 +123,11 @@ module.exports.clusters = function(user={}) {
           .get(`${ressource}/${id}`)
           .set('Authorization', `JWT ${user.token}`);
         },
-        getAll: function(opts='') {
+        getAll: function(opts={}) {
+          let params = qs.stringify(opts);
+
           return request(app)
-          .get(`${ressource}${opts}`)
+          .get(`${ressource}?${params}`)
           .set('Authorization', `JWT ${user.token}`);
         },
         create: function() {

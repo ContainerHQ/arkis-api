@@ -49,13 +49,6 @@ module.exports = {
         allowNull: true,
         defaultValue: null,
       },
-      fqdn: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        defaultValue: null,
-        unique: true,
-        validate: { isUrl: true }
-      },
       public_ip: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -81,6 +74,11 @@ module.exports = {
         allowNull: true,
         validate: { min: 1.0 }
       },
+      labels: {
+        type: DataTypes.JSONB,
+        allowNull: false,
+        defaultValue: {}
+      },
       docker_version: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -95,7 +93,9 @@ module.exports = {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: 'empty',
-        validate: { isIn: [['empty', 'deploying', 'upgrading', 'running']] }
+        validate: {
+          isIn: [['empty', 'deploying', 'upgrading', 'updating', 'running']]
+        }
       },
       last_ping: {
         type: DataTypes.DATE,

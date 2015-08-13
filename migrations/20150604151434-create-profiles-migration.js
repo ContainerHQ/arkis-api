@@ -4,12 +4,12 @@ module.exports = {
   up: function (queryInterface, DataTypes) {
     return queryInterface.createTable('Profiles', {
       id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.INTEGER.UNSIGNED,
         primaryKey: true,
         autoIncrement: true
       },
       user_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.INTEGER.UNSIGNED,
         references: {
           model: 'Users',
           key: 'id'

@@ -33,13 +33,13 @@ describe('GET /clusters/:cluster_id/nodes', () => {
     let opts = { limit: 5, offset: DEFAULT_OFFSET };
 
     it('retrieves a limited number of nodes', done => {
-      api.clusters(user).nodes(cluster).getAll(`?limit=${opts.limit}`)
+      api.clusters(user).nodes(cluster).getAll(opts)
       .expect(200, has.many(cluster, 'nodes', opts, done));
     });
 
     context('with a negative limit', () => {
       it('returns a bad request error', done => {
-        api.clusters(user).nodes(cluster).getAll('?limit=-1')
+        api.clusters(user).nodes(cluster).getAll({ limit: -1 })
         .expect(400).end(done);
       });
     });
@@ -50,37 +50,44 @@ describe('GET /clusters/:cluster_id/nodes', () => {
 
     it('retrieves the specified offset of nodes records', done => {
       api.clusters(user).nodes(cluster)
-      .getAll(`?limit=${opts.limit}&offset=${opts.offset}`)
+      .getAll(opts)
       .expect(200, has.many(cluster, 'nodes', opts, done));
     });
 
     context('with a negative offset', () => {
       it('returns a bad request error', done => {
-        api.clusters(user).getAll('?offset=-1').expect(400).end(done);
+        api.clusters(user).nodes(cluster)
+        .getAll({ offset: -1 }).expect(400).end(done);
       });
     });
   });
 
   [
     ['region', 'paris'],
+    ['region', 'london'],
     ['master', true],
     ['master', false],
-    ['region', 'london'],
     ['byon', true],
     ['byon', false],
     ['name', 'whatever'],
+    ['name', 'jean'],
     ['state', 'unreachable'],
     ['state', 'running'],
     ['node_size', 'giant'],
-    ['node_size', 'small']
+    ['node_size', 'small'],
+    ['labels', { environment: 'production' }],
+    ['labels', { support:     'opts' }]
   ].forEach(([name, value]) => {
-    context(`when user filters with ${value} ${name}`, () => {
+    let title = JSON.stringify(value),
+        opts  = {};
+
+    context(`when user filters with ${title} ${name}`, () => {
       beforeEach(done => {
-        let opts = { cluster_id: cluster.id },
-          number = name === 'name' || name === 'master' ? 1 : 3,
+          let  number = name === 'name' || name === 'master' ? 1 : 3,
           factoryName = 'node';
 
-        opts[name] = value;
+        opts[name]      = value;
+        opts.cluster_id = cluster.id;
 
         switch (name) {
           case 'state':
@@ -95,8 +102,8 @@ describe('GET /clusters/:cluster_id/nodes', () => {
         factory.createMany(factoryName, opts, number, done);
       });
 
-      it(`retrieves only user cluster nodes with ${value} ${name}`, done => {
-        api.clusters(user).nodes(cluster).getAll(`?${name}=${value}`)
+      it(`retrieves only user cluster nodes with ${title} ${name}`, done => {
+        api.clusters(user).nodes(cluster).getAll(opts)
         .expect(200, has.manyFiltered('nodes', name, value, done));
       });
     });

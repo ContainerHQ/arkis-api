@@ -21,6 +21,9 @@ describe('GET /clusters/', () => {
   it('retrieves the user clusters', done => {
     let opts = { limit: DEFAULT_LIMIT, offset: DEFAULT_OFFSET };
 
+    /*
+     * Opts are not in the query string on purpose to test default values
+     */
     api.clusters(user).getAll()
     .expect(200, has.many(user, 'clusters', opts, done));
   });
@@ -29,13 +32,13 @@ describe('GET /clusters/', () => {
     let opts = { limit: 5, offset: DEFAULT_OFFSET };
 
     it('retrieves a limited number of cluster', done => {
-      api.clusters(user).getAll(`?limit=${opts.limit}`)
+      api.clusters(user).getAll(opts)
       .expect(200, has.many(user, 'clusters', opts, done));
     });
 
     context('with a negative limit', () => {
       it('returns a bad request error', done => {
-        api.clusters(user).getAll('?limit=-1').expect(400).end(done);
+        api.clusters(user).getAll({ limit: -1 }).expect(400).end(done);
       });
     });
   });
@@ -44,13 +47,13 @@ describe('GET /clusters/', () => {
     let opts = { limit: 3, offset: 4 };
 
     it('retrieves the specified offset of cluster records', done => {
-      api.clusters(user).getAll(`?limit=${opts.limit}&offset=${opts.offset}`)
+      api.clusters(user).getAll(opts)
       .expect(200, has.many(user, 'clusters', opts, done));
     });
 
     context('with a negative offset', () => {
       it('returns a bad request error', done => {
-        api.clusters(user).getAll('?offset=-1').expect(400).end(done);
+        api.clusters(user).getAll({ offset: -1 }).expect(400).end(done);
       });
     });
   });
@@ -60,22 +63,25 @@ describe('GET /clusters/', () => {
     ['strategy', 'binpack'],
     ['strategy', 'spread'],
     ['name', 'whatever'],
+    ['name', 'john doe'],
     ['state', 'unreachable'],
     ['state', 'running'],
   ].forEach(([name, value]) => {
     context(`when user filters with ${value} ${name}`, () => {
+      let opts = {};
+
       beforeEach(done => {
-        let opts = { user_id: user.id },
-          number = name === 'name' ? 1 : 3,
+        let number = name === 'name' ? 1 : 3,
           factoryName = name === 'state' ? `${value}Cluster` : 'cluster';
 
         opts[name] = value;
+        opts.user_id = user.id;
 
         factory.createMany(factoryName, opts, number, done);
       });
 
       it(`retrieves only user clusters with ${value} ${name}`, done => {
-        api.clusters(user).getAll(`?${name}=${value}`)
+        api.clusters(user).getAll(opts)
         .expect(200, has.manyFiltered('clusters', name, value, done));
       });
     });

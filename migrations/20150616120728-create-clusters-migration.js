@@ -10,7 +10,7 @@ module.exports = {
         unique: true
       },
       user_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.INTEGER.UNSIGNED,
         references: {
           model: 'Users',
           key: 'id'
@@ -54,7 +54,9 @@ module.exports = {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: 'empty',
-        validate: { isIn: [['empty', 'deploying', 'upgrading', 'running']] }
+        validate: {
+          isIn: [['empty', 'deploying', 'upgrading', 'updating', 'running']]
+        }
       },
       last_ping: {
         type: DataTypes.DATE,

@@ -5,6 +5,8 @@ let _ = require('lodash'),
   errors = require('../routes/shared/errors'),
   machine = require('../../config/machine'),
   token = require('../../config/token'),
+  config = require('../../config'),
+  is = require('./validators'),
   mixins = require('./concerns');
 
 module.exports = function(sequelize, DataTypes) {
@@ -15,11 +17,18 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: DataTypes.UUIDV1,
       unique: true
     },
+    /*
+     * The name is used to creates the fqdn, therefore it should only
+     * include a-z, 0-9 and hypens and must not start/end with a hypen.
+     *
+     * There is also an indexe on the database to prevent having a node
+     * with the same name and the same cluster.
+     */
     name: {
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: null,
-      validate: { len: [1, 64] }
+      validate: is.subdomainable
     },
     token: {
       type: DataTypes.TEXT,
@@ -35,7 +44,8 @@ module.exports = function(sequelize, DataTypes) {
         isUnique: function(master) {
           if (!master || !this.cluster_id) { return Promise.resolve(); }
 
-          return Node.findOne({ where:  { cluster_id: this.cluster_id,
+          return Node.findOne({ where:  {
+            cluster_id: this.cluster_id,
             master: true
           }}).then(node => {
             if (node) {
@@ -70,13 +80,6 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true,
       defaultValue: null,
     },
-    fqdn: {
-      type: DataTypes.STRING,
-      unique: true,
-      allowNull: true,
-      defaultValue: null,
-      validate: { isUrl: true }
-    },
     public_ip: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -102,6 +105,18 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true,
       validate: { min: 1.0 }
     },
+    labels: {
+      type: DataTypes.JSONB,
+      allowNull: false,
+      defaultValue: {},
+      validate: {
+        isKeyValue: function(labels) {
+          if (!_.isPlainObject(labels)) {
+            throw new Error('Labels must only contain key/value pairs!');
+          }
+        }
+      }
+    },
     docker_version: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -112,7 +127,6 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true,
       defaultValue: null,
     },
-    containers_count: DataTypes.VIRTUAL
   }, DataTypes, { default: 'deploying' }), mixins.extend('state', 'options', {
     defaultScope: {
       order: [['id', 'ASC']]
@@ -123,7 +137,7 @@ module.exports = function(sequelize, DataTypes) {
       },
       filtered: function(filters) {
         let criterias = _.pick(filters, [
-          'byon', 'master', 'name', 'region', 'node_size'
+          'byon', 'master', 'name', 'region', 'node_size', 'labels'
         ]);
         return { where: criterias };
       },
@@ -142,6 +156,8 @@ module.exports = function(sequelize, DataTypes) {
             return 'Node is being deployed';
           case 'upgrading':
             return 'Node is being upgraded';
+          case 'updating':
+            return 'Node is being updated';
           case 'running':
             return 'Node is running and reachable';
         }
@@ -150,6 +166,15 @@ module.exports = function(sequelize, DataTypes) {
         if (!this.get('byon')) { return null; }
 
         return machine.agentCmd(this.get('token'));
+      },
+      fqdn: function() {
+        let clusterId = this.get('cluster_id');
+
+        if (!clusterId) { return null; }
+
+        let clusterShortId = clusterId.slice(0, 8);
+
+        return `${this.get('name')}-${clusterShortId}.${config.nodeDomain}`;
       }
     },
     instanceMethods: {
@@ -174,14 +199,40 @@ module.exports = function(sequelize, DataTypes) {
         });
       },
       /*
-       * This must update the node in order to notify its
-       * affiliated cluster of its new state.
+       * Changes commits to the machine some changes and update the node
+       * accordingly and also ensures to put the node in updating state, until
+       * the node agent registers that it has finished to process the changes.
+       *
+       * This method is agnostic from changes nature. It's up to the caller
+       * to filter the changes that must be processed.
        */
-      register: function(attributes={}) {
+      change: function(changes={}) {
+        if (this.state !== 'running') {
+          return Promise.reject(new errors.StateError('update', this.state));
+        }
+        if (_.isEmpty(changes)) { return Promise.resolve(this); }
+
+        _.merge(this, { last_state: 'updating' }, changes);
+
+        return this.validate().then(() => {
+          return machine.update(changes);
+        }).then(() => {
+          return this.save();
+        });
+      },
+      /*
+       * Registers new informations of a node and ensures to put the node
+       * in running state. Must be called whenever an agent has finished
+       * its pending work.
+       */
+      register: function(infos={}) {
         let opts = { last_state: 'running', last_ping: Date.now() };
 
-        return this.update(_.merge(opts, attributes));
+        return this.update(_.merge(opts, infos));
       },
+      /*
+       * Upgrade a node to specific versions.
+       */
       upgrade: function(versions) {
         let state = this.get('state');
 
@@ -195,15 +246,26 @@ module.exports = function(sequelize, DataTypes) {
           return this.update({ last_state: 'upgrading' });
         });
       },
+      /*
+       * Updates the last_ping of a node to current date and time.
+       */
       ping: function() {
         return this.update({ last_ping: moment() });
       },
+      /*
+       * Informations required by the agent to provision the node.
+       */
       agentInfos: function() {
         return this.getCluster().then(cluster => {
           return {
             master: this.master,
             name:   this.name,
-            cert: cluster.cert,
+            labels: this.labels,
+            cert: {
+              ca:   cluster.cert.server_ca,
+              cert: cluster.cert.server_cert,
+              key:  cluster.cert.server_key,
+            },
             versions: {
               docker:   cluster.docker_version,
               swarm:    cluster.swarm_version
@@ -216,7 +278,6 @@ module.exports = function(sequelize, DataTypes) {
     hooks: {
       beforeCreate: function(node) {
         node._generateToken();
-        node.fqdn = machine.generateFQDN({});
 
         if (!node.byon) {
           return machine.create({});
@@ -232,9 +293,21 @@ module.exports = function(sequelize, DataTypes) {
         }
         return Promise.resolve(node);
       },
+      /*
+       * If a field is set to its prior value, it won't appears in
+       * options.field.
+       */
       afterUpdate: function(node, options) {
-        if (node.master && _.includes(options.fields, 'last_ping')) {
+        /*
+         * If a master node updated its ping or a node is promoted to master,
+         * we must notify the cluster to update its last ping.
+         */
+        if ((_.includes(options.fields, 'last_ping') ||
+             _.includes(options.fields, 'master')) && node.master) {
           return node._notifyCluster({ last_ping: node.last_ping });
+        }
+        if (_.includes(options.fields, 'master') && !node.master) {
+          return node._notifyCluster({ last_ping: null });
         }
         if (_.includes(options.fields, 'last_state')) {
           return node._notifyCluster({ last_state: node.last_state });
@@ -254,16 +327,6 @@ module.exports = function(sequelize, DataTypes) {
         return node._notifyCluster({
           last_state: 'destroyed',
           master: node.master
-        });
-      },
-      afterFind: function(nodes) {
-        if (!nodes) { return Promise.resolve(); }
-
-        if (!_.isArray(nodes)) {
-          nodes = [nodes];
-        }
-        nodes.forEach(node => {
-          node.containers_count = 2;
         });
       }
     },

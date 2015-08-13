@@ -14,7 +14,9 @@ const DEFAULT_STRATEGY = 'spread',
 describe('Cluster Model', () => {
   db.sync();
 
-  concerns.behavesAsAStateMachine('cluster');
+  concerns('cluster').behavesAsAStateMachine();
+
+  concerns('cluster').hasSubdomainable('name');
 
   describe('validations', () => {
     it('succeeds with valid attributes', done => {
@@ -23,18 +25,6 @@ describe('Cluster Model', () => {
 
     it('succeeds to create multiple clusters', done => {
       factory.createMany('cluster', 3, done);
-    });
-
-    it('succeeds with a min size name', () => {
-      let cluster = factory.buildSync('cluster', { name: _.repeat('*', 1) });
-
-      return expect(cluster.save()).to.be.fulfilled;
-    });
-
-    it('succeeds with a max size name', () => {
-      let cluster = factory.buildSync('cluster', { name: _.repeat('*', 64) });
-
-      return expect(cluster.save()).to.be.fulfilled;
     });
 
     VALID_STRATEGIES.forEach(strategy => {
@@ -56,24 +46,6 @@ describe('Cluster Model', () => {
       }).then(() => {
         return factory.buildSync('cluster', { user_id: user2.id }).save();
       })).to.be.fulfilled;
-    });
-
-    it('fails without a name', () => {
-      let cluster = factory.buildSync('cluster', { name: null });
-
-      return expect(cluster.save()).to.be.rejected;
-    });
-
-    it('fails with an empty name', () => {
-      let cluster = factory.buildSync('cluster', { name: '' });
-
-      return expect(cluster.save()).to.be.rejected;
-    });
-
-    it('fails with a too long name', () => {
-      let cluster = factory.buildSync('cluster', { name: _.repeat('*', 65) });
-
-      return expect(cluster.save()).to.be.rejected;
     });
 
     context('when it belongs to the same user', () => {
@@ -171,14 +143,20 @@ describe('Cluster Model', () => {
     });
 
     context('when machine cert creation failed', () => {
+      const ERROR = random.error();
+
       beforeEach(() => {
-        sinon.stub(machine, 'createCerts').returns(Promise.reject());
+        sinon.stub(machine, 'createCerts').returns(Promise.reject(ERROR));
         sinon.stub(machine, 'createToken').returns(Promise.resolve());
       });
 
       afterEach(() => {
         machine.createCerts.restore();
         machine.createToken.restore();
+      });
+
+      it('returns the error', () => {
+        return expect(cluster.save()).to.be.rejectedWith(ERROR);
       });
 
       it("doesn't create the cluster", done => {
@@ -198,12 +176,18 @@ describe('Cluster Model', () => {
     });
 
     context('when machine token creation failed', () => {
+      const ERROR = random.error();
+
       beforeEach(() => {
-        sinon.stub(machine, 'createToken').returns(Promise.reject());
+        sinon.stub(machine, 'createToken').returns(Promise.reject(ERROR));
       });
 
       afterEach(() => {
         machine.createToken.restore();
+      });
+
+      it('returns the error', () => {
+        return expect(cluster.save()).to.be.rejectedWith(ERROR);
       });
 
       it("doesn't create the cluster", done => {
@@ -373,12 +357,18 @@ describe('Cluster Model', () => {
     });
 
     context('when token deletion failed', () => {
+      const ERROR = random.error();
+
       beforeEach(() => {
-        sinon.stub(machine, 'deleteToken').returns(Promise.reject());
+        sinon.stub(machine, 'deleteToken').returns(Promise.reject(ERROR));
       });
 
       afterEach(() => {
         machine.deleteToken.restore();
+      });
+
+      it('returns the error', () => {
+        return expect(cluster.destroy()).to.be.rejectedWith(ERROR);
       });
 
       it("doesn't remove the cluster", done => {
@@ -400,6 +390,9 @@ describe('Cluster Model', () => {
   });
 
   describe('#notify', () => {
+    const BUSY_STATES = ['deploying', 'upgrading', 'updating'];
+
+
     let cluster;
 
     beforeEach(() => {
@@ -407,7 +400,7 @@ describe('Cluster Model', () => {
       return cluster.save();
     });
 
-    ['deploying', 'upgrading'].forEach(state => {
+    BUSY_STATES.forEach(state => {
       context(`with a last state equal to ${state}`, () => {
         let lastPing;
 
@@ -427,7 +420,7 @@ describe('Cluster Model', () => {
     });
 
     context('with a last state equal to running', () => {
-      ['deploying', 'upgrading'].forEach(state => {
+      BUSY_STATES.forEach(state => {
         context(`when cluster has at least one node in state ${state}`, () => {
           beforeEach(() => {
             return addNodeTo(cluster, 'node', { last_state: state })
@@ -460,7 +453,7 @@ describe('Cluster Model', () => {
     });
 
     context('with destroyed', () => {
-      ['deploying', 'upgrading'].forEach(state => {
+      BUSY_STATES.forEach(state => {
         context(`when cluster has at least one node in state ${state}`, () => {
           beforeEach(() => {
             return addNodeTo(cluster, 'node', { last_state: state })

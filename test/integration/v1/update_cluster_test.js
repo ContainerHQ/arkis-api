@@ -56,7 +56,7 @@ describe('PATCH /clusters/:cluster_id', () => {
         expect(user.getClusters({ where: { id: cluster.id } })
         .then(clusters => {
           return _.first(clusters);
-        })).to.eventually.satisfy(has.beenFiltered(cluster, attributes))
+        })).to.eventually.satisfy(has.beenFiltered(cluster, attributes, false))
            .notify(done);
       });
     });

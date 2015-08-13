@@ -14,16 +14,19 @@ describe('PATCH /clusters/:cluster_id/nodes/:node_id', () => {
       cluster = factory.buildSync('cluster', { user_id: user.id });
       return cluster.save();
     }).then(() => {
-      node = factory.buildSync('node', { cluster_id: cluster.id });
+      node = factory.buildSync('runningNode', { cluster_id: cluster.id });
       return node.save();
     });
   });
 
   it('updates the node attributes', done => {
-    let form = { name: 'test-node' };
+    let form  = { name: random.string(), master: true, labels: {
+        storage: 'hdd', test: 2, env: 'trashtest'
+      }},
+      expected = _.merge({ last_state: 'updating' }, form);
 
     api.clusters(user).nodes(cluster).update(node.id).send(form)
-    .expect(200, has.one(cluster, 'node', { with: form }, done));
+    .expect(200, has.one(cluster, 'node', { with: expected }, done));
   });
 
   context('with invalid attributes', () => {
@@ -41,13 +44,33 @@ describe('PATCH /clusters/:cluster_id/nodes/:node_id', () => {
     });
   });
 
+  context('with empty parameters', () => {
+    it("doesn't change the node", done => {
+      let expected = node.dataValues;
+
+      api.clusters(user).nodes(cluster).update(node.id).send({})
+      .expect(200, has.one(cluster, 'node', { with: expected }, done));
+    });
+  });
+
+  context('when node is not running', () => {
+    beforeEach(() => {
+      return node.update({ last_state: 'deploying' });
+    });
+
+    it('returns a conflict error', done => {
+      api.clusters(user).nodes(cluster).update(node.id).send({ master: true })
+      .expect(409, done);
+    });
+  });
+
   context('with blacklisted attributes', () => {
     let form, attributes;
 
     beforeEach(() => {
       form = factory.buildSync('forbiddenNode').dataValues;
       attributes = _.difference(node.attributes,
-        ['name', 'created_at', 'updated_at']
+        ['name', 'master', 'labels', 'last_state']
       );
     });
 
@@ -59,7 +82,7 @@ describe('PATCH /clusters/:cluster_id/nodes/:node_id', () => {
         expect(cluster.getNodes({ where: { id: node.id } })
         .then(nodes => {
           return _.first(nodes);
-        })).to.eventually.satisfy(has.beenFiltered(node, attributes))
+        })).to.eventually.satisfy(has.beenFiltered(node, attributes, false))
            .notify(done);
       });
     });

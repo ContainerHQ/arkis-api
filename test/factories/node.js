@@ -25,6 +25,11 @@ module.exports = function(factory) {
     memory: 128,
     disk: 1.0,
     public_ip: '192.168.212.128',
+    labels: {
+      environment: 'production',
+      storage: 'ssd',
+      tags: ['small']
+    }
   });
 
   factory.define('runningNode', Node, {
@@ -50,10 +55,20 @@ module.exports = function(factory) {
     id: 0,
     cluster_id: 0,
     name: random.string,
+    master: true,
     region: 'test',
     node_size: 'whatever',
     public_ip: '192.168.212.42',
     fqdn: 'forbidden.node.arkis.io',
+    last_state: 'running',
+    last_ping: moment().subtract(3, 'minutes'),
+    cpu: 2,
+    memory: 256,
+    disk: 2.0,
+    labels: {
+      storage: 'floppy',
+      environment: 'staging'
+    },
     docker_version: '1.6.0',
     swarm_version: '0.3.0'
   });
