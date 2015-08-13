@@ -4,8 +4,9 @@ let _ = require('lodash'),
   moment = require('moment'),
   errors = require('../routes/shared/errors'),
   machine = require('../../config/machine'),
-  token = require('../../config/token'),
   config = require('../../config'),
+  services = require('../services'),
+  token = services.token,
   is = require('./validators'),
   mixins = require('./concerns');
 

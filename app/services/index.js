@@ -2,5 +2,6 @@
 
 module.exports = {
   cert: require('./cert'),
-  discovery: require('./discovery')
+  discovery: require('./discovery'),
+  token: require('./token')
 };
