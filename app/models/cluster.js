@@ -3,10 +3,10 @@
 let _ = require('lodash'),
   errors = require('../routes/shared/errors'),
   mixins = require('./concerns'),
-  machine = require('../../config/machine'),
   config = require('../../config'),
   services = require('../services'),
   discovery = services.discovery,
+  cert = services.cert,
   is = require('./validators');
 
 module.exports = function(sequelize, DataTypes) {
@@ -113,7 +113,7 @@ module.exports = function(sequelize, DataTypes) {
         });
       },
       _initializeCert: function() {
-        return machine.createCerts().then(certs => {
+        return cert.generate().then(certs => {
           this.cert = {};
 
           _.keys(certs).forEach(type => {

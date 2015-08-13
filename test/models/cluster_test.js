@@ -3,7 +3,6 @@
 let _ = require('lodash'),
   moment = require('moment'),
   errors = require('../../app/routes/shared/errors'),
-  machine = require('../support/fakes/machine'),
   models = require('../../app/models'),
   services = require('../../app/services'),
   concerns = require('./concerns'),
@@ -90,7 +89,14 @@ describe('Cluster Model', () => {
 
   describe('#create', () => {
     const FAKE_TOKEN = random.string(),
-          FAKE_CERTS = machine.createFakeCerts();
+          FAKE_CERTS = {
+            client: {
+              cert: random.string(), key: random.string(), ca: random.string()
+            },
+            server: {
+              cert: random.string(), key: random.string(), ca: random.string()
+            }
+          };
 
     let cluster;
 
@@ -103,13 +109,15 @@ describe('Cluster Model', () => {
         sinon.stub(services.discovery, 'createToken').returns(
           Promise.resolve(FAKE_TOKEN)
         );
-        sinon.stub(machine, 'createCerts').returns(Promise.resolve(FAKE_CERTS));
+        sinon.stub(services.cert, 'generate').returns(
+          Promise.resolve(FAKE_CERTS)
+        );
         return cluster.save();
       });
 
       afterEach(() => {
         services.discovery.createToken.restore();
-        machine.createCerts.restore();
+        services.cert.generate.restore();
       });
 
       it('initializes its token', () => {
@@ -149,14 +157,14 @@ describe('Cluster Model', () => {
       const ERROR = random.error();
 
       beforeEach(() => {
-        sinon.stub(machine, 'createCerts').returns(Promise.reject(ERROR));
+        sinon.stub(services.cert, 'generate').returns(Promise.reject(ERROR));
         sinon.stub(services.discovery, 'createToken').returns(
           Promise.resolve()
         );
       });
 
       afterEach(() => {
-        machine.createCerts.restore();
+        services.cert.generate.restore();
         services.discovery.createToken.restore();
       });
 
