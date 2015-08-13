@@ -10,4 +10,4 @@ machine.destroy = function() {
   return Promise.resolve();
 };
 
-module.exports = machine;
+module.exports = require('../../test/support/fakes/machine');
