@@ -1,6 +1,6 @@
 'use strict';
 
-let random = require('./random'),
+let random = require('../random'),
   machine = {};
 
 /*
@@ -20,7 +20,7 @@ machine.createCerts = function() {
 };
 
 machine.createFakeToken = function() {
-  return random.string() + random.string();
+  return ;
 };
 
 machine.createFakeCerts = function() {

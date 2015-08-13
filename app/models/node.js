@@ -324,10 +324,9 @@ module.exports = function(sequelize, DataTypes) {
         });
       },
       afterDestroy: function(node) {
-        return node._notifyCluster({
-          last_state: 'destroyed',
-          master: node.master
-        });
+        return node._notifyCluster(
+          { last_state: 'destroyed', master: node.master }
+        );
       }
     },
     classMethods: {

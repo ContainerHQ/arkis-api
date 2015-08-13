@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = require('../test/support/machine');
+module.exports = require('../test/support/fakes/machine');
