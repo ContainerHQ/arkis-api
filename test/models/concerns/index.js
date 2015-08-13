@@ -1,3 +1,8 @@
 'use strict';
 
-module.exports = { behavesAsAStateMachine: require('./state') };
+module.exports = function(factoryName) {
+  return {
+    behavesAsAStateMachine: require('./state')(factoryName),
+    hasSubdomainable: require('./subdomainable')(factoryName)
+  };
+};

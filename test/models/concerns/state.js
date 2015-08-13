@@ -3,102 +3,104 @@
 let _ = require('lodash'),
   moment = require('moment');
 
-module.exports = function(factoryName, opts={}) {
-  let defaultState = opts.default || 'empty',
-    validStates = ['empty', 'deploying', 'upgrading', 'updating', 'running'];
+module.exports = function(factoryName) {
+  return function(opts={}) {
+    let defaultState = opts.default || 'empty',
+      validStates = ['empty', 'deploying', 'upgrading', 'updating', 'running'];
 
-  if (defaultState !== 'empty') {
-    validStates = _.remove(validStates, 'empty');
-  }
+    if (defaultState !== 'empty') {
+      validStates = _.remove(validStates, 'empty');
+    }
 
-  describe('behaves as a state machine:', () => {
-    it('fails with an empty last state', () => {
-      let model = factory.buildSync(factoryName, { last_state: null });
+    describe('behaves as a state machine:', () => {
+      it('fails with an empty last state', () => {
+        let model = factory.buildSync(factoryName, { last_state: null });
 
-      return expect(model.save()).to.be.rejected;
-    });
-
-    it('fails with an invalid last state', () => {
-      let model = factory.buildSync(factoryName, { last_state: 'whatever' });
-
-      return expect(model.save()).to.be.rejected;
-    });
-
-    validStates.forEach(state => {
-      it(`succeeds with a last state equal to ${state}`, () => {
-        let model = factory.buildSync(factoryName, { last_state: state });
-
-        return expect(model.save()).to.be.fulfilled;
+        return expect(model.save()).to.be.rejected;
       });
 
-      context(`when last state is equal to ${state}`, () => {
-        context('when last ping is recent', () => {
-          let model;
+      it('fails with an invalid last state', () => {
+        let model = factory.buildSync(factoryName, { last_state: 'whatever' });
 
-          beforeEach(() => {
-            model = factory.buildSync(factoryName, {
-              last_state: state,
-              last_ping: moment()
-            });
-            return model.save();
-          });
+        return expect(model.save()).to.be.rejected;
+      });
 
-          it(`has a state equals to ${state}`, () => {
-            expect(model.state).to.equal(state);
-          });
+      validStates.forEach(state => {
+        it(`succeeds with a last state equal to ${state}`, () => {
+          let model = factory.buildSync(factoryName, { last_state: state });
+
+          return expect(model.save()).to.be.fulfilled;
         });
 
-        context('when last ping is null' ,() => {
-          let model;
+        context(`when last state is equal to ${state}`, () => {
+          context('when last ping is recent', () => {
+            let model;
 
-           beforeEach(() => {
-            model = factory.buildSync(factoryName, {
-              last_state: state,
-              last_ping: null
+            beforeEach(() => {
+              model = factory.buildSync(factoryName, {
+                last_state: state,
+                last_ping: moment()
+              });
+              return model.save();
             });
-            return model.save();
-          });
 
-          if (state === 'running') {
-            it('is unreachable', () => {
-              expect(model.state).to.equal('unreachable');
-            });
-          } else {
             it(`has a state equals to ${state}`, () => {
               expect(model.state).to.equal(state);
             });
-          }
-        });
-
-        context('when last ping has expired', () => {
-          let model;
-
-           beforeEach(() => {
-            model = factory.buildSync(factoryName, {
-              last_state: state,
-              last_ping: moment().subtract(6, 'minutes')
-            });
-            return model.save();
           });
 
-          if (state === 'running') {
-            it('is unreachable', () => {
-              expect(model.state).to.equal('unreachable');
+          context('when last ping is null' ,() => {
+            let model;
+
+             beforeEach(() => {
+              model = factory.buildSync(factoryName, {
+                last_state: state,
+                last_ping: null
+              });
+              return model.save();
             });
-          } else {
-            it(`has a state equals to ${state}`, () => {
-              expect(model.state).to.equal(state);
+
+            if (state === 'running') {
+              it('is unreachable', () => {
+                expect(model.state).to.equal('unreachable');
+              });
+            } else {
+              it(`has a state equals to ${state}`, () => {
+                expect(model.state).to.equal(state);
+              });
+            }
+          });
+
+          context('when last ping has expired', () => {
+            let model;
+
+             beforeEach(() => {
+              model = factory.buildSync(factoryName, {
+                last_state: state,
+                last_ping: moment().subtract(6, 'minutes')
+              });
+              return model.save();
             });
-          }
+
+            if (state === 'running') {
+              it('is unreachable', () => {
+                expect(model.state).to.equal('unreachable');
+              });
+            } else {
+              it(`has a state equals to ${state}`, () => {
+                expect(model.state).to.equal(state);
+              });
+            }
+          });
         });
       });
-    });
 
-    it(`is by default in ${defaultState} state`, () => {
-      let model = factory.buildSync(factoryName);
+      it(`is by default in ${defaultState} state`, () => {
+        let model = factory.buildSync(factoryName);
 
-      return expect(model.save())
-        .to.eventually.have.property('state', defaultState);
+        return expect(model.save())
+          .to.eventually.have.property('state', defaultState);
+      });
     });
-  });
-}
+  };
+};

@@ -14,7 +14,9 @@ const DEFAULT_STRATEGY = 'spread',
 describe('Cluster Model', () => {
   db.sync();
 
-  concerns.behavesAsAStateMachine('cluster');
+  concerns('cluster').behavesAsAStateMachine();
+
+  concerns('cluster').hasSubdomainable('name');
 
   describe('validations', () => {
     it('succeeds with valid attributes', done => {
@@ -23,18 +25,6 @@ describe('Cluster Model', () => {
 
     it('succeeds to create multiple clusters', done => {
       factory.createMany('cluster', 3, done);
-    });
-
-    it('succeeds with a min size name', () => {
-      let cluster = factory.buildSync('cluster', { name: _.repeat('a', 1) });
-
-      return expect(cluster.save()).to.be.fulfilled;
-    });
-
-    it('succeeds with a max size name', () => {
-      let cluster = factory.buildSync('cluster', { name: _.repeat('b', 64) });
-
-      return expect(cluster.save()).to.be.fulfilled;
     });
 
     VALID_STRATEGIES.forEach(strategy => {
@@ -56,50 +46,6 @@ describe('Cluster Model', () => {
       }).then(() => {
         return factory.buildSync('cluster', { user_id: user2.id }).save();
       })).to.be.fulfilled;
-    });
-
-    it('succeeds with a name including a hyphen', () => {
-      let cluster = factory.buildSync('cluster', { name: 'test-prod' });
-
-      return expect(cluster.save()).to.be.fulfilled;
-    });
-
-    it('fails without a name', () => {
-      let cluster = factory.buildSync('cluster', { name: null });
-
-      return expect(cluster.save()).to.be.rejected;
-    });
-
-    it('fails with an empty name', () => {
-      let cluster = factory.buildSync('cluster', { name: '' });
-
-      return expect(cluster.save()).to.be.rejected;
-    });
-
-    it('fails with a too long name', () => {
-      let cluster = factory.buildSync('cluster', { name: _.repeat('*', 65) });
-
-      return expect(cluster.save()).to.be.rejected;
-    });
-
-    ['/', '\\', '"', "'", '*'].forEach(value => {
-      it(`failed with a name including a ${value}`, () => {
-        let cluster = factory.buildSync('cluster', { name: `te${value}st` });
-
-        return expect(cluster.save()).to.be.rejected;
-      });
-    });
-
-    it('fails with a name starting with a hyphen', () => {
-      let cluster = factory.buildSync('cluster', { name: '-test' });
-
-      return expect(cluster.save()).to.be.rejected;
-    });
-
-    it('fails with a name ending with a hyphen', () => {
-      let cluster = factory.buildSync('cluster', { name: 'test-' });
-
-      return expect(cluster.save()).to.be.rejected;
     });
 
     context('when it belongs to the same user', () => {
