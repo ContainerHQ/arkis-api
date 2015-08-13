@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 let _ = require('lodash');
 
@@ -15,7 +15,7 @@ module.exports = function(certs) {
 
         if (model[attribute] !== certs[type][name]) {
           throw new Error(`${attribute} certificate is not matching.`);
-        };
+        }
       });
     });
     return true;

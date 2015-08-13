@@ -11,9 +11,10 @@ module.exports = function (entity, filterName, filterValue, done) {
     if (_.isEmpty(models)) {
       return done(new Error(`response ${entity} is empty!`));
     }
-    expect(_.all(models, model => {
+    let allFiltered = _.all(models, model => {
       return _.isEqual(model[filterName], filterValue);
-    })).to.be.true;
+    });
+    expect(allFiltered).to.deep.equal(true);
     done();
   };
 };
