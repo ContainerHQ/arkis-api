@@ -260,6 +260,7 @@ module.exports = function(sequelize, DataTypes) {
           return {
             master: this.master,
             name:   this.name,
+            labels: this.labels,
             cert: {
               ca:   cluster.cert.server_ca,
               cert: cluster.cert.server_cert,
