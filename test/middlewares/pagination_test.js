@@ -98,7 +98,7 @@ describe('Pagination Middleware', () => {
 
         send(result);
 
-        expect(res.json).to.have.been.calledWith(expected);
+        expect(res.json).to.have.been.calledWithMatch(expected);
       });
     });
   });
