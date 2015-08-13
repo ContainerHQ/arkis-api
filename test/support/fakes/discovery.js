@@ -1,6 +1,7 @@
 'use strict';
 
-let discovery = {};
+let random = require('../random'),
+  discovery = {};
 
 discovery.createToken = function() {
   return Promise.resolve(random.string() + random.string());

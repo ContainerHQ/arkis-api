@@ -1,6 +1,7 @@
 'use strict';
 
-let cert = {};
+let random = require('../random'),
+  cert = {};
 
 cert.generate = function() {
   return Promise.resolve({
