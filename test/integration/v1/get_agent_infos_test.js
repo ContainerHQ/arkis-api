@@ -24,11 +24,15 @@ describe('GET /agent/:token/infos', () => {
         }).catch(done);
       });
     });
-  });
 
-  context("when the node doesn't exist", () => {
-    it('returns a 404 not found', done => {
-      api.agent().infos().expect(404, {}, done);
+    context('when the node no longer exists', () => {
+      beforeEach(() => {
+        return node.destroy();
+      });
+
+      it('returns a 404 not found', done => {
+        api.agent(node.token).infos().expect(404, {}, done);
+      });
     });
   });
 });

@@ -25,12 +25,16 @@ describe('POST /agent/:token/live', () => {
         }).catch(done);
       });
     });
-  });
 
-  context("when the node doesn't exist", () => {
-    it('returns a not found error', done => {
-      api.agent().live()
-      .expect(404, {}, done);
+    context('when the node no longer exists', () => {
+      beforeEach(() => {
+        return node.destroy();
+      });
+
+      it('returns a not found error', done => {
+        api.agent(node).live()
+        .expect(404, {}, done);
+      })
     });
   });
 });

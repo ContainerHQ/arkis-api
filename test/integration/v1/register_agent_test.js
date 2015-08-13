@@ -80,11 +80,14 @@ describe('POST /agent/:token/register', () => {
       });
     });
 
-  });
+    context('when the node no longer exists', () => {
+      beforeEach(() => {
+        return node.destroy();
+      });
 
-  context("when the node doesn't exist", () => {
-    it('returns a 404 not found', done => {
-      api.agent().register().expect(404, {}, done);
+      it('returns a 404 not found', done => {
+        api.agent().register().expect(404, {}, done);
+      });
     });
   });
 });

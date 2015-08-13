@@ -29,7 +29,7 @@ module.exports = {
         type: DataTypes.INTEGER,
         allowNull: true,
         defaultValue: null,
-        unique: 'provider'
+        unique: true
       },
       token: {
         type: DataTypes.TEXT,
