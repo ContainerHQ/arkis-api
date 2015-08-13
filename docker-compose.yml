@@ -9,7 +9,6 @@ api:
     - 'dbtest'
   volumes:
     - '$DOCKER_CERT_PATH:/home/.docker'
-    - '/run/docker.sock:/var/run/docker.sock'
     - '.:/arkis-api'
   environment:
     - DOCKER_CERT_PATH=/home/.docker
