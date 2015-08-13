@@ -181,7 +181,7 @@ describe('Node Model', () => {
       });
     });
 
-    it('has a fqdn', () => {
+    it('has a fqdn with its name and cluster_id', () => {
       let shortId = cluster.id.slice(0, 8),
         expected  = `${node.name}-${shortId}.${config.nodeDomain}`;
 
@@ -301,7 +301,7 @@ describe('Node Model', () => {
 
       context('when fqdn registration succeeded', () => {
         beforeEach(() => {
-          sinon.stub(services.fqdn, 'register', services.fqdn.registerFQDN);
+          sinon.stub(services.fqdn, 'register').returns(Promise.resolve());
         });
 
         it('registers this ip for the fqdn', () => {
@@ -335,7 +335,30 @@ describe('Node Model', () => {
       });
     });
 
-    context('when not updating public_ip', () => {
+    context('when updating name', () => {
+      let node;
+
+      beforeEach(() => {
+        node = factory.buildSync('node');
+        return node.save().then(() => {
+          sinon.stub(services.fqdn, 'register', services.fqdn.register);
+        });
+      });
+
+      afterEach(() => {
+        services.fqdn.register.restore();
+      });
+
+      it('registers this ip with the new fqdn', () => {
+        return node.update({ name: 'new-name-prod' }).then(() => {
+          return expect(services.fqdn.register)
+            .to.have.been
+            .calledWithMatch(_.pick(node, ['fqdn', 'public_ip']));
+        });
+      });
+    });
+
+    context('when not updating public_ip or name', () => {
       let node;
 
       beforeEach(() => {
@@ -352,7 +375,7 @@ describe('Node Model', () => {
       });
 
       it("doesn't registers the public_ip for the fqdn", () => {
-        return node.update({ name: 'test' }).then(() => {
+        return node.update({ cpu: 23 }).then(() => {
           return expect(services.fqdn.register).not.to.have.been.called;
         });
       })

@@ -288,7 +288,10 @@ module.exports = function(sequelize, DataTypes) {
         return node._notifyCluster({ last_state: node.last_state });
       },
       beforeUpdate: function(node, options) {
-        if (_.includes(options.fields, 'public_ip')) {
+        if (
+          _.includes(options.fields, 'name') ||
+          _.includes(options.fields, 'public_ip')
+        ) {
           return fqdn.register(node);
         }
         return Promise.resolve(node);
