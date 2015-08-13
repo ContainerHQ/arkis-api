@@ -6,14 +6,6 @@
   ],
   "node": true,
   "mocha": true,
-  "globals": {
-    "expect": true,
-    "factory": true,
-    "has": true,
-    "api": true,
-    "db": true,
-    "_": true
-  },
   "boss": true,
   "curly": true,
   "debug": false,

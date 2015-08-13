@@ -1,3 +1,5 @@
+/* globals expect: true */
+
 'use strict';
 
 let _ = require('lodash'),
