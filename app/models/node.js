@@ -3,9 +3,12 @@
 let _ = require('lodash'),
   moment = require('moment'),
   errors = require('../routes/shared/errors'),
-  machine = require('../../config/machine'),
-  token = require('../../config/token'),
   config = require('../../config'),
+  services = require('../services'),
+  machine = services.machine,
+  daemon = services.daemon,
+  fqdn = services.fqdn,
+  token = services.token,
   is = require('./validators'),
   mixins = require('./concerns');
 
@@ -165,7 +168,7 @@ module.exports = function(sequelize, DataTypes) {
       agent_cmd: function() {
         if (!this.get('byon')) { return null; }
 
-        return machine.agentCmd(this.get('token'));
+        return `${config.agentCmd} ${this.get('token')}`;
       },
       fqdn: function() {
         let clusterId = this.get('cluster_id');
@@ -178,9 +181,6 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     instanceMethods: {
-      _generateToken: function() {
-        this.token = token.generate(this.id);
-      },
       _hasVersions: function(versions) {
         return versions.docker === this.docker_version &&
                versions.swarm  === this.swarm_version;
@@ -215,7 +215,7 @@ module.exports = function(sequelize, DataTypes) {
         _.merge(this, { last_state: 'updating' }, changes);
 
         return this.validate().then(() => {
-          return machine.update(changes);
+          return daemon.update(changes);
         }).then(() => {
           return this.save();
         });
@@ -242,7 +242,7 @@ module.exports = function(sequelize, DataTypes) {
         if (this._hasVersions(versions)) {
           return Promise.reject(new errors.AlreadyUpgradedError());
         }
-        return machine.upgrade(versions).then(() => {
+        return daemon.upgrade(versions).then(() => {
           return this.update({ last_state: 'upgrading' });
         });
       },
@@ -277,7 +277,7 @@ module.exports = function(sequelize, DataTypes) {
     },
     hooks: {
       beforeCreate: function(node) {
-        node._generateToken();
+        node.token = token.generate(node.id);
 
         if (!node.byon) {
           return machine.create({});
@@ -288,8 +288,11 @@ module.exports = function(sequelize, DataTypes) {
         return node._notifyCluster({ last_state: node.last_state });
       },
       beforeUpdate: function(node, options) {
-        if (_.includes(options.fields, 'public_ip')) {
-          return machine.registerFQDN(node);
+        if (
+          _.includes(options.fields, 'name') ||
+          _.includes(options.fields, 'public_ip')
+        ) {
+          return fqdn.register(node);
         }
         return Promise.resolve(node);
       },
@@ -320,14 +323,13 @@ module.exports = function(sequelize, DataTypes) {
         if (!node.byon) { promise = machine.destroy({}); }
 
         return promise.then(() => {
-          return machine.deleteFQDN(node.fqdn);
+          return fqdn.unregister(node.fqdn);
         });
       },
       afterDestroy: function(node) {
-        return node._notifyCluster({
-          last_state: 'destroyed',
-          master: node.master
-        });
+        return node._notifyCluster(
+          { last_state: 'destroyed', master: node.master }
+        );
       }
     },
     classMethods: {

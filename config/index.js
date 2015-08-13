@@ -15,7 +15,8 @@ let config = {
       clientSecret: process.env.GITHUB_SECRET_KEY || '*'
     }
   },
-  nodeDomain: 'node.arkis.io'
+  nodeDomain: 'node.arkis.io',
+  agentCmd:   'curl -Ls https://get.arkis.io/ | sudo -H sh -s'
 };
 
 config.db = require('./database')[config.env];

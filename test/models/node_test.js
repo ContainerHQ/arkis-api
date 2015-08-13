@@ -3,9 +3,9 @@
 let _ = require('lodash'),
   moment = require('moment'),
   errors = require('../../app/routes/shared/errors'),
-  machine = require('../support/machine'),
   concerns = require('./concerns'),
   config = require('../../config'),
+  services = require('../../app/services'),
   Node = require('../../app/models').Node;
 
 describe('Node Model', () => {
@@ -181,7 +181,7 @@ describe('Node Model', () => {
       });
     });
 
-    it('has a fqdn', () => {
+    it('has a fqdn with its name and cluster_id', () => {
       let shortId = cluster.id.slice(0, 8),
         expected  = `${node.name}-${shortId}.${config.nodeDomain}`;
 
@@ -216,16 +216,16 @@ describe('Node Model', () => {
 
     context('when machine creation succeeded', () => {
       beforeEach(() => {
-        sinon.stub(machine, 'create', machine.create);
+        sinon.stub(services.machine, 'create', services.machine.create);
       });
 
       afterEach(() => {
-        machine.create.restore();
+        services.machine.create.restore();
       });
 
       it('creates a machine behind', () => {
         return node.save().then(() => {
-          return expect(machine.create).to.have.been.calledWith({});
+          return expect(services.machine.create).to.have.been.calledWith({});
         });
       });
 
@@ -241,11 +241,11 @@ describe('Node Model', () => {
       const ERROR = random.error();
 
       beforeEach(() => {
-        sinon.stub(machine, 'create').returns(Promise.reject(ERROR));
+        sinon.stub(services.machine, 'create').returns(Promise.reject(ERROR));
       });
 
       afterEach(() => {
-        machine.create.restore();
+        services.machine.create.restore();
       });
 
       it('returns the error', () => {
@@ -262,36 +262,26 @@ describe('Node Model', () => {
     });
 
     context('when byon node', () => {
-      const AGENT_CMD = random.string();
-
       beforeEach(() => {
         _.merge(node, { byon: true, region: null, node_size: null });
-        sinon.stub(machine, 'agentCmd').returns(AGENT_CMD);
-        sinon.stub(machine, 'create', machine.create);
+        sinon.stub(services.machine, 'create', services.machine.create);
       });
 
       afterEach(() => {
-        machine.agentCmd.restore();
-        machine.create.restore();
+        services.machine.create.restore();
       });
 
       it("doesn't create a machine behind", () => {
         return node.save().then(() => {
-          return expect(machine.create).not.to.have.been.called;
-        });
-      });
-
-      it('uses machine to get the command to install the agent', () => {
-        return node.save().then(() => {
-          return node.toJSON();
-        }).then(() => {
-          return expect(machine.agentCmd).to.have.been.calledWith(node.token);
+          return expect(services.machine.create).not.to.have.been.called;
         });
       });
 
       it('has a command to get the agent', () => {
-        return expect(node.save())
-          .to.eventually.have.property('agent_cmd', AGENT_CMD);
+        return expect(node.save().then(node => {
+          return expect(node.agent_cmd)
+            .to.equal(`${config.agentCmd} ${node.token}`);
+        }));
       });
     });
   });
@@ -306,29 +296,29 @@ describe('Node Model', () => {
       });
 
       afterEach(() => {
-        machine.registerFQDN.restore();
+        services.fqdn.register.restore();
       });
 
-      context('when machine fqdn registration succeeded', () => {
+      context('when fqdn registration succeeded', () => {
         beforeEach(() => {
-          sinon.stub(machine, 'registerFQDN', machine.registerFQDN);
+          sinon.stub(services.fqdn, 'register').returns(Promise.resolve());
         });
 
         it('registers this ip for the fqdn', () => {
           return node.update({ public_ip: '192.168.1.90' }).then(() => {
-            return expect(machine.registerFQDN)
+            return expect(services.fqdn.register)
               .to.have.been
               .calledWithMatch(_.pick(node, ['fqdn', 'public_ip']));
           });
         });
       });
 
-      context('when machine fqdn registration failed', () => {
+      context('when fqdn registration failed', () => {
         const ERROR = random.error(),
               OPTS  = { public_ip: '192.168.1.90' };
 
         beforeEach(() => {
-          sinon.stub(machine, 'registerFQDN').returns(Promise.reject(ERROR));
+          sinon.stub(services.fqdn, 'register').returns(Promise.reject(ERROR));
         });
 
         it('returns the error', () => {
@@ -345,7 +335,30 @@ describe('Node Model', () => {
       });
     });
 
-    context('when not updating public_ip', () => {
+    context('when updating name', () => {
+      let node;
+
+      beforeEach(() => {
+        node = factory.buildSync('node');
+        return node.save().then(() => {
+          sinon.stub(services.fqdn, 'register', services.fqdn.register);
+        });
+      });
+
+      afterEach(() => {
+        services.fqdn.register.restore();
+      });
+
+      it('registers this ip with the new fqdn', () => {
+        return node.update({ name: 'new-name-prod' }).then(() => {
+          return expect(services.fqdn.register)
+            .to.have.been
+            .calledWithMatch(_.pick(node, ['fqdn', 'public_ip']));
+        });
+      });
+    });
+
+    context('when not updating public_ip or name', () => {
       let node;
 
       beforeEach(() => {
@@ -354,16 +367,16 @@ describe('Node Model', () => {
       });
 
       beforeEach(() => {
-        sinon.stub(machine, 'registerFQDN', machine.registerFQDN);
+        sinon.stub(services.fqdn, 'register', services.fqdn.register);
       });
 
       afterEach(() => {
-        machine.registerFQDN.restore();
+        services.fqdn.register.restore();
       });
 
       it("doesn't registers the public_ip for the fqdn", () => {
-        return node.update({ name: 'test' }).then(() => {
-          return expect(machine.registerFQDN).not.to.have.been.called;
+        return node.update({ cpu: 23 }).then(() => {
+          return expect(services.fqdn.register).not.to.have.been.called;
         });
       })
     });
@@ -527,14 +540,14 @@ describe('Node Model', () => {
 
       context('when machine destruction and fqdn deletion succeeds', () => {
         beforeEach(() => {
-          sinon.stub(machine, 'destroy', machine.destroy);
-          sinon.stub(machine, 'deleteFQDN', machine.deleteFQDN);
+          sinon.stub(services.machine, 'destroy', services.machine.destroy);
+          sinon.stub(services.fqdn, 'unregister', services.fqdn.unregister);
           return node.destroy();
         });
 
         afterEach(() => {
-          machine.destroy.restore();
-          machine.deleteFQDN.restore();
+          services.machine.destroy.restore();
+          services.fqdn.unregister.restore();
         });
 
         it('reports back the deletion to its cluster', () => {
@@ -543,11 +556,11 @@ describe('Node Model', () => {
         });
 
         it('removes the machine behind', () => {
-          expect(machine.destroy).to.have.been.calledWith({});
+          expect(services.machine.destroy).to.have.been.calledWith({});
         });
 
         it('removes the fqdn', () => {
-          expect(machine.deleteFQDN).to.have.been.calledWith(node.fqdn);
+          expect(services.fqdn.unregister).to.have.been.calledWith(node.fqdn);
         });
       });
 
@@ -555,13 +568,13 @@ describe('Node Model', () => {
         const ERROR = random.error();
 
         beforeEach(() => {
-          sinon.stub(machine, 'destroy').returns(Promise.reject(ERROR));
-          sinon.stub(machine, 'deleteFQDN', machine.deleteFQDN);
+          sinon.stub(services.machine, 'destroy').returns(Promise.reject(ERROR));
+          sinon.stub(services.fqdn, 'unregister', services.fqdn.unregister);
         });
 
         afterEach(() => {
-          machine.destroy.restore();
-          machine.deleteFQDN.restore();
+          services.machine.destroy.restore();
+          services.fqdn.unregister.restore();
         });
 
         it('returns the error', () => {
@@ -570,7 +583,7 @@ describe('Node Model', () => {
 
         it("doesn't delete the fqdn", done => {
           node.destroy().then(done).catch(err => {
-            expect(machine.deleteFQDN).to.not.have.been.called;
+            expect(services.fqdn.unregister).to.not.have.been.called;
             done();
           });
         });
@@ -588,11 +601,11 @@ describe('Node Model', () => {
         const ERROR = random.error();
 
         beforeEach(() => {
-          sinon.stub(machine, 'deleteFQDN').returns(Promise.reject(ERROR));
+          sinon.stub(services.fqdn, 'unregister').returns(Promise.reject(ERROR));
         });
 
         afterEach(() => {
-          machine.deleteFQDN.restore();
+          services.fqdn.unregister.restore();
         });
 
         it('returns the error', () => {
@@ -628,7 +641,7 @@ describe('Node Model', () => {
       beforeEach(() => {
         _.merge(node, { byon: true, region: null, node_size: null });
 
-        sinon.stub(machine, 'destroy', machine.destroy);
+        sinon.stub(services.machine, 'destroy', services.machine.destroy);
 
         return node.save().then(() => {
           node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
@@ -637,7 +650,7 @@ describe('Node Model', () => {
       });
 
       afterEach(() => {
-        machine.destroy.restore();
+        services.machine.destroy.restore();
       });
 
       it('reports back the deletion to its cluster', () => {
@@ -646,7 +659,7 @@ describe('Node Model', () => {
       });
 
       it("doesn't attempt to remove the machine behind", () => {
-        expect(machine.destroy).to.not.have.been.called;
+        expect(services.machine.destroy).to.not.have.been.called;
       });
     });
   });
@@ -657,12 +670,12 @@ describe('Node Model', () => {
     context('when node is not in running state', () => {
       beforeEach(() => {
         node = factory.buildSync('node');
-        sinon.stub(machine, 'update', machine.update);
+        sinon.stub(services.daemon, 'update', services.daemon.update);
         return node.save();
       });
 
       afterEach(() => {
-        machine.update.restore();
+        services.daemon.update.restore();
       });
 
       it("doesn't update the node", done => {
@@ -675,9 +688,9 @@ describe('Node Model', () => {
         });
       });
 
-      it("doesn't update the machine behind", done => {
+      it("doesn't update the daemon behind", done => {
         node.change(attributes).then(done).catch(() => {
-          expect(machine.update).to.not.have.been.called;
+          expect(services.daemon.update).to.not.have.been.called;
           done();
         });
       });
@@ -699,11 +712,11 @@ describe('Node Model', () => {
 
       context('when there is no changes', () => {
         beforeEach(() => {
-          sinon.stub(machine, 'update', machine.update);
+          sinon.stub(services.daemon, 'update', services.daemon.update);
         });
 
         afterEach(() => {
-          machine.update.restore();
+          services.daemon.update.restore();
         });
 
         it("doesn't update the node", () => {
@@ -713,9 +726,9 @@ describe('Node Model', () => {
             .to.eventually.have.property('dataValues', expected);
         });
 
-        it("doesn't update the machine behind", () => {
+        it("doesn't update the daemon behind", () => {
           return node.change({}).then(() => {
-            return expect(machine.update).to.not.have.been.called;
+            return expect(services.daemon.update).to.not.have.been.called;
           });
         });
       });
@@ -725,12 +738,12 @@ describe('Node Model', () => {
 
         beforeEach(() => {
           node = factory.buildSync('node');
-          sinon.stub(machine, 'update', machine.update);
+          sinon.stub(services.daemon, 'update', services.daemon.update);
           return node.save();
         });
 
         afterEach(() => {
-          machine.update.restore();
+          services.daemon.update.restore();
         });
 
         it("doesn't update the node", done => {
@@ -743,22 +756,22 @@ describe('Node Model', () => {
           });
         });
 
-        it("doesn't update the machine behind", done => {
+        it("doesn't update the daemon behind", done => {
           node.change(badAttributes).then(done).catch(() => {
-            expect(machine.update).to.not.have.been.called;
+            expect(services.daemon.update).to.not.have.been.called;
             done();
           });
         });
       });
 
-      context('when machine update succeeds', () => {
+      context('when daemon update succeeds', () => {
         beforeEach(() => {
-          sinon.stub(machine, 'update').returns(Promise.resolve());
+          sinon.stub(services.daemon, 'update').returns(Promise.resolve());
           return node.change(attributes);
         });
 
         afterEach(() => {
-          machine.update.restore();
+          services.daemon.update.restore();
         });
 
         it('updates the attributes', () => {
@@ -769,20 +782,20 @@ describe('Node Model', () => {
           expect(node.state).to.equal('updating');
         });
 
-        it('updates the machine behind', () => {
-          expect(machine.update).to.have.been.calledWith(attributes);
+        it('updates the daemon behind', () => {
+          expect(services.daemon.update).to.have.been.calledWith(attributes);
         });
       });
 
-      context('when machine update failed', () => {
+      context('when daemon update failed', () => {
         const ERROR = random.error();
 
         beforeEach(() => {
-          sinon.stub(machine, 'update').returns(Promise.reject(ERROR));
+          sinon.stub(services.daemon, 'update').returns(Promise.reject(ERROR));
         });
 
         afterEach(() => {
-          machine.update.restore();
+          services.daemon.update.restore();
         });
 
         it('returns the error', () => {
@@ -853,11 +866,11 @@ describe('Node Model', () => {
     let node;
 
     beforeEach(() => {
-      sinon.stub(machine, 'upgrade', machine.upgrade);
+      sinon.stub(services.daemon, 'upgrade', services.daemon.upgrade);
     });
 
     afterEach(() => {
-      machine.upgrade.restore();
+      services.daemon.upgrade.restore();
     });
 
     context('when node is running', () => {
@@ -875,8 +888,9 @@ describe('Node Model', () => {
         expect(node.state).to.equal('upgrading');
       });
 
-      it('upgrades the machine behind', () => {
-        expect(machine.upgrade).to.have.been.calledWith(config.latestVersions);
+      it('upgrades the daemon behind', () => {
+        expect(services.daemon.upgrade)
+          .to.have.been.calledWith(config.latestVersions);
       });
     });
 
@@ -907,11 +921,11 @@ describe('Node Model', () => {
         });
       });
 
-      it("doesn't update the machine behind", () => {
+      it("doesn't update the daemon behind", () => {
         return node.upgrade().then(() => {
           throw new Error('Upgrade should be rejected!');
         }).catch(() => {
-          expect(machine.upgrade).to.not.have.been.called;
+          expect(services.daemon.upgrade).to.not.have.been.called;
         });
       });
     });
@@ -936,7 +950,7 @@ describe('Node Model', () => {
         });
       });
 
-      it("doesn't update the machine behind", () => {
+      it("doesn't update the daemon behind", () => {
         return node.upgrade(versions).then(() => {
           throw new Error('Upgrade should be rejected!');
         }).catch(err => {

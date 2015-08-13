@@ -3,8 +3,10 @@
 let _ = require('lodash'),
   errors = require('../routes/shared/errors'),
   mixins = require('./concerns'),
-  machine = require('../../config/machine'),
   config = require('../../config'),
+  services = require('../services'),
+  discovery = services.discovery,
+  cert = services.cert,
   is = require('./validators');
 
 module.exports = function(sequelize, DataTypes) {
@@ -101,17 +103,17 @@ module.exports = function(sequelize, DataTypes) {
         });
       },
       beforeDestroy: function(cluster) {
-        return machine.deleteToken(cluster.token);
+        return discovery.deleteToken(cluster.token);
       },
     },
     instanceMethods: {
       _initializeToken: function() {
-        return machine.createToken().then(token => {
+        return discovery.createToken().then(token => {
           this.token = token;
         });
       },
       _initializeCert: function() {
-        return machine.createCerts().then(certs => {
+        return cert.generate().then(certs => {
           this.cert = {};
 
           _.keys(certs).forEach(type => {
