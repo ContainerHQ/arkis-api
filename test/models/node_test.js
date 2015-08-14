@@ -575,7 +575,7 @@ describe('Node Model', () => {
 
         it('reports back the deletion to its cluster', () => {
           expect(cluster.notify)
-            .to.have.been.calledWith({ last_state: 'destroyed', master: false });
+            .to.have.been.calledWith({ last_state: 'destroyed' });
         });
 
         it('removes the machine behind', () => {
@@ -655,8 +655,9 @@ describe('Node Model', () => {
       });
 
       it('reports back the master deletion to its cluster', () => {
-        expect(cluster.notify)
-          .to.have.been.calledWith({ last_state: 'destroyed', master: true });
+        expect(cluster.notify).to.have.been.calledWith({
+          last_state: 'destroyed', last_ping: null }
+        );
       });
     });
 
@@ -678,7 +679,7 @@ describe('Node Model', () => {
 
       it('reports back the deletion to its cluster', () => {
         expect(cluster.notify)
-          .to.have.been.calledWith({ last_state: 'destroyed', master: false });
+          .to.have.been.calledWith({ last_state: 'destroyed' });
       });
 
       it("doesn't attempt to remove the machine behind", () => {

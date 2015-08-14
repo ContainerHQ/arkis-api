@@ -330,8 +330,10 @@ module.exports = function(sequelize, DataTypes) {
         });
       },
       afterDestroy: function(node) {
+        let changes = node.master ? { last_ping: null } : {};
+
         return node._notifyCluster(
-          { last_state: 'destroyed', master: node.master }
+          _.merge({ last_state: 'destroyed'}, changes)
         );
       }
     },
