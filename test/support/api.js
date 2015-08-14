@@ -58,22 +58,22 @@ module.exports.account = function(user={}) {
   };
 };
 
-module.exports.agent = function(token) {
+module.exports.agent = function(node={}) {
   let ressource = `${API_ROUTE}/agent`;
 
   return {
     infos: function() {
       return request(app)
-      .get(`${ressource}/${token}/infos`);
+      .get(`${ressource}/${node.token}/infos`);
     },
     register: function(form) {
       return request(app)
-      .post(`${ressource}/${token}/register`)
+      .post(`${ressource}/${node.token}/register`)
       .send(form);
     },
     live: function() {
       return request(app)
-      .post(`${ressource}/${token}/live`);
+      .post(`${ressource}/${node.token}/live`);
     }
   };
 };

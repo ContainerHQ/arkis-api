@@ -2,6 +2,7 @@
 
 let _ = require('lodash'),
   express = require('express'),
+  middlewares = require('../../../middlewares'),
   Node = require('../../../models').Node;
 
 let router = express.Router();
@@ -11,8 +12,9 @@ const REGISTER_PARAMS = [
 ];
 
 router
-.param('token', (req, res, next, token) => {
-  Node.findOne({ where: { token: token } }).then(node => {
+.param('token', middlewares.tokenDecoder)
+.param('token', (req, res, next) => {
+  Node.findById(req.token.jit).then(node => {
     if (!node) { return res.notFound(); }
 
     req.node = node;

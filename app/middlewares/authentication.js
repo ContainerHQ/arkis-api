@@ -11,6 +11,9 @@ passport
   User
   .findOne({ where: { token_id: payload.jit } })
   .then(user => {
+    /*
+     * If user doesn't exist, this strategy returns a 401 unauthorized anyway.
+     */
     done(null, user);
   }).catch(done);
 }))

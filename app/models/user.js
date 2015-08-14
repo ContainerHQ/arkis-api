@@ -49,7 +49,7 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.INTEGER,
       allowNull: true,
       defaultValue: null,
-      unique: 'provider'
+      unique: true
     },
     token: {
       type: DataTypes.TEXT,

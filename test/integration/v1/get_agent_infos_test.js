@@ -14,7 +14,7 @@ describe('GET /agent/:token/infos', () => {
     });
 
     it('returns the infos required by the node agent', done => {
-      api.agent(node.token).infos()
+      api.agent(node).infos()
       .expect(200, (err, res) => {
         if (err) { return done(err); }
 
@@ -24,11 +24,21 @@ describe('GET /agent/:token/infos', () => {
         }).catch(done);
       });
     });
+
+    context('when the node no longer exists', () => {
+      beforeEach(() => {
+        return node.destroy();
+      });
+
+      it('returns a 404 not found', done => {
+        api.agent(node).infos().expect(404, {}, done);
+      });
+    });
   });
 
-  context("when the node doesn't exist", () => {
-    it('returns a 404 not found', done => {
-      api.agent().infos().expect(404, {}, done);
+  context('when token is invalid', () => {
+    it('returns a 401 unauthorized', done => {
+      api.agent().infos().expect(401, {}, done);
     });
   });
 });

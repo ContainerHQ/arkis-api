@@ -23,7 +23,7 @@ describe('POST /agent/:token/register', () => {
         disk: 2.048
       };
 
-      api.agent(node.token).register(form)
+      api.agent(node).register(form)
       .expect(204, (err, res) => {
         if (err) { return done(err); }
 
@@ -39,7 +39,7 @@ describe('POST /agent/:token/register', () => {
       it('responds with a bad request status and validation errors', done => {
         let form = { public_ip: '.' };
 
-        api.agent(node.token).register(form)
+        api.agent(node).register(form)
         .expect(400, (err, res) => {
           if (err) { return done(err); }
 
@@ -69,7 +69,7 @@ describe('POST /agent/:token/register', () => {
       })
 
       it('these attributes are filtered', done => {
-        api.agent(node.token).register(form)
+        api.agent(node).register(form)
         .expect(204, (err, res) => {
           if (err) { return done(err); }
 
@@ -80,11 +80,20 @@ describe('POST /agent/:token/register', () => {
       });
     });
 
+    context('when the node no longer exists', () => {
+      beforeEach(() => {
+        return node.destroy();
+      });
+
+      it('returns a 404 not found', done => {
+        api.agent(node).register().expect(404, {}, done);
+      });
+    });
   });
 
-  context("when the node doesn't exist", () => {
-    it('returns a 404 not found', done => {
-      api.agent().register().expect(404, {}, done);
+  context('when token is invalid', () => {
+    it('returns a 401 unauthorized', done => {
+      api.agent().register().expect(401, {}, done);
     });
   });
 });
