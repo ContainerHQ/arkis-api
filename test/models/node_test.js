@@ -502,6 +502,29 @@ describe('Node Model', () => {
         });
       });
 
+      context('when updating multiple reportable fields', () => {
+        let node;
+
+        beforeEach(() => {
+          node = factory.buildSync('node');
+          return node.save().then(() => {
+            node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+            return node.update({
+              last_state: 'upgrading',
+              last_ping: Date.now(),
+              master: true
+            });
+          });
+        });
+
+        it('reports back everything to its cluster', () => {
+          expect(cluster.notify).to.have.been.calledWith({
+            last_state: node.last_state,
+            last_ping: node.last_ping
+          });
+        });
+      });
+
       context('when updating a field different than last fields', () => {
         let node;
 
