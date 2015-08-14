@@ -14,7 +14,7 @@ describe('POST /agent/:token/live', () => {
     });
 
     it('updates the node last_ping attribute', done => {
-      api.agent(node.token).live()
+      api.agent(node).live()
       .expect(204, (err, res) => {
         if (err) { return done(err); }
 
@@ -35,6 +35,12 @@ describe('POST /agent/:token/live', () => {
         api.agent(node).live()
         .expect(404, {}, done);
       })
+    });
+  });
+
+  context('when token is invalid', () => {
+    it('returns a 401 unauthorized', done => {
+      api.agent().live().expect(401, {}, done);
     });
   });
 });

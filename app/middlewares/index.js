@@ -6,5 +6,6 @@ module.exports = {
   docker: require('./docker'),
   parseQuery: require('./parse_query'),
   resHandler: require('./res_handler'),
-  errorHandler: require('./error_handler')
+  errorHandler: require('./error_handler'),
+  tokenDecoder: require('./token_decoder')
 };
