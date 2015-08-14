@@ -147,24 +147,18 @@ module.exports = function(sequelize, DataTypes) {
        * changes, sequelize won't try to update them again.
        */
       notify: function(changes={}) {
-        if (_.has(changes, 'last_ping')) {
-          return this.update({ last_ping: changes.last_ping });
-        }
+        changes = _.pick(changes, ['last_state', 'last_ping']);
+
         switch (changes.last_state) {
-          case 'deploying':
-          case 'upgrading':
-          case 'updating':
-            return this.update({ last_state: changes.last_state });
           case 'destroyed':
           case 'running':
-            return this._getLastStateFromNodes().then(lastState => {
-              if (changes.master && changes.last_state === 'destroyed') {
-                this._removeLastPing();
-              }
-              return this.update({ last_state: lastState });
+            return this._getLastStateFromNodes().then(state => {
+              changes.last_state = state;
+
+              return this.update(changes);
             });
         }
-        return Promise.resolve(this);
+        return this.update(changes);
       },
       upgrade: function() {
         let state = this.get('state');

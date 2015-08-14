@@ -498,7 +498,7 @@ describe('Cluster Model', () => {
 
         context('when master is destroyed', () => {
           beforeEach(() => {
-            return cluster.notify({ last_state: 'destroyed', master: true });
+            return cluster.notify({ last_state: 'destroyed', last_ping: null });
           });
 
           it(`is in unreachable state`, () => {
@@ -508,7 +508,7 @@ describe('Cluster Model', () => {
 
         context('when a slave is destroyed', () => {
           beforeEach(() => {
-            return cluster.notify({ last_state: 'destroyed', master: false });
+            return cluster.notify({ last_state: 'destroyed' });
           });
 
           it(`is in running state`, () => {
