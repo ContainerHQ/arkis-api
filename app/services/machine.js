@@ -1,13 +1,15 @@
 'use strict';
 
-let machine = {};
+class Machine {
+  constructor(node) {
+    this.node = node;
+  }
+  create() {
+    return Promise.resolve();
+  }
+  delete() {
+    return Promise.resolve();
+  }
+}
 
-machine.create = function() {
-  return Promise.resolve();
-};
-
-machine.destroy = function() {
-  return Promise.resolve();
-};
-
-module.exports = require('../../test/support/fakes/machine');
+module.exports = Machine;

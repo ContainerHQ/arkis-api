@@ -6,5 +6,6 @@ module.exports = {
   discovery: require('./discovery'),
   fqdn: require('./fqdn'),
   machine: require('./machine'),
-  token: require('./token')
+  token: require('./token'),
+  MachineManager: require('./machine_manager')
 };

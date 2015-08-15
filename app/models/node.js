@@ -5,7 +5,6 @@ let _ = require('lodash'),
   errors = require('../routes/shared/errors'),
   config = require('../../config'),
   services = require('../services'),
-  machine = services.machine,
   daemon = services.daemon,
   fqdn = services.fqdn,
   token = services.token,
@@ -280,14 +279,6 @@ module.exports = function(sequelize, DataTypes) {
     hooks: {
       beforeCreate: function(node) {
         node.token = token.generate(node.id);
-
-        if (!node.byon) {
-          return machine.create({});
-        }
-        return Promise.resolve(node);
-      },
-      afterCreate: function(node) {
-        return node._notifyCluster({ last_state: node.last_state });
       },
       beforeUpdate: function(node, options) {
         if (
@@ -321,21 +312,8 @@ module.exports = function(sequelize, DataTypes) {
         return node._notifyCluster(changes);
       },
       beforeDestroy: function(node) {
-        let promise = Promise.resolve(node);
-
-        if (!node.byon) { promise = machine.destroy({}); }
-
-        return promise.then(() => {
-          return fqdn.unregister(node.fqdn);
-        });
+        return fqdn.unregister(node.fqdn);
       },
-      afterDestroy: function(node) {
-        let changes = node.master ? { last_ping: null } : {};
-
-        return node._notifyCluster(
-          _.merge({ last_state: 'destroyed'}, changes)
-        );
-      }
     },
     classMethods: {
       associate: function(models) {

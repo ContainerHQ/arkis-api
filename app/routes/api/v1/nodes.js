@@ -4,6 +4,7 @@ let _ = require('lodash'),
   express = require('express'),
   validator = require('validator'),
   middlewares = require('../../../middlewares'),
+  MachineManager = require('../../../services').MachineManager,
   Node = require('../../../models').Node;
 
 let router = express.Router();
@@ -24,7 +25,10 @@ router
  * Node must be reloaded in order to get its virtual attributes.
  */
 .post('/', (req, res, next) => {
-  req.cluster.createNode(_.pick(req.body, CREATE_PARAMS)).then(node => {
+  let node  = Node.build(_.pick(req.body, CREATE_PARAMS)),
+    manager = new MachineManager(req.cluster, node);
+
+  return manager.deploy().then(() => {
     return node.reload();
   }).then(node => {
     res.status(201).json({ node: node });
@@ -65,7 +69,9 @@ router
   }).catch(next);
 })
 .delete((req, res, next) => {
-  req.node.destroy().then(res.noContent).catch(next);
+  let manager = new MachineManager(req.cluster, req.node);
+
+  manager.destroy().then(res.noContent).catch(next);
 });
 
 module.exports = router;

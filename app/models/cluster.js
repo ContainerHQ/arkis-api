@@ -154,7 +154,6 @@ module.exports = function(sequelize, DataTypes) {
           case 'running':
             return this._getLastStateFromNodes().then(state => {
               changes.last_state = state;
-
               return this.update(changes);
             });
         }
