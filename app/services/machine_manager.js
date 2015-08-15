@@ -1,7 +1,7 @@
 'use strict';
 
 let _ = require('lodash'),
-  Machine = require('./machine');
+  Machine = require('../support').Machine;
 
 class MachineManager {
   constructor(cluster, node) {
@@ -33,9 +33,7 @@ class MachineManager {
   get destroyChanges() {
     let changes = this.node.master ? { last_ping: null } : {};
 
-    _.merge(changes, { last_state: 'destroyed' });
-
-    return changes;
+    return _.merge(changes, { last_state: 'destroyed' });
   }
   _createMachine() {
     return this.node.byon ? Promise.resolve() : this.machine.create();

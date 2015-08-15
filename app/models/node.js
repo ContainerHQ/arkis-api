@@ -2,10 +2,8 @@
 
 let _ = require('lodash'),
   moment = require('moment'),
-  errors = require('../routes/shared/errors'),
   config = require('../../config'),
   services = require('../services'),
-  daemon = services.daemon,
   fqdn = services.fqdn,
   token = services.token,
   is = require('./validators'),
@@ -180,47 +178,6 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     instanceMethods: {
-      _hasVersions: function(versions) {
-        return versions.docker === this.docker_version &&
-               versions.swarm  === this.swarm_version;
-      },
-      _notifyCluster: function(changes) {
-        if (_.isEmpty(changes)) { return Promise.resolve(); }
-
-        return this.getCluster().then(cluster => {
-          /*
-           * This ensures that the node won't notify its cluster if it has
-           * been deleted (when the cluster is deleted, it deletes its nodes
-           * in cascade).
-           */
-          if (cluster) {
-            return cluster.notify(changes);
-          }
-          return Promise.resolve();
-        });
-      },
-      /*
-       * Changes commits to the machine some changes and update the node
-       * accordingly and also ensures to put the node in updating state, until
-       * the node agent registers that it has finished to process the changes.
-       *
-       * This method is agnostic from changes nature. It's up to the caller
-       * to filter the changes that must be processed.
-       */
-      change: function(changes={}) {
-        if (this.state !== 'running') {
-          return Promise.reject(new errors.StateError('update', this.state));
-        }
-        if (_.isEmpty(changes)) { return Promise.resolve(this); }
-
-        _.merge(this, { last_state: 'updating' }, changes);
-
-        return this.validate().then(() => {
-          return daemon.update(changes);
-        }).then(() => {
-          return this.save();
-        });
-      },
       /*
        * Registers new informations of a node and ensures to put the node
        * in running state. Must be called whenever an agent has finished
@@ -230,22 +187,6 @@ module.exports = function(sequelize, DataTypes) {
         let opts = { last_state: 'running', last_ping: Date.now() };
 
         return this.update(_.merge(opts, infos));
-      },
-      /*
-       * Upgrade a node to specific versions.
-       */
-      upgrade: function(versions) {
-        let state = this.get('state');
-
-        if (state !== 'running') {
-          return Promise.reject(new errors.StateError('upgrade', state));
-        }
-        if (this._hasVersions(versions)) {
-          return Promise.reject(new errors.AlreadyUpgradedError());
-        }
-        return daemon.upgrade(versions).then(() => {
-          return this.update({ last_state: 'upgrading' });
-        });
       },
       /*
        * Updates the last_ping of a node to current date and time.
@@ -288,28 +229,6 @@ module.exports = function(sequelize, DataTypes) {
           return fqdn.register(node);
         }
         return Promise.resolve(node);
-      },
-      /*
-       * If a field is set to its prior value, it won't appears in
-       * options.field.
-       */
-      afterUpdate: function(node, options) {
-        let changes = {};
-        /*
-         * If a master node updated its ping or a node is promoted to master,
-         * we must notify the cluster to update its last ping.
-         */
-        if ((_.includes(options.fields, 'last_ping') ||
-             _.includes(options.fields, 'master')) && node.master) {
-          _.merge(changes, { last_ping: node.last_ping });
-        }
-        if (_.includes(options.fields, 'master') && !node.master) {
-          _.merge(changes, { last_ping: null });
-        }
-        if (_.includes(options.fields, 'last_state')) {
-          _.merge(changes, { last_state: node.last_state });
-        }
-        return node._notifyCluster(changes);
       },
       beforeDestroy: function(node) {
         return fqdn.unregister(node.fqdn);

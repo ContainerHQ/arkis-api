@@ -73,7 +73,7 @@ describe('MachineManager Service', () => {
     });
 
     context('when machine creation failed', () => {
-      const ERROR = new Error('Machine creation failed');
+      const ERROR = random.error();
 
       let actualError;
 
@@ -149,21 +149,59 @@ describe('MachineManager Service', () => {
     context('when machine removal succeeded', () => {
       beforeEach(() => {
         manager.machine.delete = sinon.stub().returns(Promise.resolve());
-        return manager.destroy();
       });
 
-      it('removes the node', () => {
-        return expect(Node.findById(manager.node.id))
-          .to.eventually.not.exist;
+      context('when node is a master', () => {
+        beforeEach(() => {
+          return manager.cluster.update({ last_ping: Date.now() })
+          .then(() => {
+            return manager.node.update({ master: true });
+          }).then(() => {
+            return manager.destroy();
+          });
+        });
+
+        it('removes the node', () => {
+          return expect(Node.findById(manager.node.id))
+            .to.eventually.not.exist;
+        });
+
+        it('notifies the cluster', () => {
+          expect(manager.cluster.state).to.equal('empty');
+        });
+
+        it('notifies the cluster with last_ping', () => {
+          expect(manager.cluster.last_ping).to.be.null;
+        });
       });
 
-      it('notifies the cluster', () => {
-        expect(manager.cluster.state).to.equal('empty');
+      context('when node is a slave', () => {
+        beforeEach(() => {
+          return manager.cluster.update({ last_ping: Date.now() })
+          .then(() => {
+            return manager.node.update({ master: false });
+          }).then(() => {
+            return manager.destroy();
+          });
+        });
+
+        it('removes the node', () => {
+          return expect(Node.findById(manager.node.id))
+            .to.eventually.not.exist;
+        });
+
+        it('notifies the cluster', () => {
+          expect(manager.cluster.state).to.equal('empty');
+        });
+
+        it("doens't notify the cluster with last_ping", () => {
+          expect(manager.cluster.last_ping).to.not.be.null;
+        });
       });
     });
 
     context('when machine removal failed', () => {
-      const ERROR = new Error('Machine removal failed');
+      const ERROR = random.error();
 
       let actualError;
 

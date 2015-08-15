@@ -5,7 +5,7 @@ module.exports = {
   daemon: require('./daemon'),
   discovery: require('./discovery'),
   fqdn: require('./fqdn'),
-  machine: require('./machine'),
   token: require('./token'),
-  MachineManager: require('./machine_manager')
+  MachineManager: require('./machine_manager'),
+  DaemonManager: require('./daemon_manager')
 };

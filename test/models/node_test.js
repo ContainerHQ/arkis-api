@@ -167,17 +167,12 @@ describe('Node Model', () => {
   });
 
   describe('#create', () => {
-    const FQDN = 'node_01.node.arkis.io';
-
     let node, cluster;
 
     beforeEach(() => {
       cluster = factory.buildSync('cluster');
-      cluster.notify = sinon.stub();
-
       return cluster.save().then(() => {
         node = factory.buildSync('node', { cluster_id: cluster.id });
-        node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
       });
     });
 
@@ -214,67 +209,9 @@ describe('Node Model', () => {
       }));
     });
 
-    context('when machine creation succeeded', () => {
-      beforeEach(() => {
-        sinon.stub(services.machine, 'create', services.machine.create);
-      });
-
-      afterEach(() => {
-        services.machine.create.restore();
-      });
-
-      it('creates a machine behind', () => {
-        return node.save().then(() => {
-          return expect(services.machine.create).to.have.been.calledWith({});
-        });
-      });
-
-      it('reports back its last_state to its cluster', () => {
-        return node.save().then(() => {
-          return expect(cluster.notify)
-            .to.have.been.calledWith({ last_state: node.last_state });
-        });
-      });
-    });
-
-    context('when machine creation failed', () => {
-      const ERROR = random.error();
-
-      beforeEach(() => {
-        sinon.stub(services.machine, 'create').returns(Promise.reject(ERROR));
-      });
-
-      afterEach(() => {
-        services.machine.create.restore();
-      });
-
-      it('returns the error', () => {
-        return expect(node.save()).to.be.rejectedWith(ERROR);
-      });
-
-      it("doesn't save the node", done => {
-        node.save().then(done).catch(err => {
-          expect(Node.findById(node.id))
-            .to.eventually.not.exist
-            .notify(done);
-        });
-      });
-    });
-
     context('when byon node', () => {
       beforeEach(() => {
         _.merge(node, { byon: true, region: null, node_size: null });
-        sinon.stub(services.machine, 'create', services.machine.create);
-      });
-
-      afterEach(() => {
-        services.machine.create.restore();
-      });
-
-      it("doesn't create a machine behind", () => {
-        return node.save().then(() => {
-          return expect(services.machine.create).not.to.have.been.called;
-        });
       });
 
       it('has a command to get the agent', () => {
@@ -286,7 +223,7 @@ describe('Node Model', () => {
     });
   });
 
-  describe('#update', () => {
+  describe.skip('#update', () => {
     context('when updating public_ip', () => {
       let node;
 
@@ -547,293 +484,47 @@ describe('Node Model', () => {
   });
 
   describe('#destroy', () => {
-    let node, cluster;
+    let node;
 
     beforeEach(() => {
-      cluster = { notify: sinon.stub() };
       node = factory.buildSync('node');
     });
 
-    context('with a non byon node', () => {
+    context('when machine destruction and fqdn deletion succeeds', () => {
       beforeEach(() => {
-        return node.save().then(() => {
-          node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
-        });
-      });
-
-      context('when machine destruction and fqdn deletion succeeds', () => {
-        beforeEach(() => {
-          sinon.stub(services.machine, 'destroy', services.machine.destroy);
-          sinon.stub(services.fqdn, 'unregister', services.fqdn.unregister);
-          return node.destroy();
-        });
-
-        afterEach(() => {
-          services.machine.destroy.restore();
-          services.fqdn.unregister.restore();
-        });
-
-        it('reports back the deletion to its cluster', () => {
-          expect(cluster.notify)
-            .to.have.been.calledWith({ last_state: 'destroyed' });
-        });
-
-        it('removes the machine behind', () => {
-          expect(services.machine.destroy).to.have.been.calledWith({});
-        });
-
-        it('removes the fqdn', () => {
-          expect(services.fqdn.unregister).to.have.been.calledWith(node.fqdn);
-        });
-      });
-
-      context('when machine destruction failed', () => {
-        const ERROR = random.error();
-
-        beforeEach(() => {
-          sinon.stub(services.machine, 'destroy').returns(Promise.reject(ERROR));
-          sinon.stub(services.fqdn, 'unregister', services.fqdn.unregister);
-        });
-
-        afterEach(() => {
-          services.machine.destroy.restore();
-          services.fqdn.unregister.restore();
-        });
-
-        it('returns the error', () => {
-          return expect(node.destroy()).to.be.rejectedWith(ERROR);
-        });
-
-        it("doesn't delete the fqdn", done => {
-          node.destroy().then(done).catch(err => {
-            expect(services.fqdn.unregister).to.not.have.been.called;
-            done();
-          });
-        });
-
-        it("doesn't delete the node", done => {
-          node.destroy().then(done).catch(err => {
-            expect(Node.findById(node.id))
-              .to.eventually.exist
-              .notify(done);
-          });
-        });
-      });
-
-      context('when machine fqdn deletion failed', () => {
-        const ERROR = random.error();
-
-        beforeEach(() => {
-          sinon.stub(services.fqdn, 'unregister').returns(Promise.reject(ERROR));
-        });
-
-        afterEach(() => {
-          services.fqdn.unregister.restore();
-        });
-
-        it('returns the error', () => {
-          return expect(node.destroy())
-            .to.be.rejectedWith(ERROR);
-        });
-
-        it("doesn't delete the node", done => {
-          node.destroy().then(done).catch(err => {
-            expect(Node.findById(node.id)).to.eventually.exist;
-            done();
-          });
-        });
-      });
-    });
-
-    context('with a master node', () => {
-      beforeEach(() => {
-        node.master = true;
-        return node.save().then(() => {
-          node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
-          return node.destroy();
-        });
-      });
-
-      it('reports back the master deletion to its cluster', () => {
-        expect(cluster.notify).to.have.been.calledWith({
-          last_state: 'destroyed', last_ping: null }
-        );
-      });
-    });
-
-    context('with a byon node', () => {
-      beforeEach(() => {
-        _.merge(node, { byon: true, region: null, node_size: null });
-
-        sinon.stub(services.machine, 'destroy', services.machine.destroy);
-
-        return node.save().then(() => {
-          node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
-          return node.destroy();
-        });
+        sinon.stub(services.fqdn, 'unregister', services.fqdn.unregister);
+        return node.destroy();
       });
 
       afterEach(() => {
-        services.machine.destroy.restore();
+        services.fqdn.unregister.restore();
       });
 
-      it('reports back the deletion to its cluster', () => {
-        expect(cluster.notify)
-          .to.have.been.calledWith({ last_state: 'destroyed' });
-      });
-
-      it("doesn't attempt to remove the machine behind", () => {
-        expect(services.machine.destroy).to.not.have.been.called;
+      it('removes the fqdn', () => {
+        expect(services.fqdn.unregister).to.have.been.calledWith(node.fqdn);
       });
     });
-  });
 
-  describe('#change', () => {
-    let node, attributes = { name: random.string() };
+    context('when machine fqdn deletion failed', () => {
+      const ERROR = random.error();
 
-    context('when node is not in running state', () => {
       beforeEach(() => {
-        node = factory.buildSync('node');
-        sinon.stub(services.daemon, 'update', services.daemon.update);
-        return node.save();
+        sinon.stub(services.fqdn, 'unregister')
+          .returns(Promise.reject(ERROR));
       });
 
       afterEach(() => {
-        services.daemon.update.restore();
+        services.fqdn.unregister.restore();
       });
 
-      it("doesn't update the node", done => {
-        let notExpected = _.merge({ last_state: 'updating' }, attributes);
-
-        node.change(attributes).then(done).catch(() => {
-          expect(node.reload())
-            .to.eventually.not.include(notExpected)
-            .notify(done);
-        });
+      it('returns the error', () => {
+        return expect(node.destroy()).to.be.rejectedWith(ERROR);
       });
 
-      it("doesn't update the daemon behind", done => {
-        node.change(attributes).then(done).catch(() => {
-          expect(services.daemon.update).to.not.have.been.called;
+      it("doesn't delete the node", done => {
+        node.destroy().then(done).catch(err => {
+          expect(Node.findById(node.id)).to.eventually.exist;
           done();
-        });
-      });
-
-      it('returns an error', done => {
-        node.change(attributes).then(done).catch(err => {
-          expect(err)
-            .to.deep.equal(new errors.StateError('update', node.state));
-          done();
-        });
-      });
-    });
-
-    context('when node is in running state', () => {
-      beforeEach(() => {
-        node = factory.buildSync('runningNode');
-        return node.save();
-      });
-
-      context('when there is no changes', () => {
-        beforeEach(() => {
-          sinon.stub(services.daemon, 'update', services.daemon.update);
-        });
-
-        afterEach(() => {
-          services.daemon.update.restore();
-        });
-
-        it("doesn't update the node", () => {
-          let expected = node.dataValues;
-
-          return expect(node.change({}))
-            .to.eventually.have.property('dataValues', expected);
-        });
-
-        it("doesn't update the daemon behind", () => {
-          return node.change({}).then(() => {
-            return expect(services.daemon.update).to.not.have.been.called;
-          });
-        });
-      });
-
-      context('when validation failed', () => {
-        let badAttributes = { master: 'lol' };
-
-        beforeEach(() => {
-          node = factory.buildSync('node');
-          sinon.stub(services.daemon, 'update', services.daemon.update);
-          return node.save();
-        });
-
-        afterEach(() => {
-          services.daemon.update.restore();
-        });
-
-        it("doesn't update the node", done => {
-          let notExpected = _.merge({ last_state: 'updating' }, badAttributes);
-
-          node.change(badAttributes).then(done).catch(() => {
-            expect(node.reload())
-              .to.eventually.not.include(notExpected)
-              .notify(done);
-          });
-        });
-
-        it("doesn't update the daemon behind", done => {
-          node.change(badAttributes).then(done).catch(() => {
-            expect(services.daemon.update).to.not.have.been.called;
-            done();
-          });
-        });
-      });
-
-      context('when daemon update succeeds', () => {
-        beforeEach(() => {
-          sinon.stub(services.daemon, 'update').returns(Promise.resolve());
-          return node.change(attributes);
-        });
-
-        afterEach(() => {
-          services.daemon.update.restore();
-        });
-
-        it('updates the attributes', () => {
-          expect(node).to.include(attributes);
-        });
-
-        it('set the node state to updating', () => {
-          expect(node.state).to.equal('updating');
-        });
-
-        it('updates the daemon behind', () => {
-          expect(services.daemon.update).to.have.been.calledWith(attributes);
-        });
-      });
-
-      context('when daemon update failed', () => {
-        const ERROR = random.error();
-
-        beforeEach(() => {
-          sinon.stub(services.daemon, 'update').returns(Promise.reject(ERROR));
-        });
-
-        afterEach(() => {
-          services.daemon.update.restore();
-        });
-
-        it('returns the error', () => {
-          return expect(node.change(attributes)).to.be.rejectedWith(ERROR);
-        });
-
-        it("doesn't update the node", done => {
-          let notExpected = _.merge({ last_state: 'updating' }, attributes);
-
-          node.change(attributes).then(done).catch(() => {
-            expect(node.reload())
-              .to.eventually.not.include(notExpected)
-              .notify(done);
-          });
         });
       });
     });
