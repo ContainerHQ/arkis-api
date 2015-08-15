@@ -502,6 +502,29 @@ describe('Node Model', () => {
         });
       });
 
+      context('when updating multiple reportable fields', () => {
+        let node;
+
+        beforeEach(() => {
+          node = factory.buildSync('node');
+          return node.save().then(() => {
+            node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
+            return node.update({
+              last_state: 'upgrading',
+              last_ping: Date.now(),
+              master: true
+            });
+          });
+        });
+
+        it('reports back everything to its cluster', () => {
+          expect(cluster.notify).to.have.been.calledWith({
+            last_state: node.last_state,
+            last_ping: node.last_ping
+          });
+        });
+      });
+
       context('when updating a field different than last fields', () => {
         let node;
 
@@ -552,7 +575,7 @@ describe('Node Model', () => {
 
         it('reports back the deletion to its cluster', () => {
           expect(cluster.notify)
-            .to.have.been.calledWith({ last_state: 'destroyed', master: false });
+            .to.have.been.calledWith({ last_state: 'destroyed' });
         });
 
         it('removes the machine behind', () => {
@@ -632,8 +655,9 @@ describe('Node Model', () => {
       });
 
       it('reports back the master deletion to its cluster', () => {
-        expect(cluster.notify)
-          .to.have.been.calledWith({ last_state: 'destroyed', master: true });
+        expect(cluster.notify).to.have.been.calledWith({
+          last_state: 'destroyed', last_ping: null }
+        );
       });
     });
 
@@ -655,7 +679,7 @@ describe('Node Model', () => {
 
       it('reports back the deletion to its cluster', () => {
         expect(cluster.notify)
-          .to.have.been.calledWith({ last_state: 'destroyed', master: false });
+          .to.have.been.calledWith({ last_state: 'destroyed' });
       });
 
       it("doesn't attempt to remove the machine behind", () => {

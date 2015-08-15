@@ -186,6 +186,8 @@ module.exports = function(sequelize, DataTypes) {
                versions.swarm  === this.swarm_version;
       },
       _notifyCluster: function(changes) {
+        if (_.isEmpty(changes)) { return Promise.resolve(); }
+
         return this.getCluster().then(cluster => {
           /*
            * This ensures that the node won't notify its cluster if it has
@@ -301,21 +303,22 @@ module.exports = function(sequelize, DataTypes) {
        * options.field.
        */
       afterUpdate: function(node, options) {
+        let changes = {};
         /*
          * If a master node updated its ping or a node is promoted to master,
          * we must notify the cluster to update its last ping.
          */
         if ((_.includes(options.fields, 'last_ping') ||
              _.includes(options.fields, 'master')) && node.master) {
-          return node._notifyCluster({ last_ping: node.last_ping });
+          _.merge(changes, { last_ping: node.last_ping });
         }
         if (_.includes(options.fields, 'master') && !node.master) {
-          return node._notifyCluster({ last_ping: null });
+          _.merge(changes, { last_ping: null });
         }
         if (_.includes(options.fields, 'last_state')) {
-          return node._notifyCluster({ last_state: node.last_state });
+          _.merge(changes, { last_state: node.last_state });
         }
-        return Promise.resolve(node);
+        return node._notifyCluster(changes);
       },
       beforeDestroy: function(node) {
         let promise = Promise.resolve(node);
@@ -327,8 +330,10 @@ module.exports = function(sequelize, DataTypes) {
         });
       },
       afterDestroy: function(node) {
+        let changes = node.master ? { last_ping: null } : {};
+
         return node._notifyCluster(
-          { last_state: 'destroyed', master: node.master }
+          _.merge({ last_state: 'destroyed'}, changes)
         );
       }
     },
