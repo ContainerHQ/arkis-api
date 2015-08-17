@@ -29,4 +29,4 @@ class StateManager {
   }
 }
 
-module.exports = AuthorizeManager;
+module.exports = StateManager;
