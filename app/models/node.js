@@ -140,7 +140,9 @@ module.exports = function(sequelize, DataTypes) {
         ]);
         return { where: criterias };
       },
-      nonRunning: { where: { last_state: { $ne: 'running' } } }
+      nonRunningNorUnreachable: {
+        where: { last_state: { $ne: 'running' } }
+      }
     },
     getterMethods: {
       state_message: function() {

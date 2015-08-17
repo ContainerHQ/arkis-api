@@ -125,7 +125,7 @@ describe('Cluster Model', () => {
       });
 
       it('initializes its ssl certificates', () => {
-        expect(cluster.cert).to.satisfy(has.certificate(FAKE_CERTS));
+        expect(cluster.cert).to.deep.equal(FAKE_CERTS);
       });
 
       ['docker', 'swarm'].forEach(binary => {

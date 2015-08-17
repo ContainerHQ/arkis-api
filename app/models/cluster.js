@@ -92,12 +92,12 @@ module.exports = function(sequelize, DataTypes) {
           docker_version: config.latestVersions.docker,
           swarm_version:  config.latestVersions.swarm
         });
-        /*
-         * We first try to create the ssl certificates, to avoid an
-         * unnecessary call to the docker hub discovery service.ss
-         */
-        return cluster._initializeCert().then(() => {
-          return cluster._initializeToken();
+        return cert.generate().then(cert => {
+          cluster.cert = cert;
+          return discovery.createToken();
+        }).then(token => {
+          cluster.token = token;
+          return cluster;
         });
       },
       beforeDestroy: function(cluster) {
@@ -105,36 +105,16 @@ module.exports = function(sequelize, DataTypes) {
       },
     },
     instanceMethods: {
-      _initializeToken: function() {
-        return discovery.createToken().then(token => {
-          this.token = token;
-        });
-      },
-      _initializeCert: function() {
-        return cert.generate().then(certs => {
-          this.cert = {};
+      retrieveState: function() {
+        if (this.nodes_count <= 0) { return Promise.resolve('empty'); }
 
-          _.keys(certs).forEach(type => {
-            _.keys(certs[type]).forEach(name => {
-              this.cert[`${type}_${name}`] = certs[type][name];
-            });
-          });
-          return this;
+        return this.getNodes({ scope: 'nonRunningNorUnreachable' })
+        .then(nodes => {
+          return _.isEmpty(nodes) ? 'running' : _.first(nodes).last_state;
         });
       },
-      _getLastStateFromNodes: function() {
-        if (this.nodes_count <= 0) {
-          return Promise.resolve('empty');
-        }
-        return this.getNodes({ scope: 'nonRunning' }).then(nodes => {
-          if (_.isEmpty(nodes)) {
-            return 'running';
-          }
-          return _.first(nodes).last_state;
-        });
-      },
-      _removeLastPing: function() {
-        this.last_ping = null;
+      hasNodes: function() {
+        return ;
       },
       /*
        * If the cluster already has updated its attributes with the same
@@ -146,7 +126,7 @@ module.exports = function(sequelize, DataTypes) {
         switch (changes.last_state) {
           case 'destroyed':
           case 'running':
-            return this._getLastStateFromNodes().then(state => {
+            return this.retrieveState().then(state => {
               changes.last_state = state;
               return this.update(changes);
             });
