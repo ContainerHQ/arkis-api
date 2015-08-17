@@ -4,7 +4,7 @@ compose := docker-compose
 
 all: detach
 
-re: clean build all
+re: clean build migrations all
 
 clean:
 	$(compose) kill
@@ -18,6 +18,9 @@ shell: build
 
 migrations-test:
 	$(compose) run api sequelize --env=test db:migrate
+
+migrations:
+	$(compose) run api sequelize db:migrate
 
 test: build migrations-test
 	$(compose) run api npm test

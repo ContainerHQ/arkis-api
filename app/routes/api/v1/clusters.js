@@ -16,9 +16,9 @@ router
 .get('/', middlewares.pagination, (req, res, next) => {
   Cluster
   .scope('defaultScope',
+    { method: ['filtered', req.query] },
     { method: ['user', req.user.id] },
-    { method: ['state', req.query.state] },
-    { method: ['filtered', req.query] }
+    { method: ['state', req.query.state] }
   ).findAndCount(req.pagination).then(res.paginate('clusters')).catch(next);
 })
 .post('/', (req, res, next) => {
