@@ -18,6 +18,13 @@ class ClusterManager extends AuthorizeManager {
   /*
    * Upgrade a cluster to the latest versions available and perform a
    * node upgrade on all cluster nodes.
+   *
+   * When a node is updated, the cluster is notified and update its
+   * state accordingly, beside, when every node upgrade call fails,
+   * the cluster state must not changed to. Therefore we don't need
+   * to update the state here. However, versions must be updated,
+   * the node agent will automatically get these informations when
+   * the node will be restarted.
    */
   upgrade() {
     if (this.isConflicted)      { return this.conflict('upgrade'); }

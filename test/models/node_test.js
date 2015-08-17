@@ -223,7 +223,7 @@ describe('Node Model', () => {
     });
   });
 
-  describe.skip('#update', () => {
+  describe('#update', () => {
     context('when updating public_ip', () => {
       let node;
 
@@ -317,170 +317,6 @@ describe('Node Model', () => {
         });
       })
     });
-
-    context('when it belongs to a cluster', () => {
-      let cluster;
-
-      /*
-       * We are using a fake cluster here, tests for cluster.notify behavior
-       * belongs in the cluster model tests. Therefore we must only verify here
-       * that our node model notify its cluster of its changes when it's
-       * necessary.
-       */
-      beforeEach(() => {
-        cluster = { notify: sinon.stub() };
-      });
-
-      context('when updating master', () => {
-        context('with true', () => {
-          let node;
-
-          beforeEach(() => {
-            node = factory.buildSync('node', { master: false });
-            return node.save().then(() => {
-              node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
-            });
-          });
-
-          beforeEach(() => {
-            return node.update({ master: true });
-          });
-
-          it('reports back its last ping to its cluster', () => {
-            expect(cluster.notify)
-              .to.have.been.calledWith({ last_ping: node.last_ping });
-          });
-        });
-
-        context('with false', () => {
-          let node;
-
-          beforeEach(() => {
-            node = factory.buildSync('node', { master: true });
-            return node.save().then(() => {
-              node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
-            });
-          });
-
-          beforeEach(() => {
-            return node.update({ master: false });
-          });
-
-          it('reports back its downgrade its cluster', () => {
-            expect(cluster.notify)
-              .to.have.been.calledWith({ last_ping: null });
-          });
-        });
-      });
-
-      context('when updating last_state', () => {
-        let node;
-
-        beforeEach(() => {
-          node = factory.buildSync('node');
-          return node.save().then(() => {
-            node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
-          });
-        });
-
-        /*
-         * Be careful here, sequelize doesn't add a field in options.fields
-         * if we are providing a value for the field equal to its prior value.
-         */
-        const OPTS = { last_state: 'upgrading' };
-
-        beforeEach(() => {
-          return node.update(OPTS);
-        });
-
-        it('reports back the new state to its cluster', () => {
-          expect(cluster.notify).to.have.been.calledWith(OPTS);
-        });
-      });
-
-      context('when updating last_ping', () => {
-        context('when slave node', () => {
-          let node;
-
-          beforeEach(() => {
-            node = factory.buildSync('node', { master: false });
-            return node.save().then(() => {
-              node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
-            });;
-          });
-
-          beforeEach(() => {
-            return node.update({ last_ping: Date.now() });
-          });
-
-          it("doesn't report back the ping to its cluster", () => {
-            expect(cluster.notify).to.not.have.been.called;
-          });
-        });
-
-        context('when master node', () => {
-          let node;
-
-          beforeEach(() => {
-            node = factory.buildSync('node', { master: true });
-            return node.save().then(() => {
-              node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
-            });;
-          });
-
-          beforeEach(() => {
-            return node.update({ last_ping: Date.now() });
-          });
-
-          it('reports back the ping to its cluster', () => {
-            expect(cluster.notify)
-              .to.have.been.calledWith({ last_ping: node.last_ping });
-          });
-        });
-      });
-
-      context('when updating multiple reportable fields', () => {
-        let node;
-
-        beforeEach(() => {
-          node = factory.buildSync('node');
-          return node.save().then(() => {
-            node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
-            return node.update({
-              last_state: 'upgrading',
-              last_ping: Date.now(),
-              master: true
-            });
-          });
-        });
-
-        it('reports back everything to its cluster', () => {
-          expect(cluster.notify).to.have.been.calledWith({
-            last_state: node.last_state,
-            last_ping: node.last_ping
-          });
-        });
-      });
-
-      context('when updating a field different than last fields', () => {
-        let node;
-
-        beforeEach(() => {
-          node = factory.buildSync('node');
-          return node.save().then(() => {
-            node.getCluster = sinon.stub().returns(Promise.resolve(cluster));
-          });
-        });
-
-        beforeEach(() => {
-          return node.update({ public_ip: '127.0.0.1' });
-        });
-
-        it("doesn't notify its cluster", () => {
-          expect(cluster.notify).to.not.have.been.called;
-        });
-      });
-    });
   });
 
   describe('#destroy', () => {
@@ -490,7 +326,7 @@ describe('Node Model', () => {
       node = factory.buildSync('node');
     });
 
-    context('when machine destruction and fqdn deletion succeeds', () => {
+    context('when fqdn deletion succeeded', () => {
       beforeEach(() => {
         sinon.stub(services.fqdn, 'unregister', services.fqdn.unregister);
         return node.destroy();
@@ -574,104 +410,6 @@ describe('Node Model', () => {
     it('set the node state to running', () => {
       return expect(node.register())
         .to.eventually.have.property('state', 'running');
-    });
-  });
-
-  describe('#upgrade', () => {
-    let node;
-
-    beforeEach(() => {
-      sinon.stub(services.daemon, 'upgrade', services.daemon.upgrade);
-    });
-
-    afterEach(() => {
-      services.daemon.upgrade.restore();
-    });
-
-    context('when node is running', () => {
-      let node;
-
-      beforeEach(() => {
-        node = factory.buildSync('runningNode');
-
-        return node.save().then(() => {
-          return node.upgrade(config.latestVersions);
-        });
-      });
-
-      it('it is in upgrading state', () => {
-        expect(node.state).to.equal('upgrading');
-      });
-
-      it('upgrades the daemon behind', () => {
-        expect(services.daemon.upgrade)
-          .to.have.been.calledWith(config.latestVersions);
-      });
-    });
-
-    context('when node is not running', () => {
-      let node, error;
-
-      beforeEach(() => {
-        node = factory.buildSync('node');
-        return node.save();
-      });
-
-      it('returns an error', () => {
-        let expected = new errors.StateError('upgrade', node.state);
-
-        return node.upgrade().then(() => {
-          throw new Error('Upgrade should be rejected!');
-        }).catch(err => {
-          expect(err).to.deep.equal(expected);
-        });
-      });
-
-      it('has the same state than before', () => {
-        return node.upgrade().then(() => {
-          throw new Error('Upgrade should be rejected!');
-        }).catch(err => {
-          return expect(node.reload())
-            .to.eventually.have.property('state', 'deploying');
-        });
-      });
-
-      it("doesn't update the daemon behind", () => {
-        return node.upgrade().then(() => {
-          throw new Error('Upgrade should be rejected!');
-        }).catch(() => {
-          expect(services.daemon.upgrade).to.not.have.been.called;
-        });
-      });
-    });
-
-    context('when node already has the same version', () => {
-      let node, versions, error;
-
-      beforeEach(() => {
-        node = factory.buildSync('runningNode');
-        versions = { docker: node.docker_version, swarm: node.swarm_version };
-        return node.save();
-      });
-
-      it('has the same state than before', () => {
-        let previousState = node.state;
-
-        return node.upgrade(versions).then(() => {
-          throw new Error('Upgrade should be rejected!');
-        }).catch(() => {
-          return expect(node.reload())
-            .to.eventually.have.property('state', previousState);
-        });
-      });
-
-      it("doesn't update the daemon behind", () => {
-        return node.upgrade(versions).then(() => {
-          throw new Error('Upgrade should be rejected!');
-        }).catch(err => {
-          return expect(err).to.deep.equal(new errors.AlreadyUpgradedError());
-        });
-      });
     });
   });
 

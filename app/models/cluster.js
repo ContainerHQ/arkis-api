@@ -1,7 +1,6 @@
 'use strict';
 
 let _ = require('lodash'),
-  errors = require('../routes/shared/errors'),
   mixins = require('./concerns'),
   config = require('../../config'),
   services = require('../services'),
@@ -124,10 +123,6 @@ module.exports = function(sequelize, DataTypes) {
           return this;
         });
       },
-      _hasLatestVersions: function() {
-        return config.latestVersions.docker === this.docker_version &&
-               config.latestVersions.swarm  === this.swarm_version;
-      },
       _getLastStateFromNodes: function() {
         if (this.nodes_count <= 0) {
           return Promise.resolve('empty');
@@ -158,39 +153,12 @@ module.exports = function(sequelize, DataTypes) {
             });
         }
         return this.update(changes);
-      },
-      upgrade: function() {
-        let state = this.get('state');
-
-        if (state !== 'running') {
-          return Promise.reject(new errors.StateError('upgrade', state));
-        }
-        if (this._hasLatestVersions()) {
-          return Promise.reject(new errors.AlreadyUpgradedError());
-        }
-        return this.getNodes().then(nodes => {
-          _.invoke(nodes, 'upgrade', config.latestVersions);
-          /*
-           * When a node is updated, the cluster is notified and update its
-           * state accordingly, beside, when every node upgrade call fails,
-           * the cluster state must not changed to. Therefore we don't need
-           * to update the state here. However, versions must be updated,
-           * the node agent will automatically get these informations when
-           * the node will be restarted.
-           */
-          return this.update({
-            docker_version: config.latestVersions.docker,
-            swarm_version:  config.latestVersions.swarm,
-          });
-        });
       }
     },
     classMethods: {
       associate: function(models) {
-        Cluster.hasMany(models.Node, {
-          onDelete: 'cascade',
-          hooks: true,
-          counterCache: { as: 'nodes_count' },
+        Cluster.hasMany(models.Node, { onDelete: 'cascade', hooks: true,
+          counterCache: { as: 'nodes_count' }
         });
       }
     }
