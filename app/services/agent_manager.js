@@ -4,7 +4,6 @@ let _ = require('lodash'),
   moment = require('moment'),
   errors = require('../support').errors,
   config = require('../../config');
-  //models = require('../models');
 
 const CLUSTER_INFOS = ['docker_version', 'swarm_version', 'strategy', 'cert'],
       NODE_INFOS    = ['name', 'master', 'labels'],
@@ -45,11 +44,21 @@ class AgentManager {
   }
   /*
    * Called by the swarm manager to list the running nodes of the same cluster.
-   * We must ensure first that the agent is verified has the master node of its
+   * We must first ensure that the agent is verified as the master node of its
    * cluster.
    */
   fetch() {
-    if (this.isSlave()) { return Promise.reject(new errors.NotMasterError()); }
+    if (this.isSlave) { return Promise.reject(new errors.NotMasterError()); }
+
+    return this.node.getCluster().then(cluster => {
+      return cluster.notify({ last_ping: moment() });
+    }).then(cluster => {
+      return cluster.getNodes({ scope: ['defaultScope', 'runningIPs'] });
+    }).then(nodes => {
+      return _.map(nodes, node => {
+        return `${node.public_ip}:${config.dockerPort}`;
+      });
+    });
   }
   get isSlave() {
     return !this.node.master;
