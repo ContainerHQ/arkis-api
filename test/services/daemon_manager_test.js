@@ -2,7 +2,7 @@
 
 var _ = require('lodash'),
   moment = require('moment'),
-  errors = require('../../app/routes/shared/errors'),
+  errors = require('../../app/support').errors,
   Node = require('../../app/models').Node,
   DaemonManager = require('../../app/services').DaemonManager;
 

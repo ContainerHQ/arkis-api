@@ -3,9 +3,8 @@
 let _ = require('lodash'),
   mixins = require('./concerns'),
   config = require('../../config'),
-  services = require('../services'),
-  discovery = services.discovery,
-  cert = services.cert,
+  discovery = require('../support').discovery,
+  cert = require('../support').cert,
   is = require('./validators');
 
 module.exports = function(sequelize, DataTypes) {

@@ -2,7 +2,7 @@
 
 var _ = require('lodash'),
   config = require('../../config'),
-  errors = require('../../app/routes/shared/errors'),
+  errors = require('../../app/support').errors,
   DaemonManager = require('../../app/services').DaemonManager,
   ClusterManager = require('../../app/services').ClusterManager;
 

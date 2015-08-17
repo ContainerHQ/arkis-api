@@ -3,7 +3,7 @@
 let _ = require('lodash'),
   express = require('express'),
   handler = require('../../shared/handler'),
-  errors = require('../../shared/errors');
+  errors = require('../../../support').errors;
 
 let router = express.Router();
 

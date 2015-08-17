@@ -2,10 +2,10 @@
 
 let _ = require('lodash'),
   moment = require('moment'),
-  errors = require('../../app/routes/shared/errors'),
+  errors = require('../../app/support').errors,
   concerns = require('./concerns'),
   config = require('../../config'),
-  services = require('../../app/services'),
+  support = require('../../app/support'),
   Node = require('../../app/models').Node;
 
 describe('Node Model', () => {
@@ -233,17 +233,17 @@ describe('Node Model', () => {
       });
 
       afterEach(() => {
-        services.fqdn.register.restore();
+        support.fqdn.register.restore();
       });
 
       context('when fqdn registration succeeded', () => {
         beforeEach(() => {
-          sinon.stub(services.fqdn, 'register').returns(Promise.resolve());
+          sinon.stub(support.fqdn, 'register').returns(Promise.resolve());
         });
 
         it('registers this ip for the fqdn', () => {
           return node.update({ public_ip: '192.168.1.90' }).then(() => {
-            return expect(services.fqdn.register)
+            return expect(support.fqdn.register)
               .to.have.been
               .calledWithMatch(_.pick(node, ['fqdn', 'public_ip']));
           });
@@ -255,7 +255,7 @@ describe('Node Model', () => {
               OPTS  = { public_ip: '192.168.1.90' };
 
         beforeEach(() => {
-          sinon.stub(services.fqdn, 'register').returns(Promise.reject(ERROR));
+          sinon.stub(support.fqdn, 'register').returns(Promise.reject(ERROR));
         });
 
         it('returns the error', () => {
@@ -278,17 +278,17 @@ describe('Node Model', () => {
       beforeEach(() => {
         node = factory.buildSync('node');
         return node.save().then(() => {
-          sinon.stub(services.fqdn, 'register', services.fqdn.register);
+          sinon.stub(support.fqdn, 'register', support.fqdn.register);
         });
       });
 
       afterEach(() => {
-        services.fqdn.register.restore();
+        support.fqdn.register.restore();
       });
 
       it('registers this ip with the new fqdn', () => {
         return node.update({ name: 'new-name-prod' }).then(() => {
-          return expect(services.fqdn.register)
+          return expect(support.fqdn.register)
             .to.have.been
             .calledWithMatch(_.pick(node, ['fqdn', 'public_ip']));
         });
@@ -304,16 +304,16 @@ describe('Node Model', () => {
       });
 
       beforeEach(() => {
-        sinon.stub(services.fqdn, 'register', services.fqdn.register);
+        sinon.stub(support.fqdn, 'register', support.fqdn.register);
       });
 
       afterEach(() => {
-        services.fqdn.register.restore();
+        support.fqdn.register.restore();
       });
 
       it("doesn't registers the public_ip for the fqdn", () => {
         return node.update({ cpu: 23 }).then(() => {
-          return expect(services.fqdn.register).not.to.have.been.called;
+          return expect(support.fqdn.register).not.to.have.been.called;
         });
       })
     });
@@ -328,16 +328,16 @@ describe('Node Model', () => {
 
     context('when fqdn deletion succeeded', () => {
       beforeEach(() => {
-        sinon.stub(services.fqdn, 'unregister', services.fqdn.unregister);
+        sinon.stub(support.fqdn, 'unregister', support.fqdn.unregister);
         return node.destroy();
       });
 
       afterEach(() => {
-        services.fqdn.unregister.restore();
+        support.fqdn.unregister.restore();
       });
 
       it('removes the fqdn', () => {
-        expect(services.fqdn.unregister).to.have.been.calledWith(node.fqdn);
+        expect(support.fqdn.unregister).to.have.been.calledWith(node.fqdn);
       });
     });
 
@@ -345,12 +345,12 @@ describe('Node Model', () => {
       const ERROR = random.error();
 
       beforeEach(() => {
-        sinon.stub(services.fqdn, 'unregister')
+        sinon.stub(support.fqdn, 'unregister')
           .returns(Promise.reject(ERROR));
       });
 
       afterEach(() => {
-        services.fqdn.unregister.restore();
+        support.fqdn.unregister.restore();
       });
 
       it('returns the error', () => {

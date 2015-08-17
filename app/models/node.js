@@ -3,9 +3,8 @@
 let _ = require('lodash'),
   moment = require('moment'),
   config = require('../../config'),
-  services = require('../services'),
-  fqdn = services.fqdn,
-  token = services.token,
+  fqdn = require('../support').fqdn,
+  token = require('../support').token,
   is = require('./validators'),
   mixins = require('./concerns');
 

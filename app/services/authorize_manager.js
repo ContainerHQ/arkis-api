@@ -1,7 +1,7 @@
 'use strict';
 
 let _ = require('lodash'),
-  errors = require('../routes/shared/errors');
+  errors = require('../support').errors;
 
 const CONFLICTED_STATE = 'running',
       VERSIONS = ['docker_version', 'swarm_version'];

@@ -1,7 +1,7 @@
 'use strict';
 
 let sequelize = require('sequelize'),
-  errors = require('../../app/routes/shared/errors'),
+  errors = require('../../app/support').errors,
   errorHandler = rewire('../../app/middlewares/error_handler');
 
 const INTERNAL_SERVER_ERROR = errorHandler.__get__('INTERNAL_SERVER_ERROR');

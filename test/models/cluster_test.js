@@ -2,9 +2,9 @@
 
 let _ = require('lodash'),
   moment = require('moment'),
-  errors = require('../../app/routes/shared/errors'),
+  errors = require('../../app/support').errors,
   models = require('../../app/models'),
-  services = require('../../app/services'),
+  support = require('../../app/support'),
   concerns = require('./concerns'),
   config = require('../../config');
 
@@ -106,18 +106,18 @@ describe('Cluster Model', () => {
 
     context('when machine token and cert creation succeeded', () => {
       beforeEach(() => {
-        sinon.stub(services.discovery, 'createToken').returns(
+        sinon.stub(support.discovery, 'createToken').returns(
           Promise.resolve(FAKE_TOKEN)
         );
-        sinon.stub(services.cert, 'generate').returns(
+        sinon.stub(support.cert, 'generate').returns(
           Promise.resolve(FAKE_CERTS)
         );
         return cluster.save();
       });
 
       afterEach(() => {
-        services.discovery.createToken.restore();
-        services.cert.generate.restore();
+        support.discovery.createToken.restore();
+        support.cert.generate.restore();
       });
 
       it('initializes its token', () => {
@@ -157,15 +157,15 @@ describe('Cluster Model', () => {
       const ERROR = random.error();
 
       beforeEach(() => {
-        sinon.stub(services.cert, 'generate').returns(Promise.reject(ERROR));
-        sinon.stub(services.discovery, 'createToken').returns(
+        sinon.stub(support.cert, 'generate').returns(Promise.reject(ERROR));
+        sinon.stub(support.discovery, 'createToken').returns(
           Promise.resolve()
         );
       });
 
       afterEach(() => {
-        services.cert.generate.restore();
-        services.discovery.createToken.restore();
+        support.cert.generate.restore();
+        support.discovery.createToken.restore();
       });
 
       it('returns the error', () => {
@@ -182,7 +182,7 @@ describe('Cluster Model', () => {
 
       it("doesn't create the token", done => {
         cluster.save().then(done).catch(err => {
-          expect(services.discovery.createToken).to.not.have.been.called;
+          expect(support.discovery.createToken).to.not.have.been.called;
           done();
         });
       });
@@ -192,13 +192,13 @@ describe('Cluster Model', () => {
       const ERROR = random.error();
 
       beforeEach(() => {
-        sinon.stub(services.discovery, 'createToken').returns(
+        sinon.stub(support.discovery, 'createToken').returns(
           Promise.reject(ERROR)
         );
       });
 
       afterEach(() => {
-        services.discovery.createToken.restore();
+        support.discovery.createToken.restore();
       });
 
       it('returns the error', () => {
@@ -246,20 +246,20 @@ describe('Cluster Model', () => {
 
     context('when token deletion succeeded', () => {
       beforeEach(() => {
-        sinon.stub(services.discovery, 'deleteToken').returns(
+        sinon.stub(support.discovery, 'deleteToken').returns(
           Promise.resolve()
         );
       });
 
       afterEach(() => {
-        services.discovery.deleteToken.restore();
+        support.discovery.deleteToken.restore();
       });
 
       it('deletes its token', done => {
         let token = cluster.token;
 
         cluster.destroy().then(() => {
-          expect(services.discovery.deleteToken).to.have.been.calledWith(token);
+          expect(support.discovery.deleteToken).to.have.been.calledWith(token);
           done();
         }).catch(done);
       });
@@ -275,13 +275,13 @@ describe('Cluster Model', () => {
       const ERROR = random.error();
 
       beforeEach(() => {
-        sinon.stub(services.discovery, 'deleteToken').returns(
+        sinon.stub(support.discovery, 'deleteToken').returns(
           Promise.reject(ERROR)
         );
       });
 
       afterEach(() => {
-        services.discovery.deleteToken.restore();
+        support.discovery.deleteToken.restore();
       });
 
       it('returns the error', () => {

@@ -1,7 +1,7 @@
 'use strict';
 
 let _ = require('lodash'),
-  errors = require('../routes/shared/errors');
+  errors = require('../support').errors;
 
 module.exports = function(req, res, next) {
   req.pagination = {
