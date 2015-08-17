@@ -6,6 +6,6 @@ module.exports = {
   discovery: require('./discovery'),
   fqdn: require('./fqdn'),
   errors: require('./errors'),
-  Daemon:  require('./Daemon'),
-  Machine: require('./Machine')
+  Daemon:  require('./daemon'),
+  Machine: require('./machine')
 };
