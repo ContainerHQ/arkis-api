@@ -1,5 +1,7 @@
 'use strict';
 
+var uniqueIndex = ['name', 'user_id'];
+
 module.exports = {
   up: function (queryInterface, DataTypes) {
     return queryInterface.createTable('Clusters', {
@@ -62,14 +64,14 @@ module.exports = {
       created_at: DataTypes.DATE,
       updated_at: DataTypes.DATE
     }).then(function () {
-      return queryInterface.addIndex('Clusters', ['name', 'user_id'], {
+      return queryInterface.addIndex('Clusters', uniqueIndex, {
         indicesType: 'UNIQUE'
       });
     });
   },
 
   down: function (queryInterface, Sequelize) {
-    return queryInterface.removeIndex('Clusters', ['name', 'user_id'], {
+    return queryInterface.removeIndex('Clusters', uniqueIndex, {
       indicesType: 'UNIQUE'
     }).then(function() {
       return queryInterface.dropTable('Clusters');
