@@ -61,6 +61,16 @@ describe('GET /agent/clusters/:token', () => {
     });
   });
 
+  context('when node no longer exists', () => {
+    beforeEach(() => {
+      return node.destroy();
+    });
+
+    it('returns a 404 not found', done => {
+      api.agent(node).fetch().expect(404, done);
+    });
+  });
+
   context('when token is invalid', () => {
     it('returns a 401 unauthorized', done => {
       api.agent().fetch().expect(401, done);
