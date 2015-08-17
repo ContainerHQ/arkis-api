@@ -32,6 +32,11 @@ router
     res.noContent();
   }).catch(next);
 })
+.get('/clusters/:token', (req, res, next) => {
+  req.agent.fetch().then(addresses => {
+    res.json(addresses);
+  }).catch(next);
+})
 .post('/clusters/:token', (req, res, next) => {
   let addr = _.first(_.keys(req.body));
 
