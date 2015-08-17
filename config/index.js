@@ -16,7 +16,9 @@ let config = {
     }
   },
   nodeDomain: 'node.arkis.io',
-  agentCmd:   'curl -Ls https://get.arkis.io/ | sudo -H sh -s'
+  agentCmd:   'curl -Ls https://get.arkis.io/ | sudo -H sh -s',
+  dockerPort: 2375,
+  swarmPort:  2376
 };
 
 config.db = require('./database')[config.env];

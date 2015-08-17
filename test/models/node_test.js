@@ -31,9 +31,9 @@ describe('Node Model', () => {
 
     it('succeeds to create multiple slave nodes for the same cluster', done => {
       factory.create('cluster', (err, cluster) => {
-        factory.createMany('node', {
-          master: false, cluster_id: cluster.id
-        }, 3, done);
+        let opts = { master: false, cluster_id: cluster.id };
+
+        factory.createMany('node', opts, 3, done);
       });
     });
 
@@ -363,84 +363,6 @@ describe('Node Model', () => {
           done();
         });
       });
-    });
-  });
-
-  describe('#ping', () => {
-    let node, clock;
-
-    /*
-     * We are faking the time and increasing it a bit here to ensure that
-     * last_ping is properly set to the current date and time.
-     */
-    beforeEach(() => {
-      clock = sinon.useFakeTimers();
-      node  = factory.buildSync('node');
-
-      return node.save().then(node => {
-        clock.tick(500);
-        return node.ping();
-      });
-    });
-
-    afterEach(() => {
-      clock.restore();
-    });
-
-    it('updates its last_ping', () => {
-      return expect(node.last_ping).to.deep.equal(moment().toDate());
-    });
-  });
-
-  describe('#register', () => {
-    let node;
-
-    beforeEach(() => {
-      node = factory.buildSync('node');
-      return node.save();
-    });
-
-    it('updates the attributes', () => {
-      let attributes = { public_ip: '192.168.0.1' };
-
-      return expect(node.register(attributes))
-        .to.eventually.include(attributes);
-    });
-
-    it('set the node state to running', () => {
-      return expect(node.register())
-        .to.eventually.have.property('state', 'running');
-    });
-  });
-
-  describe('#agentInfos', () => {
-    let cluster, node;
-
-    beforeEach(() => {
-      cluster = factory.buildSync('cluster')
-      return cluster.save().then(cluster => {
-        node = factory.buildSync('node', { cluster_id: cluster.id });
-        return node.save();
-      });
-    });
-
-    it('returns informations needed by the agent', () => {
-      return expect(node.agentInfos())
-        .to.eventually.deep.equal({
-          master: node.master,
-          name: node.name,
-          labels: node.labels,
-          cert: {
-            ca:   cluster.cert.server_ca,
-            cert: cluster.cert.server_cert,
-            key:  cluster.cert.server_key,
-          },
-          strategy: cluster.strategy,
-          versions: {
-            docker: cluster.docker_version,
-            swarm:  cluster.swarm_version
-          }
-        });
     });
   });
 });

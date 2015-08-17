@@ -18,13 +18,15 @@ module.exports = function(factory) {
 
   factory.define('registeredNode', Node, {
     name: random.string,
-    master: true,
+    master: false,
     region: 'london',
     node_size: 'deathstar',
+    last_state: 'running',
+    last_ping: Date.now,
     cpu: 1,
     memory: 128,
     disk: 1.0,
-    public_ip: '192.168.212.128',
+    public_ip: random.ip,
     labels: {
       environment: 'production',
       storage: 'ssd',
@@ -58,8 +60,7 @@ module.exports = function(factory) {
     master: true,
     region: 'test',
     node_size: 'whatever',
-    public_ip: '192.168.212.42',
-    fqdn: 'forbidden.node.arkis.io',
+    public_ip: random.ip,
     last_state: 'running',
     last_ping: moment().subtract(3, 'minutes'),
     cpu: 2,

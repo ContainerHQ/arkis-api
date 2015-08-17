@@ -1,7 +1,6 @@
 'use strict';
 
 let _ = require('lodash'),
-  moment = require('moment'),
   config = require('../../config'),
   fqdn = require('../support').fqdn,
   token = require('../support').token,
@@ -176,46 +175,6 @@ module.exports = function(sequelize, DataTypes) {
         let clusterShortId = clusterId.slice(0, 8);
 
         return `${this.get('name')}-${clusterShortId}.${config.nodeDomain}`;
-      }
-    },
-    instanceMethods: {
-      /*
-       * Registers new informations of a node and ensures to put the node
-       * in running state. Must be called whenever an agent has finished
-       * its pending work.
-       */
-      register: function(infos={}) {
-        let opts = { last_state: 'running', last_ping: Date.now() };
-
-        return this.update(_.merge(opts, infos));
-      },
-      /*
-       * Updates the last_ping of a node to current date and time.
-       */
-      ping: function() {
-        return this.update({ last_ping: moment() });
-      },
-      /*
-       * Informations required by the agent to provision the node.
-       */
-      agentInfos: function() {
-        return this.getCluster().then(cluster => {
-          return {
-            master: this.master,
-            name:   this.name,
-            labels: this.labels,
-            cert: {
-              ca:   cluster.cert.server_ca,
-              cert: cluster.cert.server_cert,
-              key:  cluster.cert.server_key,
-            },
-            versions: {
-              docker:   cluster.docker_version,
-              swarm:    cluster.swarm_version
-            },
-            strategy: cluster.strategy
-          };
-        });
       }
     },
     hooks: {
