@@ -2,8 +2,8 @@
 
 let _ = require('lodash'),
   moment = require('moment'),
-  errors = require('../support').errors,
-  config = require('../../config');
+  config = require('../../config'),
+  errors = require('../support').errors;
 
 const CLUSTER_INFOS = ['docker_version', 'swarm_version', 'strategy', 'cert'],
       NODE_INFOS    = ['name', 'master', 'labels'],
