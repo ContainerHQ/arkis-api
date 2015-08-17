@@ -15,6 +15,9 @@ module.exports = function(err, req, res, next) {
     case 'AlreadyUpgradedError':
       res.status(409).json({ error: err });
       break;
+    case 'NotMasterError':
+      res.status(403).json({ error: err });
+      break;
     default:
       console.error(err.message);
       res.status(500).json({ error: INTERNAL_SERVER_ERROR });

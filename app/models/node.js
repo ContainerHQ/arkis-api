@@ -141,7 +141,11 @@ module.exports = function(sequelize, DataTypes) {
       },
       nonRunningNorUnreachable: {
         where: { last_state: { $ne: 'running' } }
-      }
+      },
+      runningIPs: {
+        attributes: ['public_ip'],
+        where: { public_ip: { $ne: null }, last_state: 'running' }
+      },
     },
     getterMethods: {
       state_message: function() {

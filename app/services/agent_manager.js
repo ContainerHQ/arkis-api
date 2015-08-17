@@ -2,7 +2,9 @@
 
 let _ = require('lodash'),
   moment = require('moment'),
+  errors = require('../support').errors,
   config = require('../../config');
+  //models = require('../models');
 
 const CLUSTER_INFOS = ['docker_version', 'swarm_version', 'strategy', 'cert'],
       NODE_INFOS    = ['name', 'master', 'labels'],
@@ -47,10 +49,10 @@ class AgentManager {
    * cluster.
    */
   fetch() {
-
+    if (this.isSlave()) { return Promise.reject(new errors.NotMasterError()); }
   }
-  get isMaster() {
-    return this.node.master;
+  get isSlave() {
+    return !this.node.master;
   }
   get config() {
     return _(config)

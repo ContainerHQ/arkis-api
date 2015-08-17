@@ -3,7 +3,6 @@
 let _ = require('lodash'),
   mixins = require('./concerns'),
   config = require('../../config'),
-  discovery = require('../support').discovery,
   cert = require('../support').cert,
   is = require('./validators');
 
@@ -21,12 +20,6 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: null,
       unique: true,
       validate: is.subdomainable
-    },
-    token: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      defaultValue: null,
-      unique: true
     },
     cert: {
       type: DataTypes.JSONB,
@@ -94,15 +87,9 @@ module.exports = function(sequelize, DataTypes) {
         });
         return cert.generate().then(cert => {
           cluster.cert = cert;
-          return discovery.createToken();
-        }).then(token => {
-          cluster.token = token;
           return cluster;
         });
-      },
-      beforeDestroy: function(cluster) {
-        return discovery.deleteToken(cluster.token);
-      },
+      }
     },
     instanceMethods: {
       retrieveState: function() {
@@ -112,9 +99,6 @@ module.exports = function(sequelize, DataTypes) {
         .then(nodes => {
           return _.isEmpty(nodes) ? 'running' : _.first(nodes).last_state;
         });
-      },
-      hasNodes: function() {
-        return ;
       },
       /*
        * If the cluster already has updated its attributes with the same

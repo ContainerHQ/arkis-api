@@ -23,7 +23,7 @@ class DaemonManager extends AuthorizeManager {
    * This method is almost agnostic from changes nature. It's up to the caller
    * to filter the changes that must be processed.
    *
-   * However, if the cluster's master node changes, it must be notified
+   * However, if the cluster's master node changes, it will be notified
    * accordingly.
    */
   update(attributes={}) {

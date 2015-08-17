@@ -2,6 +2,7 @@
 
 let _ = require('lodash'),
   moment = require('moment'),
+  errors = require('../support').errors,
   config = require('../../config'),
   AgentManager = require('../../app/services').AgentManager;
 
@@ -159,5 +160,38 @@ describe('AgentManager Service', () => {
       });
     });
 
+  });
+
+  describe('#fetch', () => {
+    context('when node is not master', () => {
+      let actualErr;
+
+      beforeEach(done => {
+        node.update({ master: false }).then(() => {
+          return manager.fetch();
+        }).catch(err => {
+          actualErr = err;
+          done();
+        });
+      });
+
+      it('returns an error', () => {
+        expect(actualErr).to.deep.equal(new errors.NotMasterError());
+      });
+
+      it("doesn't update the node cluster ping", () => {
+
+      });
+    });
+
+    context('when node is master', () => {
+      beforeEach(() => {
+        return node.update({ master: true });
+      });
+
+      it('updates the node cluster ping', () => {
+
+      });
+    });
   });
 });
