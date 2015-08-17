@@ -50,13 +50,13 @@ describe('DELETE /clusters/:id', () => {
 
   context('when cluster id is invalid', () => {
     it('returns a 404 not found ', done => {
-      api.clusters(user).delete('whatever').expect(404, {}, done);
+      api.clusters(user).delete('whatever').expect(404, done);
     });
   });
 
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {
-      api.clusters().delete(cluster.id).expect(401, {}, done);
+      api.clusters().delete(cluster.id).expect(401, done);
     });
   });
 });

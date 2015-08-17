@@ -82,7 +82,7 @@ describe('POST /clusters/:cluster_id/nodes', () => {
 
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {
-      api.clusters().nodes(cluster).create().expect(401, {}, done);
+      api.clusters().nodes(cluster).create().expect(401, done);
     });
   });
 });

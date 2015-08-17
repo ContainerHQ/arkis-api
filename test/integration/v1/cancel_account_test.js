@@ -16,8 +16,7 @@ describe('DELETE /account/', () => {
   it('destroys the user account', done => {
     api.account(user).cancel()
     .field('password', password)
-    .expect(204)
-    .end((err, res) => {
+    .expect(204, (err, res) => {
       if (err) { return done(err); }
 
       expect(User.findOne({ where: { email: user.email } }))
@@ -30,8 +29,7 @@ describe('DELETE /account/', () => {
     it('returns a forbidden status', done => {
       api.account(user).cancel()
       .field('password', `${password}*`)
-      .expect(403)
-      .end((err, res) => {
+      .expect(403, (err, res) => {
         if (err) { return done(err); }
 
         expect(User.findOne({ where: { email: user.email } }))
@@ -43,7 +41,7 @@ describe('DELETE /account/', () => {
 
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {
-      api.account().cancel().expect(401, {}, done);
+      api.account().cancel().expect(401, done);
     });
   });
 });

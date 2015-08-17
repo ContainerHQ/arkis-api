@@ -1,7 +1,7 @@
 'use strict';
 
 let sequelize = require('sequelize'),
-  errors = require('../../app/routes/shared/errors'),
+  errors = require('../../app/support').errors,
   errorHandler = rewire('../../app/middlewares/error_handler');
 
 const INTERNAL_SERVER_ERROR = errorHandler.__get__('INTERNAL_SERVER_ERROR');
@@ -17,7 +17,6 @@ describe('ErrorHandler Middleware', () => {
 
     errorHandler.__set__('console', fakeConsole);
   });
-
 
   [
     'ValidationError',
@@ -79,15 +78,16 @@ describe('ErrorHandler Middleware', () => {
   });
 
   [
-    'StateError',
-    'AlreadyUpgradedError'
-  ].forEach(errorName => {
+    ['StateError', 409],
+    ['AlreadyUpgradedError', 409],
+    ['NotMasterError', 403]
+  ].forEach(([errorName, status]) => {
     context(`with a ${errorName}`, () => {
       let err = new errors[errorName]();
 
-      it('sends a conflict request status', done => {
+      it(`sends a ${status} request status`, done => {
         errorHandler(err, {}, res, () => {
-          expect(res.status).to.have.been.calledWith(409);
+          expect(res.status).to.have.been.calledWith(status);
           done();
         });
       });

@@ -1,7 +1,7 @@
 'use strict';
 
 let bcrypt = require('bcrypt'),
-  token = require('../services').token;
+  token = require('../support').token;
 
 module.exports = function(sequelize, DataTypes) {
   let User = sequelize.define('User', {

@@ -1,6 +1,6 @@
 'use strict';
 
-let errors = require('../../app/routes/shared/errors'),
+let errors = require('../../app/support').errors,
   pagination = require('../../app/middlewares').pagination;
 
 const DEFAULT_LIMIT  = 25,

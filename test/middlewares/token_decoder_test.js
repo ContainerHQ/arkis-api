@@ -1,6 +1,6 @@
 'use strict';
 
-let services = require('../../app/services'),
+let support = require('../../app/support'),
   tokenDecoder = require('../../app/middlewares').tokenDecoder;
 
 describe('Token Decoder Middleware', () => {
@@ -16,7 +16,7 @@ describe('Token Decoder Middleware', () => {
     let token;
 
     beforeEach(() => {
-      token = services.token.generate(JIT);
+      token = support.token.generate(JIT);
     });
 
     it('decodes the given jwt token', done => {

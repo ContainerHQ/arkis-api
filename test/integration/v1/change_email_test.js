@@ -21,8 +21,7 @@ describe('PATCH /account/change_email', () => {
     api.account(user).changeEmail()
     .field('password', password)
     .field('new_email', NEW_EMAIL)
-    .expect(204)
-    .end((err, res) => {
+    .expect(204, (err, res) => {
       if (err) { return done(err); }
 
       expect(user.reload())
@@ -35,8 +34,7 @@ describe('PATCH /account/change_email', () => {
     it('returns a forbidden status', done => {
       api.account(user).changeEmail()
       .field('password', `${password}*`)
-      .expect(403)
-      .end((err, res) => {
+      .expect(403, (err, res) => {
         if (err) { return done(err); }
 
         expect(user.reload())
@@ -50,8 +48,7 @@ describe('PATCH /account/change_email', () => {
     it('returns a bad request status and validation errors', done => {
       api.account(user).changeEmail()
       .field('password', password)
-      .expect(400)
-      .end((err, res) => {
+      .expect(400, (err, res) => {
         if (err) { return done(err); }
 
         expect(user.reload())
@@ -81,8 +78,7 @@ describe('PATCH /account/change_email', () => {
       .send(form)
       .field('password', password)
       .field('new_email', NEW_EMAIL)
-      .expect(204)
-      .end((err, res) => {
+      .expect(204, (err, res) => {
         if (err) { return done(err); }
 
         expect(User.findById(user.id))
@@ -94,8 +90,7 @@ describe('PATCH /account/change_email', () => {
 
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {
-      api.account().changeEmail()
-      .expect(401, {}, done);
+      api.account().changeEmail().expect(401, done);
     });
   });
 });

@@ -28,7 +28,7 @@ describe('GET /account/profile', () => {
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {
       api.account().getProfile()
-      .expect(401, {}, done);
+      .expect(401, done);
     });
   });
 });

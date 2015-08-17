@@ -1,12 +1,9 @@
 'use strict';
 
 let _ = require('lodash'),
-  errors = require('../routes/shared/errors'),
   mixins = require('./concerns'),
   config = require('../../config'),
-  services = require('../services'),
-  discovery = services.discovery,
-  cert = services.cert,
+  cert = require('../support').cert,
   is = require('./validators');
 
 module.exports = function(sequelize, DataTypes) {
@@ -23,12 +20,6 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: null,
       unique: true,
       validate: is.subdomainable
-    },
-    token: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      defaultValue: null,
-      unique: true
     },
     cert: {
       type: DataTypes.JSONB,
@@ -94,53 +85,20 @@ module.exports = function(sequelize, DataTypes) {
           docker_version: config.latestVersions.docker,
           swarm_version:  config.latestVersions.swarm
         });
-        /*
-         * We first try to create the ssl certificates, to avoid an
-         * unnecessary call to the docker hub discovery service.ss
-         */
-        return cluster._initializeCert().then(() => {
-          return cluster._initializeToken();
+        return cert.generate().then(cert => {
+          cluster.cert = cert;
+          return cluster;
         });
-      },
-      beforeDestroy: function(cluster) {
-        return discovery.deleteToken(cluster.token);
-      },
+      }
     },
     instanceMethods: {
-      _initializeToken: function() {
-        return discovery.createToken().then(token => {
-          this.token = token;
-        });
-      },
-      _initializeCert: function() {
-        return cert.generate().then(certs => {
-          this.cert = {};
+      retrieveState: function() {
+        if (this.nodes_count <= 0) { return Promise.resolve('empty'); }
 
-          _.keys(certs).forEach(type => {
-            _.keys(certs[type]).forEach(name => {
-              this.cert[`${type}_${name}`] = certs[type][name];
-            });
-          });
-          return this;
+        return this.getNodes({ scope: 'nonRunningNorUnreachable' })
+        .then(nodes => {
+          return _.isEmpty(nodes) ? 'running' : _.first(nodes).last_state;
         });
-      },
-      _hasLatestVersions: function() {
-        return config.latestVersions.docker === this.docker_version &&
-               config.latestVersions.swarm  === this.swarm_version;
-      },
-      _getLastStateFromNodes: function() {
-        if (this.nodes_count <= 0) {
-          return Promise.resolve('empty');
-        }
-        return this.getNodes({ scope: 'nonRunning' }).then(nodes => {
-          if (_.isEmpty(nodes)) {
-            return 'running';
-          }
-          return _.first(nodes).last_state;
-        });
-      },
-      _removeLastPing: function() {
-        this.last_ping = null;
       },
       /*
        * If the cluster already has updated its attributes with the same
@@ -152,46 +110,18 @@ module.exports = function(sequelize, DataTypes) {
         switch (changes.last_state) {
           case 'destroyed':
           case 'running':
-            return this._getLastStateFromNodes().then(state => {
+            return this.retrieveState().then(state => {
               changes.last_state = state;
-
               return this.update(changes);
             });
         }
         return this.update(changes);
-      },
-      upgrade: function() {
-        let state = this.get('state');
-
-        if (state !== 'running') {
-          return Promise.reject(new errors.StateError('upgrade', state));
-        }
-        if (this._hasLatestVersions()) {
-          return Promise.reject(new errors.AlreadyUpgradedError());
-        }
-        return this.getNodes().then(nodes => {
-          _.invoke(nodes, 'upgrade', config.latestVersions);
-          /*
-           * When a node is updated, the cluster is notified and update its
-           * state accordingly, beside, when every node upgrade call fails,
-           * the cluster state must not changed to. Therefore we don't need
-           * to update the state here. However, versions must be updated,
-           * the node agent will automatically get these informations when
-           * the node will be restarted.
-           */
-          return this.update({
-            docker_version: config.latestVersions.docker,
-            swarm_version:  config.latestVersions.swarm,
-          });
-        });
       }
     },
     classMethods: {
       associate: function(models) {
-        Cluster.hasMany(models.Node, {
-          onDelete: 'cascade',
-          hooks: true,
-          counterCache: { as: 'nodes_count' },
+        Cluster.hasMany(models.Node, { onDelete: 'cascade', hooks: true,
+          counterCache: { as: 'nodes_count' }
         });
       }
     }

@@ -59,21 +59,27 @@ module.exports.account = function(user={}) {
 };
 
 module.exports.agent = function(node={}) {
-  let ressource = `${API_ROUTE}/agent`;
+  let ressource = `${API_ROUTE}/agent`,
+    swarm_ressource = 'clusters';
 
   return {
     infos: function() {
       return request(app)
       .get(`${ressource}/${node.token}/infos`);
     },
-    register: function(form) {
+    notify: function(form) {
       return request(app)
-      .post(`${ressource}/${node.token}/register`)
+      .post(`${ressource}/${node.token}/notify`)
       .send(form);
     },
-    live: function() {
+    register: function(ip) {
       return request(app)
-      .post(`${ressource}/${node.token}/live`);
+      .post(`${ressource}/${swarm_ressource}/${node.token}`)
+      .send(ip);
+    },
+    fetch: function() {
+      return request(app)
+      .get(`${ressource}/${swarm_ressource}/${node.token}`);
     }
   };
 };

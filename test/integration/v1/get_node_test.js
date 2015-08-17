@@ -53,13 +53,13 @@ describe('GET /clusters/:cluster_id/nodes/:node_id', () => {
 
   context('when the user specify an invalid node id', () => {
     it('returns a 404 not found', done => {
-      api.clusters(user).nodes(cluster).get(0).expect(404, {}, done);
+      api.clusters(user).nodes(cluster).get(0).expect(404, done);
     });
   });
 
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {
-      api.clusters().nodes(cluster).get(node.id).expect(401, {}, done);
+      api.clusters().nodes(cluster).get(node.id).expect(401, done);
     });
   });
 });

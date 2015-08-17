@@ -2,9 +2,9 @@
 
 let _ = require('lodash'),
   moment = require('moment'),
-  errors = require('../../app/routes/shared/errors'),
+  errors = require('../../app/support').errors,
   models = require('../../app/models'),
-  services = require('../../app/services'),
+  support = require('../../app/support'),
   concerns = require('./concerns'),
   config = require('../../config');
 
@@ -87,16 +87,33 @@ describe('Cluster Model', () => {
       .to.eventually.have.property('strategy', DEFAULT_STRATEGY);
   });
 
+  context('adding a node to this cluster', () => {
+    let cluster, previousNodesCount;
+
+    beforeEach(() => {
+      cluster = factory.buildSync('cluster');
+      return cluster.save().then(() => {
+        previousNodesCount = cluster.nodes_count;
+        return factory.buildSync('node', { cluster_id: cluster.id }).save();
+      }).then(() => {
+        return cluster.reload();
+      });
+    });
+
+    it('increases its node counter cache', () => {
+      expect(cluster.nodes_count).to.equal(previousNodesCount + 1);
+    });
+  });
+
   describe('#create', () => {
-    const FAKE_TOKEN = random.string(),
-          FAKE_CERTS = {
-            client: {
-              cert: random.string(), key: random.string(), ca: random.string()
-            },
-            server: {
-              cert: random.string(), key: random.string(), ca: random.string()
-            }
-          };
+    const FAKE_CERTS = {
+      client: {
+        cert: random.string(), key: random.string(), ca: random.string()
+      },
+      server: {
+        cert: random.string(), key: random.string(), ca: random.string()
+      }
+    };
 
     let cluster;
 
@@ -104,28 +121,20 @@ describe('Cluster Model', () => {
       cluster = factory.buildSync('cluster');
     });
 
-    context('when machine token and cert creation succeeded', () => {
+    context('when cert creation succeeded', () => {
       beforeEach(() => {
-        sinon.stub(services.discovery, 'createToken').returns(
-          Promise.resolve(FAKE_TOKEN)
-        );
-        sinon.stub(services.cert, 'generate').returns(
+        sinon.stub(support.cert, 'generate').returns(
           Promise.resolve(FAKE_CERTS)
         );
         return cluster.save();
       });
 
       afterEach(() => {
-        services.discovery.createToken.restore();
-        services.cert.generate.restore();
-      });
-
-      it('initializes its token', () => {
-        expect(cluster.token).to.equal(FAKE_TOKEN);
+        support.cert.generate.restore();
       });
 
       it('initializes its ssl certificates', () => {
-        expect(cluster.cert).to.satisfy(has.certificate(FAKE_CERTS));
+        expect(cluster.cert).to.deep.equal(FAKE_CERTS);
       });
 
       ['docker', 'swarm'].forEach(binary => {
@@ -134,71 +143,17 @@ describe('Cluster Model', () => {
             .to.equal(config.latestVersions[binary]);
         });
       });
-
-      context('adding a node to this cluster', () => {
-        let previousNodesCount;
-
-        beforeEach(() => {
-          previousNodesCount = cluster.nodes_count;
-
-          return factory.buildSync('node', { cluster_id: cluster.id })
-          .save().then(() => {
-            return cluster.reload();
-          });
-        });
-
-        it('increases its node counter cache', () => {
-          expect(cluster.nodes_count).to.equal(previousNodesCount + 1);
-        });
-      });
     });
 
-    context('when machine cert creation failed', () => {
+    context('when cert creation failed', () => {
       const ERROR = random.error();
 
       beforeEach(() => {
-        sinon.stub(services.cert, 'generate').returns(Promise.reject(ERROR));
-        sinon.stub(services.discovery, 'createToken').returns(
-          Promise.resolve()
-        );
+        sinon.stub(support.cert, 'generate').returns(Promise.reject(ERROR));
       });
 
       afterEach(() => {
-        services.cert.generate.restore();
-        services.discovery.createToken.restore();
-      });
-
-      it('returns the error', () => {
-        return expect(cluster.save()).to.be.rejectedWith(ERROR);
-      });
-
-      it("doesn't create the cluster", done => {
-        cluster.save().then(done).catch(err => {
-          expect(models.Cluster.findById(cluster.id))
-            .to.eventually.not.exist
-            .notify(done);
-        });
-      });
-
-      it("doesn't create the token", done => {
-        cluster.save().then(done).catch(err => {
-          expect(services.discovery.createToken).to.not.have.been.called;
-          done();
-        });
-      });
-    });
-
-    context('when machine token creation failed', () => {
-      const ERROR = random.error();
-
-      beforeEach(() => {
-        sinon.stub(services.discovery, 'createToken').returns(
-          Promise.reject(ERROR)
-        );
-      });
-
-      afterEach(() => {
-        services.discovery.createToken.restore();
+        support.cert.generate.restore();
       });
 
       it('returns the error', () => {
@@ -213,108 +168,6 @@ describe('Cluster Model', () => {
         });
       });
     });
-  });
-
-  describe('#upgrade', () => {
-    context('when cluster is not running', () => {
-      let cluster;
-
-      beforeEach(() => {
-        cluster = factory.buildSync('cluster');
-        return cluster.save();
-      });
-
-      it('returns an error', () => {
-        let expected = new errors.StateError('upgrade', cluster.state);
-
-        return cluster.upgrade().then(() => {
-          throw new Error('Upgrade should be rejected!');
-        }).catch(err => {
-          return expect(err).to.deep.equal(expected);
-        });
-      });
-    });
-
-    context('when cluster is running', () => {
-      let cluster;
-
-      beforeEach(() => {
-        cluster = factory.buildSync('runningCluster');
-        return updateClusterToOldestVersions(cluster);
-      });
-
-      ['docker', 'swarm'].forEach(binary => {
-        context(`when cluster already has the latest ${binary} version`, () => {
-          beforeEach(() => {
-            return cluster.update({
-              docker_version:  config.latestVersions.docker,
-              swarm_version:   config.latestVersions.swarm
-            });
-          });
-
-          it('returns an upgrade version error', () => {
-            return cluster.upgrade().then(() => {
-              throw new Error('Upgrade should be rejected!');
-            }).catch(err => {
-              return expect(err)
-                .to.deep.equal(new errors.AlreadyUpgradedError());
-            });
-          });
-
-          it(`has the same ${binary} version as before`, () => {
-            return cluster.upgrade().then(() => {
-              throw new Error('Upgrade should be rejected!');
-            }).catch(() => {
-              expect(cluster[`${binary}_version`])
-                .to.equal(config.latestVersions[binary]);
-            });
-          });
-        });
-      });
-    });
-
-    ['resolve', 'reject'].forEach(result => {
-      contextNodeUpgrade(result);
-    });
-
-    function contextNodeUpgrade(result) {
-      let cluster;
-
-      beforeEach(() => {
-        cluster = factory.buildSync('runningCluster');
-        return updateClusterToOldestVersions(cluster);
-      });
-
-      context(`when a node upgrade has been ${result}ed`, () => {
-        let fakeNodes, upgradedCluster;
-
-        beforeEach(() => {
-          fakeNodes = _.map(new Array(10), () => {
-            return { upgrade: sinon.stub().returns(Promise[result]()) };
-          });
-          cluster.getNodes = sinon.stub().returns(Promise.resolve(fakeNodes));
-          return cluster.upgrade().then(cluster => {
-            upgradedCluster = cluster;
-          });
-        });
-
-        ['docker', 'swarm'].forEach(binary => {
-          it(`has the latest ${binary} version available`, () => {
-            expect(cluster[`${binary}_version`], config.latestVersions[binary]);
-          });
-        });
-
-        it('upgrades all the cluster nodes', () => {
-          fakeNodes.forEach(node => {
-            expect(node.upgrade).to.have.been.called;
-          });
-        });
-
-        it('returns the upgraded cluster', () =>{
-          expect(upgradedCluster).to.deep.equal(cluster);
-        });
-      });
-    }
   });
 
   /*
@@ -346,65 +199,10 @@ describe('Cluster Model', () => {
       }).catch(done);
     });
 
-    context('when token deletion succeeded', () => {
-      beforeEach(() => {
-        sinon.stub(services.discovery, 'deleteToken').returns(
-          Promise.resolve()
-        );
-      });
-
-      afterEach(() => {
-        services.discovery.deleteToken.restore();
-      });
-
-      it('deletes its token', done => {
-        let token = cluster.token;
-
-        cluster.destroy().then(() => {
-          expect(services.discovery.deleteToken).to.have.been.calledWith(token);
-          done();
-        }).catch(done);
-      });
-
-      it('removes its nodes', () => {
-        return expect(cluster.destroy().then(() => {
-          return models.Node.findAll({ where: { id: nodesId } });
-        })).to.be.fulfilled.and.to.eventually.be.empty;
-      });
-    });
-
-    context('when token deletion failed', () => {
-      const ERROR = random.error();
-
-      beforeEach(() => {
-        sinon.stub(services.discovery, 'deleteToken').returns(
-          Promise.reject(ERROR)
-        );
-      });
-
-      afterEach(() => {
-        services.discovery.deleteToken.restore();
-      });
-
-      it('returns the error', () => {
-        return expect(cluster.destroy()).to.be.rejectedWith(ERROR);
-      });
-
-      it("doesn't remove the cluster", done => {
-        cluster.destroy().then(done).catch(() => {
-          expect(models.Cluster.findById(cluster.id))
-            .to.eventually.exist
-            .notify(done);
-        });
-      });
-
-      it("doesn't remove its nodes", done => {
-        cluster.destroy().then(done).catch(() => {
-          expect(models.Node.findAll({ where: { id: nodesId } }))
-            .to.eventually.not.be.empty
-            .notify(done);
-        });
-      });
+    it('removes its nodes', () => {
+      return expect(cluster.destroy().then(() => {
+        return models.Node.findAll({ where: { id: nodesId } });
+      })).to.be.fulfilled.and.to.eventually.be.empty;
     });
   });
 

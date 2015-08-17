@@ -50,3 +50,12 @@ error.AlreadyUpgradedError = class extends Error {
     this.message = `Node already has these docker and swarm versions.`;
   }
 };
+
+error.NotMasterError = class extends Error {
+  constructor() {
+    super();
+
+    this.name = 'NotMasterError';
+    this.message = 'Forbidden for slave nodes!';
+  }
+};

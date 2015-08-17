@@ -78,7 +78,7 @@ describe('PATCH /account/profile', () => {
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {
       api.account().updateProfile()
-      .expect(401, {}, done);
+      .expect(401, done);
     });
   });
 });

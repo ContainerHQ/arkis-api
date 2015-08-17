@@ -1,10 +1,8 @@
 'use strict';
 
 module.exports = {
-  cert: require('./cert'),
-  daemon: require('./daemon'),
-  discovery: require('./discovery'),
-  fqdn: require('./fqdn'),
-  machine: require('./machine'),
-  token: require('./token')
+  AgentManager: require('./agent_manager'),
+  ClusterManager: require('./cluster_manager'),
+  DaemonManager: require('./daemon_manager'),
+  MachineManager: require('./machine_manager')
 };

@@ -40,7 +40,7 @@ describe('GET /clusters/:cluster_id/nodes', () => {
     context('with a negative limit', () => {
       it('returns a bad request error', done => {
         api.clusters(user).nodes(cluster).getAll({ limit: -1 })
-        .expect(400).end(done);
+        .expect(400, done);
       });
     });
   });
@@ -57,7 +57,7 @@ describe('GET /clusters/:cluster_id/nodes', () => {
     context('with a negative offset', () => {
       it('returns a bad request error', done => {
         api.clusters(user).nodes(cluster)
-        .getAll({ offset: -1 }).expect(400).end(done);
+        .getAll({ offset: -1 }).expect(400, done);
       });
     });
   });

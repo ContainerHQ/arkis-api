@@ -88,13 +88,13 @@ describe('POST /clusters/:cluster_id/upgrade', () => {
 
   context('when cluster id is invalid', () => {
     it('returns a 404 not found', done => {
-      api.clusters(user).upgrade(0).expect(404, {}, done);
+      api.clusters(user).upgrade(0).expect(404, done);
     });
   });
 
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {
-      api.clusters().upgrade(cluster.id).expect(401, {}, done);
+      api.clusters().upgrade(cluster.id).expect(401, done);
     });
   })
 });

@@ -23,12 +23,6 @@ module.exports = {
         defaultValue: null,
         validate: { len: [1, 64] }
       },
-      token: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-        defaultValue: null,
-        unique: true
-      },
       cert: {
         type: DataTypes.JSONB,
         allowNull: true,

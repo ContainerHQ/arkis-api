@@ -4,6 +4,7 @@ let _ = require('lodash'),
   express = require('express'),
   validator = require('validator'),
   middlewares = require('../../../middlewares'),
+  services = require('../../../services'),
   Node = require('../../../models').Node;
 
 let router = express.Router();
@@ -20,11 +21,11 @@ router
     { method: ['filtered', req.query] }
   ).findAndCount(req.pagination).then(res.paginate('nodes')).catch(next);
 })
-/*
- * Node must be reloaded in order to get its virtual attributes.
- */
 .post('/', (req, res, next) => {
-  req.cluster.createNode(_.pick(req.body, CREATE_PARAMS)).then(node => {
+  let node  = Node.build(_.pick(req.body, CREATE_PARAMS)),
+    machine = new services.MachineManager(req.cluster, node);
+
+  return machine.deploy().then(() => {
     return node.reload();
   }).then(node => {
     res.status(201).json({ node: node });
@@ -47,10 +48,9 @@ router
   }).catch(next);
 })
 .post('/:node_id/upgrade', (req, res, next) => {
-  req.node.upgrade({
-    docker: req.cluster.docker_version,
-    swarm:  req.cluster.swarm_version
-  }).then(() => {
+  let daemon = new services.DaemonManager(req.cluster, req.node);
+
+  daemon.upgrade().then(() => {
     res.noContent();
   }).catch(next);
 })
@@ -60,12 +60,18 @@ router
   res.json({ node: req.node });
 })
 .patch((req, res, next) => {
-  req.node.change(_.pick(req.body, UPDATE_PARAMS)).then(node => {
-    res.json({ node: node });
+  let daemon = new services.DaemonManager(req.cluster, req.node);
+
+  daemon.update(_.pick(req.body, UPDATE_PARAMS)).then(() => {
+    return req.node.reload();
+  }).then(() => {
+    res.json({ node: req.node });
   }).catch(next);
 })
 .delete((req, res, next) => {
-  req.node.destroy().then(res.noContent).catch(next);
+  let machine = new services.MachineManager(req.cluster, req.node);
+
+  machine.destroy().then(res.noContent).catch(next);
 });
 
 module.exports = router;

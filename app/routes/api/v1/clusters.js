@@ -4,6 +4,7 @@ let _ = require('lodash'),
   express = require('express'),
   validator = require('validator'),
   middlewares = require('../../../middlewares'),
+  services = require('../../../services'),
   Cluster = require('../../../models').Cluster;
 
 let router = express.Router();
@@ -41,7 +42,9 @@ router
   }).catch(next);
 })
 .post('/:cluster_id/upgrade', (req, res, next) => {
-  req.cluster.upgrade().then(() => {
+  let clusterManager = new services.ClusterManager(req.cluster);
+
+  clusterManager.upgrade().then(() => {
     res.noContent();
   }).catch(next);
 })
