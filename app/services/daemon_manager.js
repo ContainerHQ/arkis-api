@@ -1,13 +1,13 @@
 'use strict';
 
 let _ = require('lodash'),
-  AuthorizeManager = require('./authorize_manager'),
+  StateManager = require('./state_manager'),
   Daemon = require('../support').Daemon;
 
 const UPDATING_STATE  = { last_state: 'updating'  },
       UPGRADING_STATE = { last_state: 'upgrading' };
 
-class DaemonManager extends AuthorizeManager {
+class DaemonManager extends StateManager {
   constructor(cluster, node) {
     super(node, cluster);
 

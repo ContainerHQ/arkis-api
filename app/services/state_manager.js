@@ -6,7 +6,7 @@ let _ = require('lodash'),
 const CONFLICTED_STATE = 'running',
       VERSIONS = ['docker_version', 'swarm_version'];
 
-class AuthorizeManager {
+class StateManager {
   constructor(instance, compare) {
     this.instance = instance;
     this.compare  = compare;

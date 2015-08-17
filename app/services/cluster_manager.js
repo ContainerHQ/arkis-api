@@ -1,7 +1,7 @@
 'use strict';
 
 let _ = require('lodash'), config = require('../../config'),
-  AuthorizeManager = require('./authorize_manager'),
+  StateManager = require('./state_manager'),
   DaemonManager = require('./daemon_manager');
 
 const LATEST_VERSIONS = {
@@ -9,7 +9,7 @@ const LATEST_VERSIONS = {
   swarm_version:  config.latestVersions.swarm
 };
 
-class ClusterManager extends AuthorizeManager {
+class ClusterManager extends StateManager {
   constructor(cluster) {
     super(cluster, LATEST_VERSIONS);
 
