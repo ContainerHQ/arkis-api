@@ -141,7 +141,7 @@ describe('AgentManager Service', () => {
       });
     });
 
-    context('when addr is valid', () => {
+    context('when address is valid', () => {
       let ip;
 
       beforeEach(() => {

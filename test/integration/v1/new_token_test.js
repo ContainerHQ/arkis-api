@@ -12,8 +12,7 @@ describe('GET /account/new_token', () => {
 
   it('returns a new token', done => {
     api.account(user).generateNewToken()
-    .expect(200)
-    .end((err, res) => {
+    .expect(200, (err, res) => {
       if (err) { return done(err); }
 
       let previousToken = user.token;
@@ -29,19 +28,17 @@ describe('GET /account/new_token', () => {
 
   it('revokes the previous token', done => {
     api.account(user).generateNewToken()
-    .expect(200)
-    .end((err, res) => {
+    .expect(200, (err, res) => {
       if (err) { return done(err); }
 
       api.account(user).generateNewToken()
-      .expect(401, {}, done);
+      .expect(401, done);
     });
   });
 
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {
-      api.account().generateNewToken()
-      .expect(401, {}, done);
+      api.account().generateNewToken().expect(401, done);
     });
   });
 });

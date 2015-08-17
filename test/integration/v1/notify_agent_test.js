@@ -84,14 +84,14 @@ describe('POST /agent/:token/notify', () => {
       });
 
       it('returns a 404 not found', done => {
-        api.agent(node).notify().expect(404, {}, done);
+        api.agent(node).notify().expect(404, done);
       });
     });
   });
 
   context('when token is invalid', () => {
     it('returns a 401 unauthorized', done => {
-      api.agent().notify().expect(401, {}, done);
+      api.agent().notify().expect(401, done);
     });
   });
 });

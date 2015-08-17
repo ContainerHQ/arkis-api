@@ -64,13 +64,13 @@ describe('PATCH /clusters/:cluster_id', () => {
 
   context('when cluster id is invalid', () => {
     it('returns a 404 not found ', done => {
-      api.clusters(user).update().expect(404, {}, done)
+      api.clusters(user).update().expect(404, done)
     });
   });
 
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {
-      api.clusters().update(cluster.id).expect(401, {}, done);
+      api.clusters().update(cluster.id).expect(401, done);
     });
   });
 });

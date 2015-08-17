@@ -38,7 +38,7 @@ describe('GET /clusters/', () => {
 
     context('with a negative limit', () => {
       it('returns a bad request error', done => {
-        api.clusters(user).getAll({ limit: -1 }).expect(400).end(done);
+        api.clusters(user).getAll({ limit: -1 }).expect(400, done);
       });
     });
   });
@@ -53,7 +53,7 @@ describe('GET /clusters/', () => {
 
     context('with a negative offset', () => {
       it('returns a bad request error', done => {
-        api.clusters(user).getAll({ offset: -1 }).expect(400).end(done);
+        api.clusters(user).getAll({ offset: -1 }).expect(400, done);
       });
     });
   });
@@ -89,7 +89,7 @@ describe('GET /clusters/', () => {
 
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {
-      api.clusters().getAll().expect(401, {}, done);
+      api.clusters().getAll().expect(401, done);
     });
   });
 });

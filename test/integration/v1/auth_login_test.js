@@ -17,9 +17,7 @@ describe('POST /auth/login', () => {
   });
 
   it('registers a new user and returns its token', done => {
-    api.auth.login(user)
-    .expect(201)
-    .end((err, res) => {
+    api.auth.login(user).expect(201, (err, res) => {
       if (err) { return done(err); }
       /*
        * Retrieve the newly created user and verify the token.
@@ -38,8 +36,7 @@ describe('POST /auth/login', () => {
     it('returns the user token', done => {
       let userToken = user.token;
 
-      api.auth.login(user)
-      .expect(200, { token: userToken }, done);
+      api.auth.login(user).expect(200, { token: userToken }, done);
     });
 
     context('with incorrect password', () => {
@@ -48,8 +45,7 @@ describe('POST /auth/login', () => {
       });
 
       it('responds with an unauthorized status', done => {
-        api.auth.login(user)
-        .expect(401, {}, done);
+        api.auth.login(user).expect(401, done);
       });
     });
   });
@@ -65,10 +61,7 @@ describe('POST /auth/login', () => {
     });
 
     it('these attributes are filtered', done => {
-      api.auth.login(user)
-      .send(user)
-      .expect(201)
-      .end((err, res) => {
+      api.auth.login(user).send(user).expect(201, (err, res) => {
         if (err) { return done(err); }
 
         expect(User.findOne({ where: { email: user.email } }))
@@ -80,9 +73,7 @@ describe('POST /auth/login', () => {
 
   context('with invalid attributes', () => {
     it('responds with a bad request status and errors', done => {
-      api.auth.login()
-      .expect(400)
-      .end((err, res) => {
+      api.auth.login().expect(400, (err, res) => {
         if (err) { return done(err); }
 
         expect(User.create())

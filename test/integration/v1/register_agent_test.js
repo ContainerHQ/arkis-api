@@ -53,14 +53,14 @@ describe('POST /agent/clusters/:token/', () => {
       });
 
       it('returns a not found error', done => {
-        api.agent(node).register(addr).expect(404, {}, done);
+        api.agent(node).register(addr).expect(404, done);
       })
     });
   });
 
   context('when token is invalid', () => {
     it('returns a 401 unauthorized', done => {
-      api.agent().register(addr).expect(401, {}, done);
+      api.agent().register(addr).expect(401, done);
     });
   });
 });

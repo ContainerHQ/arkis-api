@@ -21,8 +21,7 @@ describe('PATCH /account/change_password', () => {
     .field('old_password', oldPassword)
     .field('new_password', NEW_PASSWORD)
     .field('new_password_confirmation', NEW_PASSWORD)
-    .expect(204)
-    .end((err, res) => {
+    .expect(204, (err, res) => {
       if (err) { return done(err); }
 
       expect(user.reload())
@@ -37,8 +36,7 @@ describe('PATCH /account/change_password', () => {
       .field('old_password', `${oldPassword}*`)
       .field('new_password', NEW_PASSWORD)
       .field('new_password_confirmation', NEW_PASSWORD)
-      .expect(403)
-      .end((err, res) => {
+      .expect(403, (err, res) => {
         if (err) { return done(err); }
 
         expect(user.reload())
@@ -53,8 +51,7 @@ describe('PATCH /account/change_password', () => {
       api.account(user).changePassword()
       .field('old_password', oldPassword)
       .field('new_password', NEW_PASSWORD)
-      .expect(400)
-      .end((err, res) => {
+      .expect(400, (err, res) => {
         if (err) { return done(err); }
 
         expect(res.body.errors).to.exist;
@@ -69,8 +66,7 @@ describe('PATCH /account/change_password', () => {
     it('returns a bad request status and validation errors', done => {
       api.account(user).changePassword()
       .field('old_password', oldPassword)
-      .expect(400)
-      .end((err, res) => {
+      .expect(400, (err, res) => {
         if (err) { return done(err); }
 
         user.password = null;
@@ -102,8 +98,7 @@ describe('PATCH /account/change_password', () => {
       .field('old_password', oldPassword)
       .field('new_password', NEW_PASSWORD)
       .field('new_password_confirmation', NEW_PASSWORD)
-      .expect(204)
-      .end((err, res) => {
+      .expect(204, (err, res) => {
         if (err) { return done(err); }
 
         expect(User.findById(user.id))
@@ -115,8 +110,7 @@ describe('PATCH /account/change_password', () => {
 
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {
-      api.account().changePassword()
-      .expect(401, {}, done);
+      api.account().changePassword().expect(401, done);
     });
   });
 });
