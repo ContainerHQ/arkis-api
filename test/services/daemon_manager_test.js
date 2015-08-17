@@ -331,7 +331,7 @@ describe('DaemonManager Service', () => {
           let expected = _.pick(manager.cluster,
             ['docker_version', 'swarm_version']
           );
-          expect(manager.daemon.upgrade).to.have.been.calledWith(expected);
+          expect(manager.daemon.upgrade).to.have.been.calledWithMatch(expected);
         });
 
         it('node is upgrading', () => {

@@ -1,17 +1,15 @@
 'use strict';
 
 let _ = require('lodash'),
-  errors = require('../routes/shared/errors'),
   AuthorizeManager = require('./authorize_manager'),
   Daemon = require('../support').Daemon;
 
 const UPDATING_STATE  = { last_state: 'updating'  },
-      UPGRADING_STATE = { last_state: 'upgrading' },
-      VERSIONS        = ['docker_version', 'swarm_version'];
+      UPGRADING_STATE = { last_state: 'upgrading' };
 
 class DaemonManager extends AuthorizeManager {
   constructor(cluster, node) {
-    super(node);
+    super(node, cluster);
 
     this.cluster = cluster;
     this.node    = node;
@@ -64,21 +62,11 @@ class DaemonManager extends AuthorizeManager {
     if (this.isConflicted)      { return this.conflict('upgrade'); }
     if (this.isAlreadyUpgraded) { return this.alreadyUpgraded(); }
 
-    return this.daemon.upgrade(_.pick(this.cluster, VERSIONS)).then(() => {
+    return this.daemon.upgrade(this.cluster).then(() => {
       return this.node.update(UPGRADING_STATE);
     }).then(() => {
       return this.cluster.notify(UPGRADING_STATE);
     });
-  }
-
-  get isAlreadyUpgraded() {
-    let clusterVersions = _.pick(this.cluster, VERSIONS),
-      nodeVersions      = _.pick(this.node,    VERSIONS);
-
-    return _.isEqual(clusterVersions, nodeVersions);
-  }
-  alreadyUpgraded() {
-    return Promise.reject(new errors.AlreadyUpgradedError());
   }
 }
 
