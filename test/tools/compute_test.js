@@ -31,7 +31,7 @@ describe('DigitalOcean Compute Client', () => {
 
     beforeEach(() => {
       client = compute.getClient('digitalocean', {
-        token: 'd9e29fac4796f05d6cf6c2eadf642eaef2ef3b804dcd0d5fb63d43161a913726'
+        token: ''
       });
     });
 
