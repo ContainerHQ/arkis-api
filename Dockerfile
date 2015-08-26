@@ -7,9 +7,9 @@ RUN useradd dev
 
 # Install cli tools
 RUN npm install -g \
-    sequelize-cli \
-    nodemon \
-    jshint
+    sequelize-cli@1.7.4 \
+    nodemon@1.4.1 \
+    jshint@2.8.0
 
 # Copy package.json into the image.
 COPY package.json $VENDOR/

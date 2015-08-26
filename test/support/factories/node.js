@@ -1,8 +1,8 @@
 'use strict';
 
 let moment = require('moment'),
-  random = require('../support/random'),
-  Node = require('../../app/models').Node;
+  random = require('../random'),
+  Node = require('../../../app/models').Node;
 
 module.exports = function(factory) {
   factory.define('node', Node, {

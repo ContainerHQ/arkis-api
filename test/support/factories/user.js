@@ -1,7 +1,7 @@
 'use strict';
 
-let random = require('../support/random'),
-  User = require('../../app/models').User;
+let random = require('../random'),
+  User = require('../../../app/models').User;
 
 module.exports = function(factory) {
   factory.define('user', User, {

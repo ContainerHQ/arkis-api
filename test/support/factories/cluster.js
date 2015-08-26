@@ -1,8 +1,8 @@
 'use strict';
 
 let moment = require('moment'),
-  random = require('../support/random'),
-  Cluster = require('../../app/models').Cluster;
+  random = require('../random'),
+  Cluster = require('../../../app/models').Cluster;
 
 module.exports = function(factory) {
   factory.define('cluster', Cluster, {

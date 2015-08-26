@@ -59,3 +59,14 @@ error.NotMasterError = class extends Error {
     this.message = 'Forbidden for slave nodes!';
   }
 };
+
+error.ProviderError = class extends Error {
+  constructor(options) {
+    super();
+
+    this.name = 'ProviderError';
+    this.statusMessage = options.statusMessage;
+    this.statusCode = options.statusCode;
+    this.message = `${options.provider}: ${options.message}`;
+  }
+};
