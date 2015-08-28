@@ -1,38 +1,18 @@
 'use strict';
 
 let _ = require('lodash'),
+  config = require('../../config'),
   errors = require('../../app/support').errors,
-  compute = require('../../app/tools/compute');
+  Compute = require('../../app/connectors/compute');
 
-describe('DigitalOcean Compute Client', () => {
-  const UNAUTHORIZED_ERROR = new errors.ProviderError({
-    provider: 'DigitalOcean',
-    statusCode: 401,
-    statusMessage: 'Unauthorized',
-    message: 'Unable to authenticate you.'
-  });
+const IMAGE_NAME = 'ubuntu-14-04-x64';
 
-  const UNPROCESSABLE_ERROR = new errors.ProviderError({
-    provider: 'DigitalOcean',
-    statusCode: 422,
-    statusMessage: 'Unprocessable Entity',
-    message: 'You specified an invalid region for Droplet creation.'
-  });
-
-  const NOT_FOUND_ERROR = new errors.ProviderError({
-    provider: 'DigitalOcean',
-    statusCode: 404,
-    statusMessage: 'Not Found',
-    message: 'The resource you were accessing could not be found.'
-  });
-
+describe('Compute DigitalOcean Connector', () => {
   context('with valid credentials', () => {
     let client;
 
     beforeEach(() => {
-      client = compute.getClient('digitalocean', {
-        token: ''
-      });
+      client = Compute.default(config.auth.compute);
     });
 
     describe('#verifyCredentials', () => {
@@ -54,34 +34,45 @@ describe('DigitalOcean Compute Client', () => {
     });
 
     describe('#createMachine', () => {
+      /*
+       * DigitalOcean doesn't provide a test api, beside we can't delete a
+       * droplet in deploying state, therefore we are faking the call to the
+       * real API to avoid to create real ressources that would be difficult
+       * to remove.
+       */
       context('with valid options', () => {
-        let options;
+        const OPTIONS = {
+          name: random.string(),
+          region: random.string(),
+          size: random.string()
+        },
+          SUCCESS = { statusCode: 202 },
+          BODY = { droplet: { id: random.string() } };
+
+        let dropletId;
 
         beforeEach(() => {
-          options = { id: random.string() };
-
-          return client.getRegions().then(regions => {
-            options.region    = _.first(regions, { available: true }).slug;
-            options.node_size = '512mb';
+          client._client.dropletsCreate = sinon.stub().yields(null, SUCCESS, BODY);
+          return client.createMachine(OPTIONS).then(id => {
+            dropletId = id;
           });
         });
 
         it('creates a machine with given options', () => {
-          let id;
+          let opts = _.merge({ image: IMAGE_NAME }, OPTIONS);
 
-          return client.createMachine(options).then(machine => {
-            id = machine.id;
-            return expect(machine).to.exist;
-          }).then(() => {
-            return client.deleteMachine(id);
-          });
+          expect(client._client.dropletsCreate).to.have.been.calledWith(opts);
+        });
+
+        it('returns the droplet id', () => {
+          expect(dropletId).to.equal(BODY.droplet.id);
         });
       });
 
       context('with invalid options', () => {
         it('returns an error', done => {
           client.createMachine({}).then(done).catch(err => {
-            expect(err).to.deep.equal(UNPROCESSABLE_ERROR);
+            expect(err).to.deep.equal(new errors.MachineInvalidError());
             done();
           });
         });
@@ -89,10 +80,28 @@ describe('DigitalOcean Compute Client', () => {
     });
 
     describe('#deleteMachine', () => {
+      /*
+       * DigitalOcean doesn't provide a test api, beside we can't delete a
+       * droplet in deploying state, therefore we are faking the call to the
+       * real API.
+       */
+      context('with valid id', () => {
+        const ID = random.string(), SUCCESS = { statusCode: 200 };
+
+        beforeEach(() => {
+          client._client.dropletsDelete = sinon.stub().yields(null, SUCCESS);
+          return client.deleteMachine(ID);
+        });
+
+        it('deletes the droplet with the given id', () => {
+          expect(client._client.dropletsDelete).to.have.been.calledWith(ID);
+        });
+      });
+
       context('with invalid id', () => {
         it('returns an error', done => {
           client.deleteMachine({}).then(done).catch(err => {
-            expect(err).to.deep.equal(NOT_FOUND_ERROR);
+            expect(err).to.deep.equal(new errors.MachineNotFoundError());
             done();
           });
         });
@@ -104,13 +113,13 @@ describe('DigitalOcean Compute Client', () => {
     let client;
 
     beforeEach(() => {
-      client = compute.getClient('digitalocean', {});
+      client = Compute.default();
     });
 
     describe('#verifyCredentials', () => {
       it('is rejected', done => {
         client.verifyCredentials().then(done).catch(err => {
-          expect(err).to.deep.equal(UNAUTHORIZED_ERROR);
+          expect(err).to.deep.equal(new errors.MachineCredentialsError());
           done();
         });
       });
@@ -131,7 +140,7 @@ describe('DigitalOcean Compute Client', () => {
     describe('#createMachine', () => {
       it('returns an error', done => {
         client.createMachine({}).then(done).catch(err => {
-          expect(err).to.deep.equal(UNAUTHORIZED_ERROR);
+          expect(err).to.deep.equal(new errors.MachineCredentialsError());
           done();
         });
       });
@@ -140,7 +149,7 @@ describe('DigitalOcean Compute Client', () => {
     describe('#deleteMachine', () => {
       it('returns an error', done => {
         client.deleteMachine({}).then(done).catch(err => {
-          expect(err).to.deep.equal(UNAUTHORIZED_ERROR);
+          expect(err).to.deep.equal(new errors.MachineCredentialsError());
           done();
         });
       });

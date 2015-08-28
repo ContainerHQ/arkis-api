@@ -1,6 +1,7 @@
 'use strict';
 
-let errors = require('../../support').errors,
+let _ = require('lodash'),
+  errors = require('../../support').errors,
   Client = require('do-wrapper');
 
 const IMAGE_SLUG = 'ubuntu-14-04-x64';
@@ -8,9 +9,6 @@ const IMAGE_SLUG = 'ubuntu-14-04-x64';
 class DigitalOcean {
   constructor(credentials) {
     this._client = new Client(credentials.token);
-  }
-  get label() {
-    return 'DigitalOcean';
   }
   verifyCredentials() {
     return new Promise((resolve, reject) => {
@@ -20,7 +18,7 @@ class DigitalOcean {
         if (res.statusCode === 200) {
           return resolve();
         }
-        reject(this._getError(res));
+        reject(this._formatError(res));
       });
     });
   }
@@ -29,7 +27,7 @@ class DigitalOcean {
       this._client.regionsGetAll({}, (err, res, body) => {
         if (err) { return reject(err); }
 
-        resolve(body.regions);
+        resolve(this._formatRegions(body.regions));
       });
     });
   }
@@ -38,25 +36,21 @@ class DigitalOcean {
       this._client.sizesGetAll({}, (err, res, body) => {
         if (err) { return reject(err); }
 
-        resolve(body.sizes);
+        resolve(this._formatSizes(body.sizes));
       });
     });
   }
   createMachine(options) {
     return new Promise((resolve, reject) => {
-      let config = {
-        name: options.id,
-        region: options.region,
-        size: options.node_size,
-        image: IMAGE_SLUG
-      };
-      this._client.dropletsCreate(config, (err, res, body) => {
+      let opts = _.merge({ image: IMAGE_SLUG }, options);
+
+      this._client.dropletsCreate(opts, (err, res, body) => {
         if (err) { return reject(err); }
 
         if (res.statusCode === 202) {
-          return resolve(body.droplet);
+          return resolve(body.droplet.id);
         }
-        reject(this._getError(res));
+        reject(this._formatError(res));
       });
     });
   }
@@ -68,17 +62,34 @@ class DigitalOcean {
         if (res.statusCode === 200) {
           return resolve();
         }
-        reject(this._getError(res));
+        reject(this._formatError(res));
       });
     });
   }
-  _getError(res) {
-    return new errors.ProviderError({
-      provider: this.label,
-      statusCode: res.statusCode,
-      statusMessage: res.statusMessage,
-      message: res.body.message
+  _formatRegions(regions) {
+    return _.map(regions || [], region => {
+      return _.omit(region, 'features');
     });
+  }
+  _formatSizes(sizes) {
+    return _.map(sizes || [], size => {
+      let formated = _.omit(size, 'vcpus');
+
+      _.merge(formated, { cpu: size.vcpus });
+      return formated;
+    });
+  }
+  _formatError(res) {
+    switch (res.statusCode) {
+      case 401:
+        return new errors.MachineCredentialsError();
+      case 404:
+        return new errors.MachineNotFoundError();
+      case 422:
+        return new errors.MachineInvalidError();
+      default:
+        return new Error(res);
+    }
   }
 }
 

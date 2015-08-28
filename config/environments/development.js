@@ -2,5 +2,6 @@
 
 module.exports = {
   logging: true,
-  logger: 'dev'
+  logger: 'dev',
+  useFakes: true
 };
