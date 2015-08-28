@@ -10,7 +10,7 @@ exclude=""
 # related to GitHub authentication.
 #
 if [ "$GITHUB_CLIENT_ID" = "" ] || [ "$GITHUB_SECRET_KEY" = "" ]; then
-    exclude="$exclude github"
+    exclude="$exclude --grep github"
 fi
 
 #
@@ -18,11 +18,11 @@ fi
 # related to DigitalOcean.
 #
 if [ "$DIGITAL_OCEAN_TOKEN" = "" ]; then
-    exclude="$exclude DigitalOcean"
+    exclude="$exclude --grep DigitalOcean"
 fi
 
-if [ "$DIGITAL_OCEAN_TOKEN" = "" ]; then
-    exclude="--grep $exclude --invert"
+if [ "$exclude" != "" ]; then
+    exclude="$exclude --invert"
 fi
 
 # Launch mocha with istanbul coverage reports.
@@ -30,7 +30,6 @@ NODE_ENV=test istanbul cover \
     -x **/docker/** \
     -x **/upgrade/** \
     _mocha -- $exclude $@
-
 
 # Upload coverage report to codeclimate.
 if [ $CODECLIMATE_REPO_TOKEN ]; then
