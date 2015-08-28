@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
 
+./scripts/jslint.sh
+
 exclude=""
 
 #
@@ -19,13 +21,15 @@ if [ "$DIGITAL_OCEAN_TOKEN" = "" ]; then
     exclude="$exclude DigitalOcean"
 fi
 
-./scripts/jslint.sh
+if [ "$DIGITAL_OCEAN_TOKEN" = "" ]; then
+    exclude="--grep $exclude --invert"
+fi
 
 # Launch mocha with istanbul coverage reports.
 NODE_ENV=test istanbul cover \
     -x **/docker/** \
     -x **/upgrade/** \
-    _mocha -- --grep $exclude --invert $@
+    _mocha -- $exclude $@
 
 
 # Upload coverage report to codeclimate.

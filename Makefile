@@ -1,7 +1,8 @@
 .PHONY: all re fclean clean build shell migrations test up detach
 
-env     := $(if $(NODE_ENV),$(NODE_ENV),'development')
-compose := NODE_ENV=$(env) docker-compose
+env          := $(if $(NODE_ENV),$(NODE_ENV),'development')
+compose-test := docker-compose
+compose      := NODE_ENV=$(env) $(compose-test)
 
 all: detach
 
@@ -24,9 +25,9 @@ migrations:
 	$(compose) run api sequelize --env=$(env) db:migrate
 
 test: build
-	$(compose) run api sequelize --env=test db:migrate:undo:all
-	$(compose) run api sequelize --env=test db:migrate
-	$(compose) run api npm test
+	$(compose-test) run api sequelize --env=test db:migrate:undo:all
+	$(compose-test) run api sequelize --env=test db:migrate
+	$(compose-test) run api npm test
 
 up: build migrations
 	$(compose) up
