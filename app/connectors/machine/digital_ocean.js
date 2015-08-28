@@ -86,7 +86,7 @@ class DigitalOcean {
       case 404:
         return new errors.MachineNotFoundError();
       case 422:
-        return new errors.MachineInvalidError();
+        return new errors.MachineUnprocessableError();
       default:
         return new Error(res);
     }

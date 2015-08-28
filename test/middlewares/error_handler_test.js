@@ -80,7 +80,10 @@ describe('ErrorHandler Middleware', () => {
   [
     ['StateError', 409],
     ['AlreadyUpgradedError', 409],
-    ['NotMasterError', 403]
+    ['NotMasterError', 403],
+    ['MachineCredentialsError', 401],
+    ['MachineNotFoundError', 404],
+    ['MachineUnprocessableError', 422]
   ].forEach(([errorName, status]) => {
     context(`with a ${errorName}`, () => {
       let err = new errors[errorName]();
@@ -92,9 +95,9 @@ describe('ErrorHandler Middleware', () => {
         });
       });
 
-      it('sends the error back', done => {
+      it('sends the error message back', done => {
         errorHandler(err, {}, res, () => {
-          expect(res.json).to.have.been.calledWith({ error: err });
+          expect(res.json).to.have.been.calledWith({ error: err.message });
           done();
         });
       });

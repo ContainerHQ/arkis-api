@@ -72,7 +72,7 @@ describe('Machine DigitalOcean Connector', () => {
       context('with invalid options', () => {
         it('returns an error', done => {
           client.create({}).then(done).catch(err => {
-            expect(err).to.deep.equal(new errors.MachineInvalidError());
+            expect(err).to.deep.equal(new errors.MachineUnprocessableError());
             done();
           });
         });

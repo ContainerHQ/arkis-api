@@ -23,7 +23,7 @@ class Machine {
       return new errors.MachineCredentialsError();
     }
     if (!options.region || !options.size) {
-      return Promise.reject(new errors.MachineInvalidError());
+      return Promise.reject(new errors.MachineUnprocessableError());
     }
     return Promise.resolve(options.name);
   }
@@ -31,7 +31,7 @@ class Machine {
     if (!this.credentials) {
       return new errors.MachineCredentialsError();
     }
-    if (id <= 0) { return Promise.reject(new errors.MachineNotFoundError()); }
+    if (!id) { return Promise.reject(new errors.MachineNotFoundError()); }
 
     return Promise.resolve();
   }

@@ -78,11 +78,11 @@ error.MachineNotFoundError = class extends Error {
   }
 };
 
-error.MachineInvalidError = class extends Error {
+error.MachineUnprocessableError = class extends Error {
   constructor() {
     super();
 
-    this.name = 'MachineInvalidError';
-    this.message = 'Invalid region/size for machine creation.';
+    this.name = 'MachineUnprocessableError';
+    this.message = 'Unavailable region/size for machine creation.';
   }
 };

@@ -13,7 +13,9 @@ describe('DELETE /clusters/:cluster_id/nodes/:node_id', () => {
       cluster = factory.buildSync('cluster', { user_id: user.id });
       return cluster.save();
     }).then(() => {
-      node = factory.buildSync('node', { cluster_id: cluster.id });
+      node = factory.buildSync('node', {
+        cluster_id: cluster.id, machine_id: random.string()
+      });
       return node.save();
     });
   });

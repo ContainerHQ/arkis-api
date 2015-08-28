@@ -38,7 +38,16 @@ describe('POST /clusters/:cluster_id/nodes', () => {
     });
   });
 
+  ['region', 'node_size'].forEach(machineOption => {
+    context(`with unavailable ${machineOption}`, () => {
+      let form = { name: machineOption, byon: false };
 
+      form[machineOption] = null;
+
+      api.clusters(user).nodes(cluster).create().send(form).expect(422);
+    });
+  });
+  
   context('with invalid attributes', () => {
     it('returns a bad request status and validation errors', done => {
       api.clusters(user).nodes(cluster).create().send()

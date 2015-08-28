@@ -13,10 +13,19 @@ module.exports = function(err, req, res, next) {
       break;
     case 'StateError':
     case 'AlreadyUpgradedError':
-      res.status(409).json({ error: err });
+      res.status(409).json({ error: err.message });
       break;
     case 'NotMasterError':
-      res.status(403).json({ error: err });
+      res.status(403).json({ error: err.message  });
+      break;
+    case 'MachineCredentialsError':
+      res.status(401).json({ error: err.message  });
+      break;
+    case 'MachineNotFoundError':
+      res.status(404).json({ error: err.message  });
+      break;
+    case 'MachineUnprocessableError':
+      res.status(422).json({ error: err.message  });
       break;
     default:
       console.error(err.message);
