@@ -85,6 +85,12 @@ module.exports = function(sequelize, DataTypes) {
       unique: true,
       validate: { isIP: true }
     },
+    machine_id: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      defaultValue: null,
+      unique: true
+    },
     cpu: {
       type: DataTypes.INTEGER.UNSIGNED,
       defaultValue: null,

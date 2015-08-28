@@ -3,7 +3,7 @@
     "username": "postgres",
     "password": "mysecretpassword",
     "adapter": "postgres",
-    "host": "db",
+    "host": "dbdev",
     "dialect": "postgres"
   },
   "test": {
@@ -17,7 +17,7 @@
     "username": "postgres",
     "password": "mysecretpassword",
     "adapter": "postgres",
-    "host": "db",
+    "host": "dbproduction",
     "dialect": "postgres"
   }
 }

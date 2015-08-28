@@ -3,16 +3,16 @@
 let _ = require('lodash'),
   config = require('../../config'),
   errors = require('../../app/support').errors,
-  Compute = require('../../app/connectors/compute');
+  Machine = require('../../app/connectors/machine');
 
 const IMAGE_NAME = 'ubuntu-14-04-x64';
 
-describe('Compute DigitalOcean Connector', () => {
+describe('Machine DigitalOcean Connector', () => {
   context('with valid credentials', () => {
     let client;
 
     beforeEach(() => {
-      client = Compute.default(config.auth.compute);
+      client = Machine.default(config.auth.machine);
     });
 
     describe('#verifyCredentials', () => {
@@ -33,7 +33,7 @@ describe('Compute DigitalOcean Connector', () => {
       });
     });
 
-    describe('#createMachine', () => {
+    describe('#create', () => {
       /*
        * DigitalOcean doesn't provide a test api, beside we can't delete a
        * droplet in deploying state, therefore we are faking the call to the
@@ -53,7 +53,7 @@ describe('Compute DigitalOcean Connector', () => {
 
         beforeEach(() => {
           client._client.dropletsCreate = sinon.stub().yields(null, SUCCESS, BODY);
-          return client.createMachine(OPTIONS).then(id => {
+          return client.create(OPTIONS).then(id => {
             dropletId = id;
           });
         });
@@ -71,7 +71,7 @@ describe('Compute DigitalOcean Connector', () => {
 
       context('with invalid options', () => {
         it('returns an error', done => {
-          client.createMachine({}).then(done).catch(err => {
+          client.create({}).then(done).catch(err => {
             expect(err).to.deep.equal(new errors.MachineInvalidError());
             done();
           });
@@ -79,7 +79,7 @@ describe('Compute DigitalOcean Connector', () => {
       });
     });
 
-    describe('#deleteMachine', () => {
+    describe('#delete', () => {
       /*
        * DigitalOcean doesn't provide a test api, beside we can't delete a
        * droplet in deploying state, therefore we are faking the call to the
@@ -90,7 +90,7 @@ describe('Compute DigitalOcean Connector', () => {
 
         beforeEach(() => {
           client._client.dropletsDelete = sinon.stub().yields(null, SUCCESS);
-          return client.deleteMachine(ID);
+          return client.delete(ID);
         });
 
         it('deletes the droplet with the given id', () => {
@@ -100,7 +100,7 @@ describe('Compute DigitalOcean Connector', () => {
 
       context('with invalid id', () => {
         it('returns an error', done => {
-          client.deleteMachine({}).then(done).catch(err => {
+          client.delete({}).then(done).catch(err => {
             expect(err).to.deep.equal(new errors.MachineNotFoundError());
             done();
           });
@@ -113,7 +113,7 @@ describe('Compute DigitalOcean Connector', () => {
     let client;
 
     beforeEach(() => {
-      client = Compute.default();
+      client = Machine.default();
     });
 
     describe('#verifyCredentials', () => {
@@ -137,18 +137,18 @@ describe('Compute DigitalOcean Connector', () => {
       });
     });
 
-    describe('#createMachine', () => {
+    describe('#create', () => {
       it('returns an error', done => {
-        client.createMachine({}).then(done).catch(err => {
+        client.create({}).then(done).catch(err => {
           expect(err).to.deep.equal(new errors.MachineCredentialsError());
           done();
         });
       });
     });
 
-    describe('#deleteMachine', () => {
+    describe('#delete', () => {
       it('returns an error', done => {
-        client.deleteMachine({}).then(done).catch(err => {
+        client.delete({}).then(done).catch(err => {
           expect(err).to.deep.equal(new errors.MachineCredentialsError());
           done();
         });

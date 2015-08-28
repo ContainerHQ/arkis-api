@@ -29,7 +29,6 @@ NODE_ENV=test istanbul cover \
     _mocha -- --grep $exclude --invert $@
 
 
-
 # Upload coverage report to codeclimate.
 if [ $CODECLIMATE_REPO_TOKEN ]; then
     codeclimate-test-reporter < coverage/lcov.info

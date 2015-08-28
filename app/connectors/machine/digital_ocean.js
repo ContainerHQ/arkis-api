@@ -40,7 +40,7 @@ class DigitalOcean {
       });
     });
   }
-  createMachine(options) {
+  create(options) {
     return new Promise((resolve, reject) => {
       let opts = _.merge({ image: IMAGE_SLUG }, options);
 
@@ -54,7 +54,7 @@ class DigitalOcean {
       });
     });
   }
-  deleteMachine(id) {
+  delete(id) {
     return new Promise((resolve, reject) => {
       this._client.dropletsDelete(id, (err, res) => {
         if (err) { return reject(err); }

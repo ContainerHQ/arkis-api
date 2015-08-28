@@ -1,20 +1,23 @@
 'use strict';
 
 let _ = require('lodash'),
-  Machine = require('../support').Machine;
+  config = require('../../config'),
+  Machine = require('../connectors').Machine;
 
 class MachineManager {
   constructor(cluster, node) {
     this.cluster = cluster;
     this.node    = node;
-    this.machine = new Machine(node);
+    this.machine = new Machine(config.auth.machine);
   }
   deploy() {
     return this.node.validate().then(err => {
       if (err) { return Promise.reject(err); }
 
       return this._createMachine();
-    }).then(() => {
+    }).then(id => {
+      this.node.machine_id = id;
+
       return this.cluster.addNode(this.node);
     }).then(() => {
       return this.cluster.notify(this.deployChanges);
@@ -36,10 +39,16 @@ class MachineManager {
     return _.merge(changes, { last_state: 'destroyed' });
   }
   _createMachine() {
-    return this.node.byon ? Promise.resolve() : this.machine.create();
+    return this.node.byon ? Promise.resolve() : this.machine.create({
+      name:   this.node.id,
+      region: this.node.region,
+      size:   this.node.node_size
+    });
   }
   _deleteMachine()  {
-    return this.node.byon ? Promise.resolve() : this.machine.delete();
+    return this.node.byon ? Promise.resolve() : this.machine.delete(
+      this.node.machine_id
+    );
   }
 }
 

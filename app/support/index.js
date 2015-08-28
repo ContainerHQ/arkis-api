@@ -6,5 +6,4 @@ module.exports = {
   fqdn: require('./fqdn'),
   errors: require('./errors'),
   Daemon:  require('./daemon'),
-  Machine: require('./machine')
 };

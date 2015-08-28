@@ -14,7 +14,7 @@ let config = {
       clientID:     process.env.GITHUB_CLIENT_ID  || '*',
       clientSecret: process.env.GITHUB_SECRET_KEY || '*'
     },
-    compute: {
+    machine: {
       token: process.env.DIGITAL_OCEAN_TOKEN || ''
     }
   },

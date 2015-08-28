@@ -4,10 +4,10 @@ let providers = {
   DigitalOcean: require('./digital_ocean')
 };
 
-class Compute {
+class Machine {
   static default(credentials={}) {
     return new providers.DigitalOcean(credentials);
   }
 }
 
-module.exports = Compute;
+module.exports = Machine;
