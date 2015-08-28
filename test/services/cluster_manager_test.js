@@ -8,7 +8,7 @@ var _ = require('lodash'),
 
 const VERSIONS = ['docker_version', 'swarm_version'];
 
-describe('ClusterManager', () => {
+describe('ClusterManager Service', () => {
   let manager;
 
   beforeEach(() => {
