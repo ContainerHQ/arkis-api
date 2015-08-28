@@ -3,8 +3,8 @@
 let passport = require('passport'),
   JwtStrategy = require('passport-jwt').Strategy,
   GitHubStrategy = require('passport-github2').Strategy,
-  User = require('../models').User,
-  config = require('../../config');
+  config = require('../../config'),
+  User = require('../models').User;
 
 passport
 .use(new JwtStrategy({ secretOrKey: config.secrets.jwt }, (payload, done) => {
@@ -29,6 +29,8 @@ passport
   // update profile with infos (fullname etc)
   // whitelist parameters on creation (user)
   done(null, false);
+
+  // TODO: Add validations on provider_id uniqueness per provider!
 }));
 
 module.exports = passport;

@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = {
-  logging: true,
-  logger: 'dev'
+  logging: console.log,
+  logger: 'dev',
+  useFakes: true
 };

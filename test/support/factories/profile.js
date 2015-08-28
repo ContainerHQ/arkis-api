@@ -1,7 +1,7 @@
 'use strict';
 
 let _ = require('lodash'),
-  Profile = require('../../app/models').Profile;
+  Profile = require('../../../app/models').Profile;
 
 module.exports = function(factory) {
   factory.define('profile', Profile, {

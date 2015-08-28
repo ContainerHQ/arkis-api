@@ -56,6 +56,33 @@ error.NotMasterError = class extends Error {
     super();
 
     this.name = 'NotMasterError';
-    this.message = 'Forbidden for slave nodes!';
+    this.message = 'Action forbidden for slave nodes.';
+  }
+};
+
+error.MachineCredentialsError = class extends Error {
+  constructor() {
+    super();
+
+    this.name = 'MachineCredentialsError';
+    this.message = 'Invalid machine credentials.';
+  }
+};
+
+error.MachineNotFoundError = class extends Error {
+  constructor() {
+    super();
+
+    this.name = 'MachineNotFoundError';
+    this.message = 'Machine not found.';
+  }
+};
+
+error.MachineUnprocessableError = class extends Error {
+  constructor() {
+    super();
+
+    this.name = 'MachineUnprocessableError';
+    this.message = 'Unavailable region/size for machine creation.';
   }
 };

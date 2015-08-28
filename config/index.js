@@ -13,6 +13,9 @@ let config = {
     github: {
       clientID:     process.env.GITHUB_CLIENT_ID  || '*',
       clientSecret: process.env.GITHUB_SECRET_KEY || '*'
+    },
+    machine: {
+      token: process.env.DIGITAL_OCEAN_TOKEN || ''
     }
   },
   nodeDomain: 'node.arkis.io',

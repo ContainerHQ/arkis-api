@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "./scripts/test.sh",
-    "start": "nodemon --ignore tests/"
+    "start": "./scripts/start.sh"
   },
   "repository": {
     "type": "git",
@@ -31,6 +31,7 @@
     "bcrypt": "0.8.x",
     "body-parser": "1.12.x",
     "cors": "2.6.x",
+    "do-wrapper": "2.1.2",
     "dockerode": "2.1.x",
     "express": "4.12.x",
     "jsonwebtoken": "5.0.x",

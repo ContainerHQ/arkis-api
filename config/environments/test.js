@@ -1,5 +1,6 @@
 'use strict';
 
 module.exports = {
-  logging: false
+  logging: false,
+  useFakes: true
 };

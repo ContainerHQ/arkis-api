@@ -1,6 +1,7 @@
 'use strict';
 
 var _ = require('lodash'),
+  config = require('../../config'),
   Node = require('../../app/models').Node,
   MachineManager = require('../../app/services').MachineManager;
 
@@ -19,8 +20,8 @@ describe('MachineManager Service', () => {
   });
 
   describe('constructor', () => {
-    it('initializes machine with the same node', () => {
-      expect(manager.machine.node).to.equal(manager.node);
+    it('initializes machine with config credentials', () => {
+      expect(manager.machine.credentials).to.equal(config.auth.machine);
     });
   });
 
@@ -54,13 +55,28 @@ describe('MachineManager Service', () => {
     });
 
     context('when machine creation succeeded', () => {
+      let machineId;
+
       beforeEach(() => {
-        manager.machine.create = sinon.stub().returns(Promise.resolve());
+        machineId = random.string();
+        manager.machine.create = sinon.stub().returns(Promise.resolve(machineId));
         return manager.deploy();
       });
 
       it('creates the node', () => {
         expect(manager.node.isNewRecord).to.be.false;
+      });
+
+      it('creates the machine behind with specified options', () => {
+        expect(manager.machine.create).to.have.been.calledWith({
+          name: manager.node.id,
+          region: manager.node.region,
+          size: manager.node.node_size
+        });
+      });
+
+      it('adds the machine id to the node', () => {
+        expect(manager.node.machine_id).to.equal(machineId);
       });
 
       it('adds the node to the cluster', () => {
@@ -132,13 +148,17 @@ describe('MachineManager Service', () => {
     context('when byon node', () => {
       beforeEach(() => {
         return manager.node.update(BYON_OPTS).then(() => {
+          manager.machine.delete = sinon.stub().returns(Promise.resolve());
           return manager.destroy();
         });
       });
 
       it('removes the node', () => {
-        return expect(Node.findById(manager.node.id))
-          .to.eventually.not.exist;
+        return expect(Node.findById(manager.node.id)).to.eventually.not.exist;
+      });
+
+      it("doesn't delete the machine behind", () => {
+        expect(manager.machine.delete).to.not.have.been.called;
       });
 
       it('notifies the cluster', () => {
@@ -147,7 +167,10 @@ describe('MachineManager Service', () => {
     });
 
     context('when machine removal succeeded', () => {
+      let machineId;
+
       beforeEach(() => {
+        machineId = random.string();
         manager.machine.delete = sinon.stub().returns(Promise.resolve());
       });
 
@@ -155,7 +178,9 @@ describe('MachineManager Service', () => {
         beforeEach(() => {
           return manager.cluster.update({ last_ping: Date.now() })
           .then(() => {
-            return manager.node.update({ master: true });
+            return manager.node.update({
+              master: true, machine_id: machineId
+            });
           }).then(() => {
             return manager.destroy();
           });
@@ -164,6 +189,10 @@ describe('MachineManager Service', () => {
         it('removes the node', () => {
           return expect(Node.findById(manager.node.id))
             .to.eventually.not.exist;
+        });
+
+        it('removes the machine behind', () => {
+          expect(manager.machine.delete).to.have.been.calledWith(machineId);
         });
 
         it('notifies the cluster', () => {
@@ -179,7 +208,9 @@ describe('MachineManager Service', () => {
         beforeEach(() => {
           return manager.cluster.update({ last_ping: Date.now() })
           .then(() => {
-            return manager.node.update({ master: false });
+            return manager.node.update({
+              master: false, machine_id: machineId
+            });
           }).then(() => {
             return manager.destroy();
           });
@@ -188,6 +219,10 @@ describe('MachineManager Service', () => {
         it('removes the node', () => {
           return expect(Node.findById(manager.node.id))
             .to.eventually.not.exist;
+        });
+
+        it('removes the machine behind', () => {
+          expect(manager.machine.delete).to.have.been.calledWith(machineId);
         });
 
         it('notifies the cluster', () => {
