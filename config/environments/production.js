@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  logging: true,
+  logging: console.log,
   logger: 'combined',
   useFakes: false
 };

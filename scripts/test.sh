@@ -19,8 +19,7 @@ if [ "$DIGITAL_OCEAN_TOKEN" = "" ]; then
     exclude="$exclude DigitalOcean"
 fi
 
-# Detect errors and potential problems.
-jshint app test/support
+./scripts/jslint.sh
 
 # Launch mocha with istanbul coverage reports.
 NODE_ENV=test istanbul cover \
