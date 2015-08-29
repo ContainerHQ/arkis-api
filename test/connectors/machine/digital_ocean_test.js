@@ -5,7 +5,9 @@ let _ = require('lodash'),
   errors = require('../../../app/support').errors,
   Machine = require('../../../app/connectors/machine');
 
-const IMAGE_NAME = 'ubuntu-14-04-x64';
+const IMAGE_NAME = 'ubuntu-14-04-x64',
+      UNPROCESSABLE_MESSAGE =
+      'You specified an invalid region for machine creation.';
 
 describe('Machine DigitalOcean Connector', () => {
   context('with valid credentials', () => {
@@ -74,7 +76,9 @@ describe('Machine DigitalOcean Connector', () => {
       context('with invalid options', () => {
         it('returns an error', done => {
           client.create({}).then(done).catch(err => {
-            expect(err).to.deep.equal(new errors.MachineUnprocessableError());
+            expect(err).to.deep.equal(
+              new errors.MachineUnprocessableError(UNPROCESSABLE_MESSAGE)
+            );
             done();
           });
         });

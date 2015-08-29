@@ -83,10 +83,10 @@ describe('ErrorHandler Middleware', () => {
     ['NotMasterError', 403],
     ['MachineCredentialsError', 401],
     ['MachineNotFoundError', 404],
-    ['MachineUnprocessableError', 422]
-  ].forEach(([errorName, status]) => {
+    ['MachineUnprocessableError', 422, random.string()]
+  ].forEach(([errorName, status, opts]) => {
     context(`with a ${errorName}`, () => {
-      let err = new errors[errorName]();
+      let err = new errors[errorName](opts);
 
       it(`sends a ${status} request status`, done => {
         errorHandler(err, {}, res, () => {
