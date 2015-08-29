@@ -1,9 +1,9 @@
 'use strict';
 
 let _ = require('lodash'),
-  config = require('../../config'),
-  errors = require('../../app/support').errors,
-  Machine = require('../../app/connectors/machine');
+  config = require('../../../config'),
+  errors = require('../../../app/support').errors,
+  Machine = require('../../../app/connectors/machine');
 
 const IMAGE_NAME = 'ubuntu-14-04-x64';
 
@@ -22,14 +22,16 @@ describe('Machine DigitalOcean Connector', () => {
     });
 
     describe('#getRegions', () => {
-      it('returns the regions list', () => {
-        return expect(client.getRegions()).to.eventually.not.be.empty;
+      it('returns the formated regions list', () => {
+        return expect(client.getRegions())
+          .to.eventually.satisfy(has.formatedRegions)
       });
     });
 
     describe('#getSizes', () => {
-      it('returns the sizes list', () => {
-        return expect(client.getSizes()).to.eventually.not.be.empty;
+      it('returns the formated sizes list', () => {
+        return expect(client.getSizes())
+          .to.eventually.satisfy(has.formatedSizes);
       });
     });
 

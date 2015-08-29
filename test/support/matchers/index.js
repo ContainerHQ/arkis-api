@@ -7,5 +7,7 @@ module.exports = {
   latestVersions: require('./latest_versions'),
   one: require('./one'),
   many: require('./many'),
-  manyFiltered: require('./many_filtered')
+  manyFiltered: require('./many_filtered'),
+  formatedRegions: require('./formated_regions'),
+  formatedSizes: require('./formated_sizes')
 };
