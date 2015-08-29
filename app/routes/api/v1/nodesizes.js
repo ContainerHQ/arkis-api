@@ -9,8 +9,8 @@ router
 .get('/', (err, res, next) => {
   let manager = new RegionSizeManager();
 
-  manager.getRegions().then(regions => {
-    res.json({ regions: regions });
+  manager.getSizes().then(sizes => {
+    res.json({ sizes: sizes });
   }).catch(next);
 });
 

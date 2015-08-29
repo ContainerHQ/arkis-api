@@ -21,6 +21,30 @@ module.exports.auth = {
   }
 };
 
+module.exports.regions = function(user={}) {
+  let ressource = `${API_ROUTE}/regions`;
+
+  return {
+    getAll: function() {
+      return request(app)
+      .get(`${ressource}`)
+      .set('Authorization', `JWT ${user.token}`);
+    }
+  };
+};
+
+module.exports.nodeSizes = function(user={}) {
+  let ressource = `${API_ROUTE}/nodesizes`;
+
+  return {
+    getAll: function() {
+      return request(app)
+      .get(`${ressource}`)
+      .set('Authorization', `JWT ${user.token}`);
+    }
+  };
+};
+
 module.exports.account = function(user={}) {
   let ressource = `${API_ROUTE}/account`;
 
