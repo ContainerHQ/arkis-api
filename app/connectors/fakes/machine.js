@@ -2,6 +2,8 @@
 
 let errors = require('../../support').errors;
 
+const UNPROCESSABLE_MESSAGE = 'Invalid region/size for macine creation';
+
 class Machine {
   constructor(credentials) {
     this.credentials = credentials;
@@ -70,7 +72,9 @@ class Machine {
       return new errors.MachineCredentialsError();
     }
     if (!options.region || !options.size) {
-      return Promise.reject(new errors.MachineUnprocessableError());
+      return Promise.reject(
+        new errors.MachineUnprocessableError(UNPROCESSABLE_MESSAGE)
+      );
     }
     return Promise.resolve(options.name);
   }

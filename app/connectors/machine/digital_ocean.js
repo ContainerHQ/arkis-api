@@ -86,7 +86,9 @@ class DigitalOcean {
       case 404:
         return new errors.MachineNotFoundError();
       case 422:
-        return new errors.MachineUnprocessableError();
+        let message = res.body.message.replace('Droplet', 'machine');
+
+        return new errors.MachineUnprocessableError(message);
       default:
         return new Error(res);
     }
