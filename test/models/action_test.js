@@ -18,9 +18,9 @@ describe('Action Model', () => {
       });
     });
 
-    ['Node', 'Cluster'].forEach(ressource => {
-      it(`succeeds with ressource ${ressource}`, done => {
-        factory.create('action', { ressource: ressource }, done);
+    ['Node', 'Cluster'].forEach(resource => {
+      it(`succeeds with resource ${resource}`, done => {
+        factory.create('action', { resource: resource }, done);
       });
     });
 
@@ -30,7 +30,7 @@ describe('Action Model', () => {
       });
     });
 
-    ['last_state', 'type', 'ressource', 'ressource_id'].forEach(attribute => {
+    ['last_state', 'type', 'resource', 'resource_id'].forEach(attribute => {
       let opts;
 
       beforeEach(() => {

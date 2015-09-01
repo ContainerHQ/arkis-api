@@ -6,7 +6,7 @@ let random = require('../random'),
 module.exports = function(factory) {
   factory.define('action', Action, {
     type: 'deploy',
-    ressource: 'Node',
-    ressource_id: random.uuid
+    resource: 'Node',
+    resource_id: random.uuid
   });
 };

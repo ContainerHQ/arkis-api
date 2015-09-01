@@ -25,7 +25,7 @@ module.exports = {
           isIn: [['deploy', 'update', 'upgrade']]
         }
       },
-      ressource: {
+      resource: {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: null,
@@ -33,7 +33,7 @@ module.exports = {
           isIn: [['Node', 'Cluster']]
         }
       },
-      ressource_id: {
+      resource_id: {
         type: DataTypes.UUID,
         allowNull: false,
         defaultValue: null
