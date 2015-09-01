@@ -2,7 +2,7 @@
 
 let models = require('../../app/models');
 
-const ENTITIES_TO_DESTROY = ['User', 'Profile', 'Cluster', 'Node'],
+const ENTITIES_TO_DESTROY = ['User', 'Profile', 'Cluster', 'Node', 'Action'],
       ALL = { where: {} };
 
 /*

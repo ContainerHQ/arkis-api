@@ -40,16 +40,16 @@ describe('AgentManager Service', () => {
 
   describe('#notify', () => {
     context('with valid attributes', () => {
-      const ATTRITBUTES = { docker_version: '1.2.0', disk: 2 };
+      const ATTRIBUTES = { docker_version: '1.2.0', disk: 2 };
 
       beforeEach(() => {
-        return manager.notify(ATTRITBUTES).then(() => {
+        return manager.notify(ATTRIBUTES).then(() => {
           return node.reload();
         });
       });
 
       it('updates the node with attributes', () => {
-        expect(node).to.include(ATTRITBUTES);
+        expect(node).to.include(ATTRIBUTES);
       });
 
       it('sets the node last_state to running', () => {

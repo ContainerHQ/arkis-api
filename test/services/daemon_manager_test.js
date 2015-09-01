@@ -23,13 +23,13 @@ describe('DaemonManager Service', () => {
     });
   });
 
-  describe('constructor', () => {
+  describe('.constructor', () => {
     it('initializes daemon with the same node', () => {
       expect(manager.daemon.node).to.equal(manager.node);
     });
   });
 
-  describe('update', () => {
+  describe('#update', () => {
     context('when node is not running', () => {
       const CHANGES = { name: random.string() };
 
@@ -246,7 +246,7 @@ describe('DaemonManager Service', () => {
     });
   });
 
-  describe('upgrade', () => {
+  describe('#upgrade', () => {
     context('when node is not running', () => {
       let actualErr;
 

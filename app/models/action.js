@@ -1,6 +1,7 @@
 'use strict';
 
-let moment = require('moment');
+let _ = require('lodash'),
+  moment = require('moment');
 
 const EXPIRATION_TIME = 5;
 
@@ -49,10 +50,17 @@ module.exports = function(sequelize, DataTypes) {
   }, {
     createdAt: 'started_at',
 
+    defaultScope: { order: [['id', 'DESC']] },
+    scopes: {
+      date: { order:  [['started_at']] },
+      filtered: function(filters) {
+        return { where: _.pick(filters, ['type']) };
+      }
+    },
     getterMethods: {
       state: function() {
         let lastState = this.getDataValue('last_state'),
-          startedAt = this.getDataValue('started_at'),
+          startedAt   = this.getDataValue('started_at'),
           expirationTime = moment().subtract(EXPIRATION_TIME, 'minutes');
 
         if (lastState === 'in-progress' && startedAt < expirationTime) {
