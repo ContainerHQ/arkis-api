@@ -6,7 +6,7 @@ let _ = require('lodash'),
   concerns = require('./concerns'),
   config = require('../../config'),
   support = require('../../app/support'),
-  Node = require('../../app/models').Node;
+  models = require('../../app/models');
 
 describe('Node Model', () => {
   db.sync();
@@ -359,7 +359,7 @@ describe('Node Model', () => {
 
       it("doesn't delete the node", done => {
         node.destroy().then(done).catch(err => {
-          expect(Node.findById(node.id)).to.eventually.exist;
+          expect(models.Node.findById(node.id)).to.eventually.exist;
           done();
         });
       });

@@ -207,6 +207,11 @@ module.exports = function(sequelize, DataTypes) {
     classMethods: {
       associate: function(models) {
         Node.belongsTo(models.Cluster);
+        Node.hasMany(models.Action, {
+          foreignKey: 'resource_id',
+          constraints: false,
+          scope: { resource: 'Node' }
+        });
       }
     }
   }));

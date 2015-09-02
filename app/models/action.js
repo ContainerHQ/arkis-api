@@ -52,7 +52,7 @@ module.exports = function(sequelize, DataTypes) {
 
     defaultScope: { order: [['id', 'DESC']] },
     scopes: {
-      date: { order:  [['started_at']] },
+      date: { order: [['started_at']] },
       filtered: function(filters) {
         return { where: _.pick(filters, ['type']) };
       }
