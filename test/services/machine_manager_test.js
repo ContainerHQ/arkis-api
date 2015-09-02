@@ -95,7 +95,7 @@ describe('MachineManager Service', () => {
           type: 'deploy',
           state: 'in-progress',
           completed_at: null,
-          resource: 'Node',
+          resource: 'node',
           resource_id: manager.node.id,
           isNewRecord: false
         });
@@ -165,7 +165,7 @@ describe('MachineManager Service', () => {
           type: 'deploy',
           state: 'in-progress',
           completed_at: null,
-          resource: 'Node',
+          resource: 'node',
           resource_id: manager.node.id,
           isNewRecord: false
         });

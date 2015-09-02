@@ -34,7 +34,7 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       defaultValue: null,
       validate: {
-        isIn: [['Node', 'Cluster']]
+        isIn: [['node', 'cluster']]
       }
     },
     resource_id: {

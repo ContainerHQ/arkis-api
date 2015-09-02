@@ -37,7 +37,8 @@ describe('DELETE /clusters/:cluster_id/nodes/:node_id', () => {
       let actionIds;
 
       beforeEach(done => {
-        let opts = { type: 'deploy', resource: 'Node', resource_id: node.id };
+        let opts = { type: 'deploy', resource: 'node', resource_id: node.id };
+
         factory.createMany('action', opts, 10, (err, actions) => {
           if (err) { return done(err); }
 

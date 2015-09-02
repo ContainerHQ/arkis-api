@@ -34,10 +34,10 @@ describe('POST /clusters/:cluster_id/nodes', () => {
         api.clusters(user).nodes(cluster).create().send(form)
         .expect(202, (err, res) => {
           if (err) { return done(err); }
-          
+
           expect(res.body.action).to.include({
             type: 'deploy',
-            resource: 'Node',
+            resource: 'node',
             resource_id: res.body.node.id
           });
           done();

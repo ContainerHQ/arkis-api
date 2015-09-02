@@ -210,7 +210,7 @@ module.exports = function(sequelize, DataTypes) {
         Node.hasMany(models.Action, {
           foreignKey: 'resource_id',
           constraints: false,
-          scope: { resource: 'Node' }
+          scope: { resource: 'node' }
         });
       }
     }

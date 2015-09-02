@@ -18,7 +18,7 @@ describe('Action Model', () => {
       });
     });
 
-    ['Node', 'Cluster'].forEach(resource => {
+    ['node', 'cluster'].forEach(resource => {
       it(`succeeds with resource ${resource}`, done => {
         factory.create('action', { resource: resource }, done);
       });
