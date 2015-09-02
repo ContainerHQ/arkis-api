@@ -50,10 +50,14 @@ router
   }).catch(next);
 })
 .post('/:node_id/upgrade', (req, res, next) => {
-  let daemon = new services.DaemonManager(req.cluster, req.node);
+  let daemon = new services.DaemonManager(req.cluster, req.node),
+    action;
 
-  daemon.upgrade().then(() => {
-    res.noContent();
+  daemon.upgrade().then(nodeAction => {
+    action = nodeAction;
+    return req.node.reload();
+  }).then(() => {
+    res.status(202).json({ node: req.node, action: action });
   }).catch(next);
 })
 
@@ -62,12 +66,14 @@ router
   res.json({ node: req.node });
 })
 .patch((req, res, next) => {
-  let daemon = new services.DaemonManager(req.cluster, req.node);
+  let daemon = new services.DaemonManager(req.cluster, req.node),
+    action;
 
-  daemon.update(_.pick(req.body, UPDATE_PARAMS)).then(() => {
+  daemon.update(_.pick(req.body, UPDATE_PARAMS)).then(nodeAction => {
+    action = nodeAction;
     return req.node.reload();
   }).then(() => {
-    res.json({ node: req.node });
+    res.status(202).json({ node: req.node, action: action });
   }).catch(next);
 })
 .delete((req, res, next) => {

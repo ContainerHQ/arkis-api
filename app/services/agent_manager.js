@@ -28,9 +28,10 @@ class AgentManager {
     return this.node.update(
       _.merge(attributes, { last_state: 'running' })
     );
+    // TODO: We must notify the cluster also with the last_state
   }
   /*
-   * Called by the swarm agent to notify that the docker daemon is running on
+   * Called by the swarm agent to register that the docker daemon is running on
    * this ip.
    */
   register(addr) {

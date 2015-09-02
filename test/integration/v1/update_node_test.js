@@ -19,14 +19,28 @@ describe('PATCH /clusters/:cluster_id/nodes/:node_id', () => {
     });
   });
 
-  it('updates the node attributes', done => {
-    let form  = { name: random.string(), master: true, labels: {
-        storage: 'hdd', test: 2, env: 'trashtest'
-      }},
-      expected = _.merge({ last_state: 'updating' }, form);
+  const FORM = { name: random.string(), master: true, labels: {
+    storage: 'hdd', test: 2, env: 'trashtest'
+  }};
 
-    api.clusters(user).nodes(cluster).update(node.id).send(form)
-    .expect(200, has.one(cluster, 'node', { with: expected }, done));
+  it('updates the node attributes and returns the node', done => {
+    let expected = _.merge({ last_state: 'updating' }, FORM);
+
+    api.clusters(user).nodes(cluster).update(node.id).send(FORM)
+    .expect(202, has.one(cluster, 'node', { with: expected }, done));
+  });
+
+  it('returns a node update action', done => {
+    let expected = {
+      type: 'update',
+      state: 'in-progress',
+      resource: 'node',
+      resource_id: node.id,
+      completed_at: null
+    };
+
+    api.clusters(user).nodes(cluster).update(node.id).send(FORM)
+    .expect(202, has.one(node, 'action', { with: expected }, done));
   });
 
   context('with invalid attributes', () => {
@@ -49,7 +63,17 @@ describe('PATCH /clusters/:cluster_id/nodes/:node_id', () => {
       let expected = node.dataValues;
 
       api.clusters(user).nodes(cluster).update(node.id).send({})
-      .expect(200, has.one(cluster, 'node', { with: expected }, done));
+      .expect(202, has.one(cluster, 'node', { with: expected }, done));
+    });
+
+    it('returns a null action', done => {
+      api.clusters(user).nodes(cluster).update(node.id).send({})
+      .expect(202, (err, res) => {
+        if (err) { return done(err); }
+
+        expect(res.body.action).to.be.null;
+        done();
+      });
     });
   });
 
@@ -76,7 +100,7 @@ describe('PATCH /clusters/:cluster_id/nodes/:node_id', () => {
 
     it('these attributes are filtered', done => {
       api.clusters(user).nodes(cluster).update(node.id).send(form)
-      .expect(200, (err, res) => {
+      .expect(202, (err, res) => {
         if (err) { return done(err); }
 
         expect(cluster.getNodes({ where: { id: node.id } })
