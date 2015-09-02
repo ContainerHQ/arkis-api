@@ -209,7 +209,6 @@ describe('Cluster Model', () => {
   describe('#notify', () => {
     const BUSY_STATES = ['deploying', 'upgrading', 'updating'];
 
-
     let cluster;
 
     beforeEach(() => {

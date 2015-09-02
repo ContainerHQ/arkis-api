@@ -23,12 +23,14 @@ router
 })
 .post('/', (req, res, next) => {
   let node  = Node.build(_.pick(req.body, CREATE_PARAMS)),
-    machine = new services.MachineManager(req.cluster, node);
+    machine = new services.MachineManager(req.cluster, node),
+    action;
 
-  return machine.deploy().then(() => {
+  return machine.deploy().then(nodeAction => {
+    action = nodeAction;
     return node.reload();
   }).then(node => {
-    res.status(201).json({ node: node });
+    res.status(202).json({ node: node, action: action });
   }).catch(next);
 })
 .param('node_id', (req, res, next, id) => {

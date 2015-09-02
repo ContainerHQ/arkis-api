@@ -16,25 +16,33 @@ describe('POST /clusters/:cluster_id/nodes', () => {
     });
   });
 
-  context('with a byon slave node', () => {
-    let form = { name: 'create', master: false, byon: true, labels: {
+  [
+    ['byon slave', { name: 'create', master: false, byon: true, labels: {
       environment: 'production', storage: 'hdd'
-    }};
-
-    it('creates a byon slave node for the cluster', done => {
-      api.clusters(user).nodes(cluster).create().send(form)
-      .expect(201, has.one(cluster, 'node', { with: form }, done));
-    });
-  });
-
-  context('with a arkis master node', () => {
-    let form = { name: 'create', master: true, region: 'europe',
+    }}],
+    ['arkis master', { name: 'create', master: true, region: 'europe',
       node_size: 'small'
-    };
+    }]
+  ].forEach(([title, form]) => {
+    context(`with a ${title} node`, () => {
+      it(`creates a ${title} node for the cluster`, done => {
+        api.clusters(user).nodes(cluster).create().send(form)
+        .expect(202, has.one(cluster, 'node', { with: form }, done));
+      });
 
-    it('creates a arkis master node for the cluster', done => {
-      api.clusters(user).nodes(cluster).create().send(form)
-      .expect(201, has.one(cluster, 'node', { with: form }, done));
+      it('creates a deploy action for the node', done => {
+        api.clusters(user).nodes(cluster).create().send(form)
+        .expect(202, (err, res) => {
+          if (err) { return done(err); }
+          
+          expect(res.body.action).to.include({
+            type: 'deploy',
+            resource: 'Node',
+            resource_id: res.body.node.id
+          });
+          done();
+        });
+      });
     });
   });
 
@@ -47,7 +55,7 @@ describe('POST /clusters/:cluster_id/nodes', () => {
       api.clusters(user).nodes(cluster).create().send(form).expect(422);
     });
   });
-  
+
   context('with invalid attributes', () => {
     it('returns a bad request status and validation errors', done => {
       api.clusters(user).nodes(cluster).create().send()
@@ -77,7 +85,7 @@ describe('POST /clusters/:cluster_id/nodes', () => {
 
     it('these attributes are filtered', done => {
       api.clusters(user).nodes(cluster).create().send(form)
-      .expect(201, (err, res) => {
+      .expect(202, (err, res) => {
         if (err) { return done(err); }
 
         expect(cluster.getNodes({ where: { name: node.name } })
