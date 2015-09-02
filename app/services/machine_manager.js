@@ -21,6 +21,8 @@ class MachineManager {
       return this.cluster.addNode(this.node);
     }).then(() => {
       return this.cluster.notify(this.deployChanges);
+    }).then(() => {
+      return this.node.createAction({ type: 'deploy' });
     });
   }
   destroy() {
@@ -28,6 +30,10 @@ class MachineManager {
       return this.node.destroy();
     }).then(() => {
       return this.cluster.notify(this.destroyChanges);
+    }).then(() => {
+      return this.node.getActions();
+    }).then(actions => {
+      return Promise.all(_.invoke(actions, 'destroy'));
     });
   }
   get deployChanges() {

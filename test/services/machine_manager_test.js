@@ -2,6 +2,7 @@
 
 var _ = require('lodash'),
   config = require('../../config'),
+  models = require('../../app/models'),
   Node = require('../../app/models').Node,
   MachineManager = require('../../app/services').MachineManager;
 
@@ -55,12 +56,14 @@ describe('MachineManager Service', () => {
     });
 
     context('when machine creation succeeded', () => {
-      let machineId;
+      let action, machineId;
 
       beforeEach(() => {
         machineId = random.string();
         manager.machine.create = sinon.stub().returns(Promise.resolve(machineId));
-        return manager.deploy();
+        return manager.deploy().then(nodeAction => {
+          action = nodeAction;
+        });
       });
 
       it('creates the node', () => {
@@ -85,6 +88,17 @@ describe('MachineManager Service', () => {
 
       it('notifies the cluster', () => {
         expect(manager.cluster.state).to.equal('deploying');
+      });
+
+      it('creates and returns a deploy action for the node', () => {
+        expect(action).to.include({
+          type: 'deploy',
+          state: 'in-progress',
+          completed_at: null,
+          resource: 'Node',
+          resource_id: manager.node.id,
+          isNewRecord: false
+        });
       });
     });
 
@@ -112,14 +126,22 @@ describe('MachineManager Service', () => {
       it("doesn't notify the cluster", () => {
         expect(manager.cluster.state).to.equal('empty');
       });
+
+      it("doesn't create an action", () => {
+        return expect(manager.node.getActions()).to.eventually.be.empty;
+      });
     });
 
     context('when byon node', () => {
+      let action;
+
       beforeEach(() => {
         _.merge(manager.node, BYON_OPTS);
 
         manager.machine.create = sinon.stub().returns(Promise.resolve());
-        return manager.deploy();
+        return manager.deploy().then(nodeAction => {
+          action = nodeAction;
+        });
       });
 
       it('creates the node', () => {
@@ -137,12 +159,27 @@ describe('MachineManager Service', () => {
       it('creates the node', () => {
         expect(manager.node.isNewRecord).to.be.false;
       });
+
+      it('creates and returns a deploy action for the node', () => {
+        expect(action).to.include({
+          type: 'deploy',
+          state: 'in-progress',
+          completed_at: null,
+          resource: 'Node',
+          resource_id: manager.node.id,
+          isNewRecord: false
+        });
+      });
     });
   });
 
   describe('#destroy', () => {
+    let action;
+
     beforeEach(() => {
-      return manager.deploy();
+      return manager.deploy().then(nodeAction => {
+        action = nodeAction;
+      });
     });
 
     context('when byon node', () => {
@@ -163,6 +200,10 @@ describe('MachineManager Service', () => {
 
       it('notifies the cluster', () => {
         expect(manager.cluster.state).to.equal('empty');
+      });
+
+      it('removes its actions', () => {
+        return expect(models.Action.findById(action.id)).to.eventually.be.null;
       });
     });
 
@@ -202,6 +243,10 @@ describe('MachineManager Service', () => {
         it('notifies the cluster with last_ping', () => {
           expect(manager.cluster.last_ping).to.be.null;
         });
+
+        it('removes its actions', () => {
+          return expect(models.Action.findById(action.id)).to.eventually.be.null;
+        });
       });
 
       context('when node is a slave', () => {
@@ -231,6 +276,10 @@ describe('MachineManager Service', () => {
 
         it("doens't notify the cluster with last_ping", () => {
           expect(manager.cluster.last_ping).to.not.be.null;
+        });
+
+        it('removes its actions', () => {
+          return expect(models.Action.findById(action.id)).to.eventually.be.null;
         });
       });
     });
