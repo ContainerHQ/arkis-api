@@ -6,30 +6,39 @@ let _ = require('lodash'),
 describe('POST /agent/:token/notify', () => {
   db.sync();
 
-  let node;
+  let node, cluster;
 
   beforeEach(() => {
-    node = factory.buildSync('node');
-    return node.save();
+    cluster = factory.buildSync('cluster');
+    return cluster.save().then(() => {
+      node = factory.buildSync('node', { cluster_id: cluster.id });
+      return node.save();
+    });
   });
 
-  it('updates the node attributes and its last_state to running', done => {
-    let form = {
-      docker_version: '0.0.0',
-      swarm_version:  '0.0.0',
-      cpu: 3,
-      memory: 2048,
-      disk: 2.048
-    };
+  const FORM = {
+    docker_version: '0.0.0', swarm_version:  '0.0.0',
+    cpu: 3, memory: 2048, disk: 2.048
+  };
 
-    api.agent(node).notify(form).expect(204, (err, res) => {
+  it('updates the node attributes and its last_state to running', done => {
+    api.agent(node).notify(FORM).expect(204, (err, res) => {
       if (err) { return done(err); }
 
-      node.reload().then(() => {
-        expect(node).to.include(form).and
-          .to.have.property('last_state', 'running');
-        done();
-      }).catch(done);
+      expect(node.reload())
+        .to.eventually.include(FORM).and
+        .to.have.property('last_state', 'running')
+        .notify(done);
+    });
+  });
+
+  it('updates the cluster last_state to running', done => {
+    api.agent(node).notify(FORM).expect(204, (err, res) => {
+      if (err) { return done(err); }
+
+      expect(cluster.reload())
+        .to.eventually.have.property('last_state', 'running')
+        .notify(done);
     });
   });
 

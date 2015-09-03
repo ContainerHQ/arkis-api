@@ -39,6 +39,15 @@ describe('AgentManager Service', () => {
   });
 
   describe('#notify', () => {
+    let clusterNotify;
+
+    beforeEach(() => {
+      clusterNotify   = sinon.stub().returns(Promise.resolve());
+      node.getCluster = sinon.stub().returns(
+        Promise.resolve({ notify: clusterNotify })
+      );
+    });
+
     context('with valid attributes', () => {
       const ATTRIBUTES = { docker_version: '1.2.0', disk: 2 };
 
@@ -55,6 +64,11 @@ describe('AgentManager Service', () => {
       it('sets the node last_state to running', () => {
         expect(node.last_state).to.equal('running');
       });
+
+      it('notifies the cluster with last_state', () => {
+        expect(clusterNotify)
+          .to.have.been.calledWith({ last_state: 'running'});
+      });
     });
 
     context('with empty attributes', () => {
@@ -66,6 +80,11 @@ describe('AgentManager Service', () => {
 
       it('sets the node last_state to running', () => {
         expect(node.last_state).to.equal('running');
+      });
+
+      it('notifies the cluster with last_state', () => {
+        expect(clusterNotify)
+          .to.have.been.calledWith({ last_state: 'running'});
       });
     });
 
@@ -95,6 +114,10 @@ describe('AgentManager Service', () => {
       it("doesn't set the node last_state to running", () => {
         return expect(node.reload())
           .to.eventually.not.have.property('last_state', 'running');
+      });
+
+      it("doesn't notify the cluster", () => {
+        expect(clusterNotify).to.not.have.been.called;
       });
     });
   });
