@@ -53,9 +53,8 @@ module.exports = function(sequelize, DataTypes) {
     defaultScope: { order: [['id', 'ASC']] },
     scopes: {
       date: { order: [['started_at', 'DESC']] },
-      latestPending: {
+      pending: {
         where: { last_state: 'in-progress'},
-        order: [['started_at', 'DESC']],
         limit: 1
       },
       filtered: function(filters) {

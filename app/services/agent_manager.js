@@ -31,11 +31,11 @@ class AgentManager {
     }).then(cluster => {
       return cluster.notify(RUNNING_STATE);
     }).then(() => {
-      return this.node.getActions({ scope: 'latestPending' });
+      return this.node.getActions({ scope: 'pending' });
     }).then(actions => {
-      let latestAction = _.first(actions);
+      let pendingAction = _.first(actions);
 
-      return !!latestAction ? latestAction.complete() : Promise.resolve(null);
+      return pendingAction ? pendingAction.complete() : Promise.resolve(null);
     });
   }
   /*
