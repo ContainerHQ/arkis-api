@@ -88,6 +88,52 @@ describe('AgentManager Service', () => {
       });
     });
 
+    context('when node as a pending action', () => {
+      let action;
+
+      beforeEach(() => {
+        return node.createAction({ type: 'deploy' }).then(nodeAction => {
+          action = nodeAction;
+          return manager.notify();
+        }).then(() => {
+          return node.reload();
+        }).then(() => {
+          return action.reload();
+        });
+      });
+
+      it('set this action in completed state', () => {
+        expect(action.state).to.deep.equal('completed');
+      });
+
+      it('sets this action completed_at to current datetime', () => {
+        expect(moment(action.completed_at).fromNow())
+          .to.equal('a few seconds ago');
+      });
+    });
+
+    context('when node as a non pending action', () => {
+      let action;
+
+      beforeEach(() => {
+        return node.createAction({ type: 'deploy', last_state: 'completed' })
+        .then(nodeAction => {
+          action = nodeAction;
+          return manager.notify();
+        }).then(() => {
+          return node.reload();
+        });
+      });
+
+      it("doesn't complete this action", () => {
+        let previousValues = action.dataValues;
+
+        return expect(action.reload())
+          .to.eventually.have.property('dataValues')
+          .that.deep.equals(previousValues);
+      });
+    });
+
     context('with invalid attributes', () => {
       const ATTRIBUTES = { memory: -1 };
 

@@ -26,7 +26,7 @@ module.exports = {
         defaultValue: null,
       },
       provider_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
         allowNull: true,
         defaultValue: null,
         unique: true

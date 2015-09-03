@@ -38,7 +38,7 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     resource_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.STRING,
       allowNull: false,
       defaultValue: null
     },
@@ -50,9 +50,14 @@ module.exports = function(sequelize, DataTypes) {
   }, {
     createdAt: 'started_at',
 
-    defaultScope: { order: [['id', 'DESC']] },
+    defaultScope: { order: [['id', 'ASC']] },
     scopes: {
-      date: { order: [['started_at']] },
+      date: { order: [['started_at', 'DESC']] },
+      latestPending: {
+        where: { last_state: 'in-progress'},
+        order: [['started_at', 'DESC']]
+        limit: 1
+      },
       filtered: function(filters) {
         return { where: _.pick(filters, ['type']) };
       }

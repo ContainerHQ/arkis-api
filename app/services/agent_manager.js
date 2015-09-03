@@ -30,6 +30,12 @@ class AgentManager {
       return this.node.getCluster();
     }).then(cluster => {
       return cluster.notify(RUNNING_STATE);
+    }).then(() => {
+      return this.node.getActions({ scope: 'latestPending' });
+    }).then(actions => {
+      let latestAction = _.first(actions);
+
+      return !!latestAction ? latestAction.complete() : Promise.resolve();
     });
   }
   /*
