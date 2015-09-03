@@ -28,8 +28,8 @@ router
   }).catch(next);
 })
 .post('/:token/notify', (req, res, next) => {
-  req.agent.notify(_.pick(req.body, REGISTER_PARAMS)).then(() => {
-    res.noContent();
+  req.agent.notify(_.pick(req.body, REGISTER_PARAMS)).then(action => {
+    res.json({ action: action });
   }).catch(next);
 })
 .get('/clusters/:token', (req, res, next) => {

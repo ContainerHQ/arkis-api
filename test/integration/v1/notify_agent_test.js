@@ -22,7 +22,7 @@ describe('POST /agent/:token/notify', () => {
   };
 
   it('updates the node attributes and its last_state to running', done => {
-    api.agent(node).notify(FORM).expect(204, (err, res) => {
+    api.agent(node).notify(FORM).expect(200, (err, res) => {
       if (err) { return done(err); }
 
       expect(node.reload())
@@ -33,12 +33,53 @@ describe('POST /agent/:token/notify', () => {
   });
 
   it('updates the cluster last_state to running', done => {
-    api.agent(node).notify(FORM).expect(204, (err, res) => {
+    api.agent(node).notify(FORM).expect(200, (err, res) => {
       if (err) { return done(err); }
 
       expect(cluster.reload())
         .to.eventually.have.property('last_state', 'running')
         .notify(done);
+    });
+  });
+
+  context('when node has no pending action', () => {
+    it('returns a null action', done => {
+      api.agent(node).notify(FORM)
+      .expect(200, (err, res) => {
+        if (err) return done(err);
+
+        expect(res.body.action).to.be.null;
+        done();
+      });
+    });
+  });
+
+  context('when node has a pending action', () => {
+    const ACTION_TYPE = 'upgrade';
+
+    let action;
+
+    beforeEach(() => {
+      return node.createAction({ type: ACTION_TYPE }).then(nodeAction => {
+        action = nodeAction;
+      });
+    });
+
+    it('returns the completed action', done => {
+      let expected = action.dataValues;
+
+      _.merge(expected, { last_state: 'completed' });
+
+      api.agent(node).notify(FORM)
+      .expect(200, (err, res) => {
+        if (err) return done(err);
+
+        expect(res.body.action).to.include({
+          resource: 'node',        resource_id: node.id,
+          last_state: 'completed', type: ACTION_TYPE
+        });
+        done();
+      });
     });
   });
 
@@ -76,7 +117,7 @@ describe('POST /agent/:token/notify', () => {
 
     it('these attributes are filtered', done => {
       api.agent(node).notify(form)
-      .expect(204, (err, res) => {
+      .expect(200, (err, res) => {
         if (err) { return done(err); }
 
         expect(Node.findById(node.id))

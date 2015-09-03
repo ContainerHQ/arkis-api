@@ -55,7 +55,7 @@ module.exports = function(sequelize, DataTypes) {
       date: { order: [['started_at', 'DESC']] },
       latestPending: {
         where: { last_state: 'in-progress'},
-        order: [['started_at', 'DESC']]
+        order: [['started_at', 'DESC']],
         limit: 1
       },
       filtered: function(filters) {
@@ -76,7 +76,9 @@ module.exports = function(sequelize, DataTypes) {
     },
     instanceMethods: {
       complete: function() {
-        return this.update({ last_state: 'completed', completed_at: moment() });
+        return this.update({
+          last_state: 'completed', completed_at: moment()
+        });
       }
     }
   });

@@ -35,7 +35,7 @@ class AgentManager {
     }).then(actions => {
       let latestAction = _.first(actions);
 
-      return !!latestAction ? latestAction.complete() : Promise.resolve();
+      return !!latestAction ? latestAction.complete() : Promise.resolve(null);
     });
   }
   /*

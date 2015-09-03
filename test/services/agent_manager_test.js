@@ -89,17 +89,22 @@ describe('AgentManager Service', () => {
     });
 
     context('when node as a pending action', () => {
-      let action;
+      let action, result;
 
       beforeEach(() => {
         return node.createAction({ type: 'deploy' }).then(nodeAction => {
           action = nodeAction;
           return manager.notify();
-        }).then(() => {
+        }).then(notifyResult => {
+          result = notifyResult;
           return node.reload();
         }).then(() => {
           return action.reload();
         });
+      });
+
+      it('returns the action', () => {
+        expect(result.toJSON()).to.deep.equal(action.toJSON());
       });
 
       it('set this action in completed state', () => {
@@ -113,16 +118,21 @@ describe('AgentManager Service', () => {
     });
 
     context('when node as a non pending action', () => {
-      let action;
+      let action, result;
 
       beforeEach(() => {
         return node.createAction({ type: 'deploy', last_state: 'completed' })
         .then(nodeAction => {
           action = nodeAction;
           return manager.notify();
-        }).then(() => {
+        }).then(notifyResult => {
+          result = notifyResult;
           return node.reload();
         });
+      });
+
+      it('returns null', () => {
+        expect(result).to.be.null;
       });
 
       it("doesn't complete this action", () => {
