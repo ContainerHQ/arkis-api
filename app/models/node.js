@@ -42,10 +42,9 @@ module.exports = function(sequelize, DataTypes) {
         isUnique: function(master) {
           if (!master || !this.cluster_id) { return Promise.resolve(); }
 
-          return Node.findOne({ where:  {
-            cluster_id: this.cluster_id,
-            master: true
-          }}).then(node => {
+          return Node.findOne({
+            where: { cluster_id: this.cluster_id, master: true }
+          }).then(node => {
             if (node) {
               return Promise.reject('This cluster already has a master node!');
             }
@@ -62,7 +61,7 @@ module.exports = function(sequelize, DataTypes) {
           if (byon && (this.region || this.node_size)) {
             throw new Error("A byon node canno't have a region and size!");
           }
-          if (!byon && (!this.region || !this.node_size)) {
+          if (!byon && !(this.region && this.node_size)) {
             throw new Error("A provided node must have a region and size!");
           }
         }
