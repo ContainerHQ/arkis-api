@@ -44,19 +44,13 @@ describe('ClusterManager Service', () => {
         });
       });
     });
-
   });
 
   describe('#upgrade', () => {
-    let nodeDaemons;
+    beforeEach(done => {
+      let opts = { cluster_id: manager.cluster.id };
 
-    beforeEach(() => {
-      nodeDaemons = _.map(new Array(5), () => {
-        return { upgrade: sinon.stub() };
-      });
-      manager.getNodesDaemons = function() {
-        return Promise.resolve(nodeDaemons);
-      };
+      factory.createMany('runningNode', opts, 5, done);
     });
 
     context('when cluster is not running', () => {
@@ -82,9 +76,11 @@ describe('ClusterManager Service', () => {
         expect(manager.cluster).to.include(previousVersions);
       });
 
-      it("doenst' upgrade all the nodes", () => {
-        nodeDaemons.forEach(daemon => {
-          expect(daemon.upgrade).to.not.have.been.called;
+      it("doenst' upgrade its nodes", () => {
+        return manager.cluster.getNodes().then(nodes => {
+          return expect(_.all(nodes, node => {
+            return node.state !== 'upgrading';
+          }));
         });
       });
     });
@@ -108,9 +104,11 @@ describe('ClusterManager Service', () => {
         expect(manager.cluster).to.include(previousVersions);
       });
 
-      it("doenst' upgrade all the nodes", () => {
-        nodeDaemons.forEach(daemon => {
-          expect(daemon.upgrade).to.not.have.been.called;
+      it("doesnt' upgrade its nodes", () => {
+        return manager.cluster.getNodes().then(nodes => {
+          return expect(_.all(nodes, node => {
+            return node.state === 'upgrading';
+          })).to.be.false;
         });
       });
     });
@@ -122,25 +120,104 @@ describe('ClusterManager Service', () => {
       };
 
       beforeEach(() => {
-        return manager.cluster.update(OLDEST_VERSIONS).then(() => {
-          return manager.upgrade();
-        }).then(() => {
-          return manager.cluster.reload();
+        return manager.cluster.update(OLDEST_VERSIONS);
+      });
+
+      context('when its nodes are upgradable', () => {
+        let result;
+
+        beforeEach(() => {
+          return manager.upgrade().then(res => {
+            result = res;
+          });
+        });
+
+        it('updates its versions to the latest versions available', () => {
+          return expect(manager.cluster.reload()).to.eventually.include({
+            docker_version: config.latestVersions.docker,
+            swarm_version:  config.latestVersions.swarm
+          });
+        });
+
+        it('returns no error', () => {
+          expect(result.errors).to.be.empty;
+        });
+
+        it('upgrades its nodes', () => {
+          return manager.cluster.getNodes().then(nodes => {
+            return expect(_.all(nodes, node => {
+              return node.state === 'upgrading';
+            })).to.be.true;
+          });
+        });
+
+        it('returns an upgrade action for each of its node', () => {
+          return manager.cluster.getNodes().then(nodes => {
+            return expect(_.map(nodes, node => {
+              return _.findWhere(result.actions, {
+                type: 'upgrade',
+                completed_at: null,
+                last_state: 'in-progress',
+                resource: 'node',
+                resource_id: node.id
+              });
+            })).to.not.include(undefined);
+          });
         });
       });
 
-      it('updates its verions to the latest versions available', () => {
-        expect(manager.cluster).to.include({
-          docker_version: config.latestVersions.docker,
-          swarm_version:  config.latestVersions.swarm
+      context('when some node upgrades has issues', () => {
+        let result;
+
+        beforeEach(done => {
+          let opts = { cluster_id: manager.cluster.id };
+
+          factory.createMany('node', opts, 4, done);
+        });
+
+        beforeEach(() => {
+          return manager.upgrade().then(res => {
+            result = res;
+          });
+        });
+
+        it('updates its versions to the latest versions available', () => {
+          return expect(manager.cluster.reload()).to.eventually.include({
+            docker_version: config.latestVersions.docker,
+            swarm_version:  config.latestVersions.swarm
+          });
+        });
+
+        it("returns an error for each node not upgrading", () => {
+          return manager.cluster.getNodes().then(nodes => {
+            return expect(_.map(nodes, node => {
+              if (node.state === 'upgrading') { return null; }
+
+              return _.findWhere(result.errors, {
+                resource: 'node',
+                resource_id: node.id
+              });
+            })).to.not.be.empty.and.not.include(undefined);
+          });
+        });
+
+        it('returns an action for each upgrading node', () => {
+          return manager.cluster.getNodes().then(nodes => {
+            return expect(_.map(nodes, node => {
+              if (node.state !== 'upgrading') { return null; }
+
+              return _.findWhere(result.actions, {
+                type: 'upgrade',
+                completed_at: null,
+                last_state: 'in-progress',
+                resource: 'node',
+                resource_id: node.id
+              });
+            })).to.not.be.empty.and.not.include(undefined);
+          });
         });
       });
 
-      it('upgrades all the nodes', () => {
-        nodeDaemons.forEach(daemon => {
-          expect(daemon.upgrade).to.have.been.called;
-        });
-      });
     });
   });
 });
