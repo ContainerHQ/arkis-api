@@ -23,13 +23,9 @@ router
 })
 .post('/', (req, res, next) => {
   let node  = Node.build(_.pick(req.body, CREATE_PARAMS)),
-    machine = new services.MachineManager(req.cluster, node),
-    action;
+    machine = new services.MachineManager(req.cluster, node);
 
-  return machine.deploy().then(nodeAction => {
-    action = nodeAction;
-    return node.reload();
-  }).then(node => {
+  return machine.deploy().then(action => {
     res.status(202).json({ node: node, action: action });
   }).catch(next);
 })
@@ -50,13 +46,9 @@ router
   }).catch(next);
 })
 .post('/:node_id/upgrade', (req, res, next) => {
-  let daemon = new services.DaemonManager(req.cluster, req.node),
-    action;
+  let daemon = new services.DaemonManager(req.cluster, req.node);
 
-  daemon.upgrade().then(nodeAction => {
-    action = nodeAction;
-    return req.node.reload();
-  }).then(() => {
+  daemon.upgrade().then(action => {
     res.status(202).json({ node: req.node, action: action });
   }).catch(next);
 })
@@ -66,13 +58,9 @@ router
   res.json({ node: req.node });
 })
 .patch((req, res, next) => {
-  let daemon = new services.DaemonManager(req.cluster, req.node),
-    action;
+  let daemon = new services.DaemonManager(req.cluster, req.node);
 
-  daemon.update(_.pick(req.body, UPDATE_PARAMS)).then(nodeAction => {
-    action = nodeAction;
-    return req.node.reload();
-  }).then(() => {
+  daemon.update(_.pick(req.body, UPDATE_PARAMS)).then(action => {
     res.status(202).json({ node: req.node, action: action });
   }).catch(next);
 })
