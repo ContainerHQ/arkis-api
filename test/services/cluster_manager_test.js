@@ -17,7 +17,7 @@ describe('ClusterManager Service', () => {
     });
   });
 
-  describe('#getNodesDaemons', () => {
+  describe('#getNodeDaemons', () => {
     context('when cluster has nodes', () => {
       beforeEach(done => {
         factory.createMany('node', { cluster_id: manager.cluster.id }, 7, done);
@@ -30,7 +30,7 @@ describe('ClusterManager Service', () => {
           expected = _.map(nodes, node => {
             return new DaemonManager(manager.cluster, node);
           });
-          return manager.getNodesDaemons();
+          return manager.getNodeDaemons();
         }).then(daemons => {
           return expect(daemons).to.deep.equal(expected);
         });
@@ -39,7 +39,7 @@ describe('ClusterManager Service', () => {
 
     context('when cluster is empty', () => {
       it('returns an empty list', () => {
-        return manager.getNodesDaemons().then(daemons => {
+        return manager.getNodeDaemons().then(daemons => {
           return expect(daemons).to.be.empty;
         });
       });

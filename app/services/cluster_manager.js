@@ -31,7 +31,7 @@ class ClusterManager extends StateManager {
     if (this.isAlreadyUpgraded) { return this.alreadyUpgraded(); }
 
     return this.cluster.update(LATEST_VERSIONS).then(() => {
-      return this.getNodesDaemons();
+      return this.getNodeDaemons();
     }).then(daemons => {
       return Promise.all(_.map(daemons, daemon => {
         return daemon.upgrade().then(
@@ -51,7 +51,7 @@ class ClusterManager extends StateManager {
       });
     });
   }
-  getNodesDaemons() {
+  getNodeDaemons() {
     return this.cluster.getNodes().then(nodes => {
       return _.map(nodes, node => {
         return new DaemonManager(this.cluster, node);
