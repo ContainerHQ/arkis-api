@@ -179,6 +179,24 @@ module.exports.clusters = function(user={}) {
           return request(app)
           .post(`${resource}/${id}/upgrade`)
           .set('Authorization', `JWT ${user.token}`);
+        },
+        actions: function(node={}) {
+          resource = `${resource}/${node.id}/actions`;
+
+          return {
+            get: function(id) {
+              return request(app)
+              .get(`${resource}/${id}`)
+              .set('Authorization', `JWT ${user.token}`);
+            },
+            getAll: function(opts={}) {
+              let params = qs.stringify(opts);
+
+              return request(app)
+              .get(`${resource}?${params}`)
+              .set('Authorization', `JWT ${user.token}`);
+            }
+          };
         }
       };
     }

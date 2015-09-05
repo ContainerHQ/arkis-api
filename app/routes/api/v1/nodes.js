@@ -52,6 +52,7 @@ router
     res.status(202).json({ node: req.node, action: action });
   }).catch(next);
 })
+.use('/:node_id/actions', require('./action')({ resource: 'node' }))
 
 .route('/:node_id')
 .get((req, res) => {

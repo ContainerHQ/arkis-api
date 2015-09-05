@@ -76,7 +76,7 @@ describe('ClusterManager Service', () => {
         expect(manager.cluster).to.include(previousVersions);
       });
 
-      it("doenst' upgrade its nodes", () => {
+      it("doesnt' upgrade its nodes", () => {
         return manager.cluster.getNodes().then(nodes => {
           return expect(_.all(nodes, node => {
             return node.state !== 'upgrading';

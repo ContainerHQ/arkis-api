@@ -35,7 +35,7 @@ describe('POST /clusters/:cluster_id/upgrade', () => {
       });
     });
 
-    context('when cluster has old versions', () => {
+    context('when cluster has older versions', () => {
       beforeEach(() => {
         let versions = {
           docker_version: config.oldestVersions.docker,
@@ -44,36 +44,88 @@ describe('POST /clusters/:cluster_id/upgrade', () => {
         return cluster.update(versions);
       });
 
-      context('when cluster has no reachable node', () => {
-        it("doesn't upgrade the cluster", done => {
-          let previousState = cluster.state;
+      it('upgrades and returns the cluster', done => {
+        api.clusters(user).upgrade(cluster.id)
+        .expect(202, (err, res) => {
+          if (err) { return done(err); }
 
+          let clusterInfos = format.timestamps(res.body.cluster);
+
+          cluster.reload().then(() => {
+            expect(clusterInfos)
+              .to.deep.equal(cluster.toJSON()).and
+              .to.satisfy(has.latestVersions);
+            done();
+          }).catch(done);
+        });
+      });
+
+      context('when cluster has no upgradable nodes', () => {
+        it("doesn't set the cluster state to upgrading", done => {
           api.clusters(user).upgrade(cluster.id)
-          .expect(204, (err, res) => {
+          .expect(202, (err, res) => {
             if (err) { return done(err); }
 
-            expect(cluster.reload())
-              .to.eventually.satisfy(has.latestVersions)
-              .notify(done);
+            expect(res.body.cluster.state).to.not.equal('upgrading');
+            done();
           });
         });
       });
 
-      context('when cluster has reachable nodes', () => {
+      context('when some cluster nodes can be upgraded', () => {
         beforeEach(done => {
           let opts = { cluster_id: cluster.id };
 
           factory.createMany('runningNode', opts, 5, done);
         });
 
-        it('upgrades the cluster', done => {
+        it('returns node upgrade actions', done => {
           api.clusters(user).upgrade(cluster.id)
-          .expect(204, (err, res) => {
+          .expect(202, (err, res) => {
             if (err) { return done(err); }
 
-            expect(cluster.reload())
-              .to.eventually.satisfy(has.latestVersions)
-              .notify(done);
+            let actions = format.allTimestamps(res.body.actions);
+
+            expect(actions).to.not.be.empty;
+            done();
+          });
+        });
+
+        it('returns no error', done => {
+          api.clusters(user).upgrade(cluster.id)
+          .expect(202, (err, res) => {
+            if (err) { return done(err); }
+
+            expect(res.body.errors).to.be.empty;
+            done();
+          });
+        });
+
+        it('set the cluster state to upgrading', done => {
+          api.clusters(user).upgrade(cluster.id)
+          .expect(202, (err, res) => {
+            if (err) { return done(err); }
+
+            expect(res.body.cluster.state).to.equal('upgrading');
+            done();
+          });
+        });
+
+        context("when some cluster nodes can't be upgraded", () => {
+          beforeEach(done => {
+            let opts = { cluster_id: cluster.id };
+
+            factory.createMany('node', opts, 4, done);
+          });
+
+          it('returns node errors', done => {
+            api.clusters(user).upgrade(cluster.id)
+            .expect(202, (err, res) => {
+              if (err) { return done(err); }
+
+              expect(res.body.errors).to.not.be.empty;
+              done();
+            });
           });
         });
       });

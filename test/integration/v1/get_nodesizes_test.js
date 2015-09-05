@@ -30,5 +30,5 @@ describe('GET /nodesizes', () => {
     it('returns an unauthorized status', done => {
       api.nodeSizes().getAll().expect(401, done);
     });
-  })
+  });
 });
