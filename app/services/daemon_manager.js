@@ -28,7 +28,7 @@ class DaemonManager extends StateManager {
    */
   update(attributes={}) {
     if (this.isConflicted)      { return this.conflict('update');    }
-    if (_.isEmpty(attributes))  { return Promise.resolve(this.node); }
+    if (_.isEmpty(attributes))  { return Promise.resolve(null); }
 
     let changes = this._updateChanges(attributes);
 
@@ -42,6 +42,8 @@ class DaemonManager extends StateManager {
       return this.node.save();
     }).then(() => {
       return this.cluster.notify(changes);
+    }).then(() => {
+      return this.node.createAction({ type: 'update' });
     });
   }
   _updateChanges(attributes) {
@@ -66,6 +68,8 @@ class DaemonManager extends StateManager {
       return this.node.update(UPGRADING_STATE);
     }).then(() => {
       return this.cluster.notify(UPGRADING_STATE);
+    }).then(() => {
+      return this.node.createAction({ type: 'upgrade' });
     });
   }
 }

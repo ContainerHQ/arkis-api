@@ -6,7 +6,7 @@ let _ = require('lodash'),
   concerns = require('./concerns'),
   config = require('../../config'),
   support = require('../../app/support'),
-  Node = require('../../app/models').Node;
+  models = require('../../app/models');
 
 describe('Node Model', () => {
   db.sync();
@@ -176,49 +176,54 @@ describe('Node Model', () => {
       });
     });
 
-    it('has a fqdn with its name and cluster_id', () => {
-      let shortId = cluster.id.slice(0, 8),
-        expected  = `${node.name}-${shortId}.${config.nodeDomain}`;
+    context('for all nodes', () => {
+      beforeEach(() => {
+        return node.save();
+      });
 
-      return expect(node.save())
-        .to.eventually.have.property('fqdn', expected);
+      it('has a fqdn with its name and cluster_id', () => {
+        let shortId = cluster.id.slice(0, 8),
+          expected  = `${node.name}-${shortId}.${config.nodeDomain}`;
+
+        expect(node.fqdn).to.equal(expected);
+      });
+
+      it('initializes its jwt token', () => {
+        expect(node).to.satisfy(has.validJWT);
+      });
+
+      it('initialized its state to deploying', () => {
+        expect(node.state).to.equal('deploying');
+      });
+
+      it('is not a master node by default', () => {
+        expect(node.master).to.be.false;
+      });
+
+      it('has empty json labels by default', () => {
+        expect(node.labels).to.deep.equal({});
+      });
     });
 
-    it('initializes its jwt token', () => {
-      return expect(node.save())
-        .to.eventually.satisfy(has.validJWT);
-    });
+    context('when non byon node', () => {
+      beforeEach(() => {
+        _.merge(node, { byon: false, region: 'ams1', node_size: '10GB' });
+        return node.save();
+      });
 
-    it('initialized its state to deploying', () => {
-      return expect(node.save())
-        .to.eventually.have.property('state', 'deploying');
-    });
-
-    it('is not a master node by default', () => {
-      return expect(node.save()).to.eventually.have.property('master', false);
-    });
-
-    it('has no download link to get the agent', () => {
-      return expect(node.save())
-        .to.eventually.have.property('agent_cmd', null);
-    });
-
-    it('has empty json labels by default', () => {
-      return expect(node.save().then(node => {
-        return expect(node.labels).to.deep.equal({});
-      }));
+      it('has no download link to get the agent', () => {
+        expect(node.agent_cmd).to.be.null;
+      });
     });
 
     context('when byon node', () => {
       beforeEach(() => {
         _.merge(node, { byon: true, region: null, node_size: null });
+        return node.save();
       });
 
       it('has a command to get the agent', () => {
-        return expect(node.save().then(node => {
-          return expect(node.agent_cmd)
-            .to.equal(`${config.agentCmd} ${node.token}`);
-        }));
+        expect(node.agent_cmd).to.equal(`${config.agentCmd} ${node.token}`);
       });
     });
   });
@@ -313,7 +318,7 @@ describe('Node Model', () => {
 
       it("doesn't registers the public_ip for the fqdn", () => {
         return node.update({ cpu: 23 }).then(() => {
-          return expect(support.fqdn.register).not.to.have.been.called;
+          return expect(support.fqdn.register).to.not.have.been.called;
         });
       })
     });
@@ -324,6 +329,7 @@ describe('Node Model', () => {
 
     beforeEach(() => {
       node = factory.buildSync('node');
+      return node.save();
     });
 
     context('when fqdn deletion succeeded', () => {
@@ -338,6 +344,10 @@ describe('Node Model', () => {
 
       it('removes the fqdn', () => {
         expect(support.fqdn.unregister).to.have.been.calledWith(node.fqdn);
+      });
+
+      it('deletes the node', () => {
+        return expect(models.Node.findById(node.id)).to.eventually.not.exist;
       });
     });
 
@@ -359,8 +369,9 @@ describe('Node Model', () => {
 
       it("doesn't delete the node", done => {
         node.destroy().then(done).catch(err => {
-          expect(Node.findById(node.id)).to.eventually.exist;
-          done();
+          expect(models.Node.findById(node.id))
+            .to.eventually.exist
+            .notify(done);
         });
       });
     });

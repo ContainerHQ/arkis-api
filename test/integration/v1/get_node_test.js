@@ -23,7 +23,7 @@ describe('GET /clusters/:cluster_id/nodes/:node_id', () => {
     });
   });
 
-  context('when the target node belongs to the cluster', () => {
+  context('when the targeted node belongs to the cluster', () => {
     it('retrieves the user informations', done => {
       api.clusters(user).nodes(cluster).get(node.id)
       .expect(200, (err, res) => {

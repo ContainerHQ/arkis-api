@@ -39,21 +39,35 @@ describe('AgentManager Service', () => {
   });
 
   describe('#notify', () => {
+    let clusterNotify;
+
+    beforeEach(() => {
+      clusterNotify   = sinon.stub().returns(Promise.resolve());
+      node.getCluster = sinon.stub().returns(
+        Promise.resolve({ notify: clusterNotify })
+      );
+    });
+
     context('with valid attributes', () => {
-      const ATTRITBUTES = { docker_version: '1.2.0', disk: 2 };
+      const ATTRIBUTES = { docker_version: '1.2.0', disk: 2 };
 
       beforeEach(() => {
-        return manager.notify(ATTRITBUTES).then(() => {
+        return manager.notify(ATTRIBUTES).then(() => {
           return node.reload();
         });
       });
 
       it('updates the node with attributes', () => {
-        expect(node).to.include(ATTRITBUTES);
+        expect(node).to.include(ATTRIBUTES);
       });
 
       it('sets the node last_state to running', () => {
         expect(node.last_state).to.equal('running');
+      });
+
+      it('notifies the cluster with last_state', () => {
+        expect(clusterNotify)
+          .to.have.been.calledWith({ last_state: 'running'});
       });
     });
 
@@ -66,6 +80,67 @@ describe('AgentManager Service', () => {
 
       it('sets the node last_state to running', () => {
         expect(node.last_state).to.equal('running');
+      });
+
+      it('notifies the cluster with last_state', () => {
+        expect(clusterNotify)
+          .to.have.been.calledWith({ last_state: 'running'});
+      });
+    });
+
+    context('when node as a pending action', () => {
+      let action, result;
+
+      beforeEach(() => {
+        return node.createAction({ type: 'deploy' }).then(nodeAction => {
+          action = nodeAction;
+          return manager.notify();
+        }).then(notifyResult => {
+          result = notifyResult;
+          return node.reload();
+        }).then(() => {
+          return action.reload();
+        });
+      });
+
+      it('returns the action', () => {
+        expect(result.toJSON()).to.deep.equal(action.toJSON());
+      });
+
+      it('set this action in completed state', () => {
+        expect(action.state).to.deep.equal('completed');
+      });
+
+      it('sets this action completed_at to current datetime', () => {
+        expect(moment(action.completed_at).fromNow())
+          .to.equal('a few seconds ago');
+      });
+    });
+
+    context('when node as a non pending action', () => {
+      let action, result;
+
+      beforeEach(() => {
+        return node.createAction({ type: 'deploy', last_state: 'completed' })
+        .then(nodeAction => {
+          action = nodeAction;
+          return manager.notify();
+        }).then(notifyResult => {
+          result = notifyResult;
+          return node.reload();
+        });
+      });
+
+      it('returns null', () => {
+        expect(result).to.be.null;
+      });
+
+      it("doesn't complete this action", () => {
+        let previousValues = action.dataValues;
+
+        return expect(action.reload())
+          .to.eventually.have.property('dataValues')
+          .that.deep.equals(previousValues);
       });
     });
 
@@ -95,6 +170,10 @@ describe('AgentManager Service', () => {
       it("doesn't set the node last_state to running", () => {
         return expect(node.reload())
           .to.eventually.not.have.property('last_state', 'running');
+      });
+
+      it("doesn't notify the cluster", () => {
+        expect(clusterNotify).to.not.have.been.called;
       });
     });
   });

@@ -1,6 +1,7 @@
 'use strict';
 
-let Chance = require('chance'),
+let uuid = require('node-uuid'),
+  Chance = require('chance'),
   chance = new Chance(),
   random = {};
 
@@ -26,6 +27,10 @@ random.email = function() {
 
 random.ip = function() {
   return chance.ip();
+};
+
+random.uuid = function() {
+  return uuid.v1();
 };
 
 module.exports = random;

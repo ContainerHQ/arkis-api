@@ -9,16 +9,35 @@ module.exports = function(factory) {
     name: random.string,
   });
 
-  factory.define('unreachableCluster', Cluster, {
+  factory.define('emptyCluster', Cluster, {
     name: random.string,
-    last_state: 'running',
-    last_ping: moment().subtract(6, 'minutes')
+  });
+
+  factory.define('deployingCluster', Cluster, {
+    name: random.string,
+    last_state: 'deploying',
+  });
+
+  factory.define('upgradingCluster', Cluster, {
+    name: random.string,
+    last_state: 'upgrading'
+  });
+
+  factory.define('updatingCluster', Cluster, {
+    name: random.string,
+    last_state: 'updating'
   });
 
   factory.define('runningCluster', Cluster, {
     name: random.string,
     last_state: 'running',
-    last_ping: moment()
+    last_ping: moment
+  });
+
+  factory.define('unreachableCluster', Cluster, {
+    name: random.string,
+    last_state: 'running',
+    last_ping: moment().subtract(6, 'minutes')
   });
 
   /*

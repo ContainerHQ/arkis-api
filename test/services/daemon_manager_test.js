@@ -23,13 +23,13 @@ describe('DaemonManager Service', () => {
     });
   });
 
-  describe('constructor', () => {
+  describe('.constructor', () => {
     it('initializes daemon with the same node', () => {
       expect(manager.daemon.node).to.equal(manager.node);
     });
   });
 
-  describe('update', () => {
+  describe('#update', () => {
     context('when node is not running', () => {
       const CHANGES = { name: random.string() };
 
@@ -70,12 +70,19 @@ describe('DaemonManager Service', () => {
       it("doesn't notify the cluster", () => {
         expect(manager.cluster.state).to.not.equal('updating');
       });
+
+      it("doesn't create an action", () => {
+        return expect(manager.node.getActions()).to.eventually.be.empty;
+      });
     });
 
     context('when changes are empty', () => {
+      let action;
+
       beforeEach(() => {
         manager.daemon.update = sinon.stub();
-        return manager.update({}).then(() => {
+        return manager.update({}).then(nodeAction => {
+          action = nodeAction;
           return manager.node.reload();
         });
       });
@@ -90,6 +97,14 @@ describe('DaemonManager Service', () => {
 
       it("doesn't notify the cluster", () => {
         expect(manager.cluster.state).to.not.equal('updating');
+      });
+
+      it('returns a null action', () => {
+        expect(action).to.be.null;
+      });
+
+      it("doesn't create an action", () => {
+        return expect(manager.node.getActions()).to.eventually.be.empty;
       });
     });
 
@@ -132,6 +147,10 @@ describe('DaemonManager Service', () => {
       it("doesn't notify the cluster", () => {
         expect(manager.cluster.state).to.not.equal('updating');
       });
+
+      it("doesn't create an action", () => {
+        return expect(manager.node.getActions()).to.eventually.be.empty;
+      });
     });
 
     context('when daemon update succeeded', () => {
@@ -143,12 +162,25 @@ describe('DaemonManager Service', () => {
         const CHANGES = { name: 'adrien' },
               PING    = Date.now();
 
+        let action;
 
         beforeEach(() => {
           return manager.cluster.update({ last_ping: PING }).then(() => {
             return manager.update(CHANGES);
-          }).then(() => {
+          }).then(nodeAction => {
+            action = nodeAction;
             return manager.node.reload();
+          });
+        });
+
+        it('creates and returns an update node action', () => {
+          expect(action).to.include({
+            type: 'update',
+            state: 'in-progress',
+            completed_at: null,
+            resource: 'node',
+            resource_id: manager.node.id,
+            isNewRecord: false
           });
         });
 
@@ -243,10 +275,14 @@ describe('DaemonManager Service', () => {
       it("doesn't notify the cluster", () => {
         expect(manager.cluster.state).to.not.equal('updating');
       });
+
+      it("doesn't create an action", () => {
+        return expect(manager.node.getActions()).to.eventually.be.empty;
+      });
     });
   });
 
-  describe('upgrade', () => {
+  describe('#upgrade', () => {
     context('when node is not running', () => {
       let actualErr;
 
@@ -276,6 +312,10 @@ describe('DaemonManager Service', () => {
 
       it("doesn't notify the cluster", () => {
         expect(manager.cluster.state).to.not.equal('upgrading');
+      });
+
+      it("doesn't create an action", () => {
+        return expect(manager.node.getActions()).to.eventually.be.empty;
       });
     });
 
@@ -309,6 +349,10 @@ describe('DaemonManager Service', () => {
       it("doesn't notify the cluster", () => {
         expect(manager.cluster.state).to.not.equal('upgrading');
       });
+
+      it("doesn't create an action", () => {
+        return expect(manager.node.getActions()).to.eventually.be.empty;
+      });
     });
 
     context('when node has different versions than cluster', () => {
@@ -317,14 +361,14 @@ describe('DaemonManager Service', () => {
         swarm_version:  random.string()
       };
 
-      beforeEach(() => {
-        return manager.node.update(VERSIONS);
-      });
-
       context('when daemon upgrade succeeded', () => {
+        let action;
+
         beforeEach(() => {
           manager.daemon.upgrade = sinon.stub().returns(Promise.resolve());
-          return manager.upgrade();
+          return manager.upgrade().then(nodeAction => {
+            action = nodeAction;
+          });
         });
 
         it('upgrades the daemon with cluster versions', () => {
@@ -340,6 +384,17 @@ describe('DaemonManager Service', () => {
 
         it('notifies the cluster', () => {
           expect(manager.cluster.state).to.equal('upgrading');
+        });
+
+        it('returns a upgrade node action', () => {
+          expect(action).to.include({
+            type: 'upgrade',
+            state: 'in-progress',
+            completed_at: null,
+            resource: 'node',
+            resource_id: manager.node.id,
+            isNewRecord: false
+          });
         });
       });
 
@@ -366,6 +421,10 @@ describe('DaemonManager Service', () => {
 
         it("doesn't notify the cluster", () => {
           expect(manager.cluster.state).to.not.equal('upgrading');
+        });
+
+        it("doesn't create an action", () => {
+          return expect(manager.node.getActions()).to.eventually.be.empty;
         });
       });
     });

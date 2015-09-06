@@ -56,7 +56,7 @@ describe('POST /clusters/:cluster_id/nodes/:node_id/upgrade', () => {
 
       it('upgrades the node to its cluster versions', done => {
         api.clusters(user).nodes(cluster).upgrade(node.id)
-        .expect(204, (err, res) => {
+        .expect(202, (err, res) => {
           if (err) { return done(err); }
 
           expect(node.reload())
@@ -67,13 +67,33 @@ describe('POST /clusters/:cluster_id/nodes/:node_id/upgrade', () => {
 
       it('update the state of its cluster', done => {
         api.clusters(user).nodes(cluster).upgrade(node.id)
-        .expect(204, (err, res) => {
+        .expect(202, (err, res) => {
           if (err) { return done(err); }
 
           expect(cluster.reload())
             .to.eventually.have.property('state', 'upgrading')
             .notify(done);
         });
+      });
+
+      it('returns the updating node', done => {
+        let expected = _.merge(node.dataValues, { last_state: 'upgrading' });
+
+        api.clusters(user).nodes(cluster).upgrade(node.id)
+        .expect(202, has.one(cluster, 'node', { with: expected }, done));
+      });
+
+      it('returns a node upgrade action', done => {
+        let expected = {
+          type: 'upgrade',
+          state: 'in-progress',
+          resource: 'node',
+          resource_id: node.id,
+          completed_at: null
+        };
+
+        api.clusters(user).nodes(cluster).upgrade(node.id)
+        .expect(202, has.one(node, 'action', { with: expected }, done));
       });
     });
   });

@@ -1,6 +1,7 @@
 'use strict';
 
-let models = require('../../../app/models');
+let _ = require('lodash'),
+  models = require('../../../app/models');
 
 describe('DELETE /clusters/:cluster_id/nodes/:node_id', () => {
   db.sync();
@@ -29,6 +30,31 @@ describe('DELETE /clusters/:cluster_id/nodes/:node_id', () => {
         expect(models.Node.findById(node.id))
           .to.eventually.not.exist
           .notify(done);
+      });
+    });
+
+    context('when node has actions', () => {
+      let actionIds;
+
+      beforeEach(done => {
+        let opts = { type: 'deploy', resource: 'node', resource_id: node.id };
+
+        factory.createMany('action', opts, 10, (err, actions) => {
+          if (err) { return done(err); }
+
+          actionIds = _.pluck(actions, 'id');
+          done();
+        });
+      });
+
+      it('removes the node actions', done => {
+        api.clusters(user).nodes(cluster).delete(node.id)
+        .expect(204, (err, res) => {
+          if (err) { return done(err); }
+            expect(models.Action.findAll({ where: { id: actionIds } }))
+              .to.eventually.be.empty
+              .notify(done);
+        });
       });
     });
   });

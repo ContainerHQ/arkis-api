@@ -7,7 +7,8 @@ let _ = require('lodash'),
 
 const CLUSTER_INFOS = ['docker_version', 'swarm_version', 'strategy', 'cert'],
       NODE_INFOS    = ['name', 'master', 'labels'],
-      CONFIG_INFOS  = ['dockerPort', 'swarmPort'];
+      CONFIG_INFOS  = ['dockerPort', 'swarmPort'],
+      RUNNING_STATE = { last_state: 'running' };
 
 class AgentManager {
   constructor(node) {
@@ -25,12 +26,20 @@ class AgentManager {
    * Must be called whenever an agent has finished its pending work.
    */
   notify(attributes={}) {
-    return this.node.update(
-      _.merge(attributes, { last_state: 'running' })
-    );
+    return this.node.update(_.merge(attributes, RUNNING_STATE)).then(() => {
+      return this.node.getCluster();
+    }).then(cluster => {
+      return cluster.notify(RUNNING_STATE);
+    }).then(() => {
+      return this.node.getActions({ scope: 'pending' });
+    }).then(actions => {
+      let pendingAction = _.first(actions);
+
+      return pendingAction ? pendingAction.complete() : Promise.resolve(null);
+    });
   }
   /*
-   * Called by the swarm agent to notify that the docker daemon is running on
+   * Called by the swarm agent to register that the docker daemon is running on
    * this ip.
    */
   register(addr) {

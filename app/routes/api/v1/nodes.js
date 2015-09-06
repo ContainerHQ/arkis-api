@@ -17,18 +17,16 @@ router
   Node
   .scope('defaultScope',
     { method: ['filtered', req.query] },
-    { method: ['cluster', req.cluster.id] },
-    { method: ['state', req.query.state] }
+    { method: ['cluster',  req.cluster.id] },
+    { method: ['state',    req.query.state] }
   ).findAndCount(req.pagination).then(res.paginate('nodes')).catch(next);
 })
 .post('/', (req, res, next) => {
   let node  = Node.build(_.pick(req.body, CREATE_PARAMS)),
     machine = new services.MachineManager(req.cluster, node);
 
-  return machine.deploy().then(() => {
-    return node.reload();
-  }).then(node => {
-    res.status(201).json({ node: node });
+  return machine.deploy().then(action => {
+    res.status(202).json({ node: node, action: action });
   }).catch(next);
 })
 .param('node_id', (req, res, next, id) => {
@@ -50,10 +48,11 @@ router
 .post('/:node_id/upgrade', (req, res, next) => {
   let daemon = new services.DaemonManager(req.cluster, req.node);
 
-  daemon.upgrade().then(() => {
-    res.noContent();
+  daemon.upgrade().then(action => {
+    res.status(202).json({ node: req.node, action: action });
   }).catch(next);
 })
+.use('/:node_id/actions', require('./action')({ resource: 'node' }))
 
 .route('/:node_id')
 .get((req, res) => {
@@ -62,10 +61,8 @@ router
 .patch((req, res, next) => {
   let daemon = new services.DaemonManager(req.cluster, req.node);
 
-  daemon.update(_.pick(req.body, UPDATE_PARAMS)).then(() => {
-    return req.node.reload();
-  }).then(() => {
-    res.json({ node: req.node });
+  daemon.update(_.pick(req.body, UPDATE_PARAMS)).then(action => {
+    res.status(202).json({ node: req.node, action: action });
   }).catch(next);
 })
 .delete((req, res, next) => {

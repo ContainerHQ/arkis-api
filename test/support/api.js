@@ -7,178 +7,196 @@ let request = require('supertest'),
 const API_ROUTE = '/api/v1';
 
 module.exports.auth = {
-  ressource: `${API_ROUTE}/auth`,
+  resource: `${API_ROUTE}/auth`,
 
   login: function(user={}) {
     return request(app)
-    .post(`${this.ressource}/login`)
+    .post(`${this.resource}/login`)
     .field('email', user.email || '')
     .field('password', user.password || '');
   },
   github: function() {
     return request(app)
-    .get(`${this.ressource}/github`);
+    .get(`${this.resource}/github`);
   }
 };
 
 module.exports.regions = function(user={}) {
-  let ressource = `${API_ROUTE}/regions`;
+  let resource = `${API_ROUTE}/regions`;
 
   return {
     getAll: function() {
       return request(app)
-      .get(`${ressource}`)
+      .get(`${resource}`)
       .set('Authorization', `JWT ${user.token}`);
     }
   };
 };
 
 module.exports.nodeSizes = function(user={}) {
-  let ressource = `${API_ROUTE}/nodesizes`;
+  let resource = `${API_ROUTE}/nodesizes`;
 
   return {
     getAll: function() {
       return request(app)
-      .get(`${ressource}`)
+      .get(`${resource}`)
       .set('Authorization', `JWT ${user.token}`);
     }
   };
 };
 
 module.exports.account = function(user={}) {
-  let ressource = `${API_ROUTE}/account`;
+  let resource = `${API_ROUTE}/account`;
 
   return {
     getProfile: function() {
       return request(app)
-      .get(`${ressource}/profile`)
+      .get(`${resource}/profile`)
       .set('Authorization', `JWT ${user.token}`);
     },
     updateProfile: function() {
       return request(app)
-      .patch(`${ressource}/profile`)
+      .patch(`${resource}/profile`)
       .set('Authorization', `JWT ${user.token}`);
     },
     changePassword: function() {
       return request(app)
-      .patch(`${ressource}/change_password`)
+      .patch(`${resource}/change_password`)
       .set('Authorization', `JWT ${user.token}`);
     },
     changeEmail: function() {
       return request(app)
-      .patch(`${ressource}/change_email`)
+      .patch(`${resource}/change_email`)
       .set('Authorization', `JWT ${user.token}`);
     },
     cancel: function() {
       return request(app)
-      .delete(`${ressource}/`)
+      .delete(`${resource}/`)
       .set('Authorization', `JWT ${user.token}`);
     },
     generateNewToken: function() {
       return request(app)
-      .get(`${ressource}/new_token`)
+      .get(`${resource}/new_token`)
       .set('Authorization', `JWT ${user.token}`);
     }
   };
 };
 
 module.exports.agent = function(node={}) {
-  let ressource = `${API_ROUTE}/agent`,
-    swarm_ressource = 'clusters';
+  let resource = `${API_ROUTE}/agent`,
+    swarm_resource = 'clusters';
 
   return {
     infos: function() {
       return request(app)
-      .get(`${ressource}/${node.token}/infos`);
+      .get(`${resource}/${node.token}/infos`);
     },
     notify: function(form) {
       return request(app)
-      .post(`${ressource}/${node.token}/notify`)
+      .post(`${resource}/${node.token}/notify`)
       .send(form);
     },
     register: function(ip) {
       return request(app)
-      .post(`${ressource}/${swarm_ressource}/${node.token}`)
+      .post(`${resource}/${swarm_resource}/${node.token}`)
       .send(ip);
     },
     fetch: function() {
       return request(app)
-      .get(`${ressource}/${swarm_ressource}/${node.token}`);
+      .get(`${resource}/${swarm_resource}/${node.token}`);
     }
   };
 };
 
 module.exports.clusters = function(user={}) {
-  let ressource = `${API_ROUTE}/clusters`;
+  let resource = `${API_ROUTE}/clusters`;
 
   return {
     get: function(id) {
       return request(app)
-      .get(`${ressource}/${id}`)
+      .get(`${resource}/${id}`)
       .set('Authorization', `JWT ${user.token}`);
     },
     getAll: function(opts={}) {
       let params = qs.stringify(opts);
 
       return request(app)
-      .get(`${ressource}?${params}`)
+      .get(`${resource}?${params}`)
       .set('Authorization', `JWT ${user.token}`);
     },
     create: function() {
       return request(app)
-      .post(`${ressource}/`)
+      .post(`${resource}/`)
       .set('Authorization', `JWT ${user.token}`);
     },
     update: function(id) {
       return request(app)
-      .patch(`${ressource}/${id}`)
+      .patch(`${resource}/${id}`)
       .set('Authorization', `JWT ${user.token}`);
     },
     delete: function(id) {
       return request(app)
-      .delete(`${ressource}/${id}`)
+      .delete(`${resource}/${id}`)
       .set('Authorization', `JWT ${user.token}`);
     },
     upgrade: function(id) {
       return request(app)
-      .post(`${ressource}/${id}/upgrade`)
+      .post(`${resource}/${id}/upgrade`)
       .set('Authorization', `JWT ${user.token}`);
     },
     nodes: function(cluster={}) {
-      ressource = `${ressource}/${cluster.id}/nodes`;
+      resource = `${resource}/${cluster.id}/nodes`;
 
       return {
         get: function(id) {
           return request(app)
-          .get(`${ressource}/${id}`)
+          .get(`${resource}/${id}`)
           .set('Authorization', `JWT ${user.token}`);
         },
         getAll: function(opts={}) {
           let params = qs.stringify(opts);
 
           return request(app)
-          .get(`${ressource}?${params}`)
+          .get(`${resource}?${params}`)
           .set('Authorization', `JWT ${user.token}`);
         },
         create: function() {
           return request(app)
-          .post(`${ressource}/`)
+          .post(`${resource}/`)
           .set('Authorization', `JWT ${user.token}`);
         },
         update: function(id) {
           return request(app)
-          .patch(`${ressource}/${id}`)
+          .patch(`${resource}/${id}`)
           .set('Authorization', `JWT ${user.token}`);
         },
         delete: function(id) {
           return request(app)
-          .delete(`${ressource}/${id}`)
+          .delete(`${resource}/${id}`)
           .set('Authorization', `JWT ${user.token}`);
         },
         upgrade: function(id) {
           return request(app)
-          .post(`${ressource}/${id}/upgrade`)
+          .post(`${resource}/${id}/upgrade`)
           .set('Authorization', `JWT ${user.token}`);
+        },
+        actions: function(node={}) {
+          resource = `${resource}/${node.id}/actions`;
+
+          return {
+            get: function(id) {
+              return request(app)
+              .get(`${resource}/${id}`)
+              .set('Authorization', `JWT ${user.token}`);
+            },
+            getAll: function(opts={}) {
+              let params = qs.stringify(opts);
+
+              return request(app)
+              .get(`${resource}?${params}`)
+              .set('Authorization', `JWT ${user.token}`);
+            }
+          };
         }
       };
     }

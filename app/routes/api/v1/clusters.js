@@ -44,8 +44,10 @@ router
 .post('/:cluster_id/upgrade', (req, res, next) => {
   let clusterManager = new services.ClusterManager(req.cluster);
 
-  clusterManager.upgrade().then(() => {
-    res.noContent();
+  clusterManager.upgrade().then(upgradeResult => {
+    res.status(202).json(
+      _.merge({ cluster: req.cluster }, upgradeResult)
+    );
   }).catch(next);
 })
 

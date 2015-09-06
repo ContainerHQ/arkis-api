@@ -12,7 +12,7 @@ describe('RegionSizeManager Service', () => {
     manager = new RegionSizeManager();
   });
 
-  describe('constructor', () => {
+  describe('.constructor', () => {
     it('initializes machine with config credentials', () => {
       expect(manager.machine.credentials).to.equal(config.auth.machine);
     });

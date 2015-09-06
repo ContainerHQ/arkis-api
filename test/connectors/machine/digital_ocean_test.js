@@ -41,7 +41,7 @@ describe('Machine DigitalOcean Connector', () => {
       /*
        * DigitalOcean doesn't provide a test api, beside we can't delete a
        * droplet in deploying state, therefore we are faking the call to the
-       * real API to avoid to create real ressources that would be difficult
+       * real API to avoid to create real resources that would be difficult
        * to remove.
        */
       context('with valid options', () => {
