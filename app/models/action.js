@@ -42,23 +42,48 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       defaultValue: null
     },
+    started_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
+    },
     completed_at: {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null
     }
   }, {
-    createdAt: 'started_at',
-
     defaultScope: { order: [['id', 'ASC']] },
     scopes: {
-      date: { order: [['started_at', 'DESC']] },
       pending: {
         where: { last_state: 'in-progress'},
         limit: 1
       },
       filtered: function(filters) {
         return { where: _.pick(filters, ['type']) };
+      },
+      state: function(state) {
+        let expired = moment().subtract(EXPIRATION_TIME, 'minutes').toDate(),
+          opts;
+
+        switch (state) {
+          case 'in-progress':
+            opts = {
+              last_state: 'in-progress', started_at: { $gte: expired }
+            };
+            break;
+          case 'errored':
+            opts = {
+              last_state: 'in-progress', started_at: { $lt: expired }
+            };
+            break;
+          default:
+            opts = { last_state: { $like: state || '%' } };
+        }
+        return { where: opts };
+      },
+      node: function(id) {
+        return { where: { resource: 'node', resource_id: id } };
       }
     },
     getterMethods: {

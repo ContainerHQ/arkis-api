@@ -17,8 +17,8 @@ router
   Node
   .scope('defaultScope',
     { method: ['filtered', req.query] },
-    { method: ['cluster', req.cluster.id] },
-    { method: ['state', req.query.state] }
+    { method: ['cluster',  req.cluster.id] },
+    { method: ['state',    req.query.state] }
   ).findAndCount(req.pagination).then(res.paginate('nodes')).catch(next);
 })
 .post('/', (req, res, next) => {

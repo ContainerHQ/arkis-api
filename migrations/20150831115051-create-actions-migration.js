@@ -38,12 +38,17 @@ module.exports = {
         allowNull: false,
         defaultValue: null
       },
+      started_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: null
+      },
       completed_at: {
         type: DataTypes.DATE,
         allowNull: true,
         defaultValue: null
       },
-      started_at: DataTypes.DATE,
+      created_at: DataTypes.DATE,
       updated_at: DataTypes.DATE
     });
   },

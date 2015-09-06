@@ -1,6 +1,7 @@
 'use strict';
 
-let random = require('../random'),
+let moment = require('moment'),
+  random = require('../random'),
   Action = require('../../../app/models').Action;
 
 module.exports = function(factory) {
@@ -8,5 +9,29 @@ module.exports = function(factory) {
     type: 'deploy',
     resource: 'node',
     resource_id: random.uuid
+  });
+
+  factory.define('in-progressAction', Action, {
+    type: 'deploy',
+    resource: 'node',
+    resource_id: random.uuid,
+    last_state: 'in-progress',
+    started_at: moment
+  });
+
+  factory.define('completedAction', Action, {
+    type: 'upgrade',
+    resource: 'node',
+    resource_id: random.uuid,
+    last_state: 'completed',
+    completed_at: moment
+  });
+
+  factory.define('erroredAction', Action, {
+    type: 'update',
+    resource: 'node',
+    resource_id: random.uuid,
+    last_state: 'in-progress',
+    started_at: moment().subtract(10, 'minutes')
   });
 };

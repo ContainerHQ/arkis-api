@@ -1,6 +1,8 @@
 'use strict';
 
-let moment = require('moment');
+let _ = require('lodash'),
+  moment = require('moment'),
+  Action = require('../../app/models').Action;
 
 const DEFAULT_STATE = 'in-progress';
 
@@ -30,7 +32,7 @@ describe('Action Model', () => {
       });
     });
 
-    ['last_state', 'type', 'resource', 'resource_id'].forEach(attribute => {
+    ['last_state', 'type', 'resource'].forEach(attribute => {
       let opts;
 
       beforeEach(() => {
@@ -53,6 +55,38 @@ describe('Action Model', () => {
         opts[attribute] = random.string();
 
         return expect(factory.buildSync('action', opts).save()).to.be.rejected;
+      });
+    });
+
+    it('fails with null resource_id', () => {
+      let opts = { resource_id: null };
+
+      return expect(factory.buildSync('action', opts).save()).to.be.rejected;
+    });
+  });
+
+  describe('scopes', () => {
+    describe('state', () => {
+      const STATES = ['in-progress', 'completed', 'errored'];
+
+      STATES.forEach(state => {
+        beforeEach(done => {
+          factory.createMany(`${state}Action`, 5, done);
+        });
+      });
+
+      STATES.forEach(state => {
+        context(`with state ${state}`, () => {
+          const SCOPE = { method: ['state', state] };
+
+          it(`returns all the actions with state ${state}`, () => {
+            return Action.scope(SCOPE).findAll().then(actions => {
+              return expect(_.all(actions, action => {
+                return action.state === state;
+              })).to.be.true;
+            });
+          });
+        });
       });
     });
   });
@@ -131,6 +165,11 @@ describe('Action Model', () => {
 
     it('initializes completed_at to null', () => {
       expect(action.completed_at).to.be.null;
+    });
+
+    it('initializes started_at to current datetime', () => {
+      expect(moment(action.started_at).fromNow())
+        .to.equal('a few seconds ago');
     });
   });
 

@@ -1,7 +1,6 @@
 'use strict';
 
 module.exports = {
-  ActionManager: require('./action_manager'),
   AgentManager: require('./agent_manager'),
   ClusterManager: require('./cluster_manager'),
   DaemonManager: require('./daemon_manager'),

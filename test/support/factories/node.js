@@ -34,12 +34,32 @@ module.exports = function(factory) {
     }
   });
 
+  factory.define('deployingNode', Node, {
+    name: random.string,
+    region: 'london',
+    node_size: 'deathstar'
+  });
+
+  factory.define('upgradingNode', Node, {
+    name: random.string,
+    region: 'london',
+    node_size: 'deathstar',
+    last_state: 'upgrading'
+  });
+
+  factory.define('updatingNode', Node, {
+    name: random.string,
+    region: 'london',
+    node_size: 'deathstar',
+    last_state: 'updating'
+  });
+
   factory.define('runningNode', Node, {
     name: random.string,
     region: 'london',
     node_size: 'deathstar',
     last_state: 'running',
-    last_ping: Date.now
+    last_ping: moment
   });
 
   factory.define('unreachableNode', Node, {
