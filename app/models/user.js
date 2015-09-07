@@ -1,7 +1,9 @@
 'use strict';
 
-let bcrypt = require('bcrypt'),
-  token = require('../support').token;
+let _ = require('lodash'),
+  bcrypt = require('bcrypt'),
+  token = require('../support').token,
+  is = require('./validators');
 
 module.exports = function(sequelize, DataTypes) {
   let User = sequelize.define('User', {
@@ -15,7 +17,9 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       defaultValue: null,
       unique: true,
-      validate: { isEmail: true }
+      validate: _.merge({ isEmail: true },
+        is.unique({ attribute: 'email'})
+      )
     },
     password_hash: {
       type: DataTypes.STRING,
