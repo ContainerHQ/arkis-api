@@ -14,7 +14,7 @@ module.exports = function({ resource }) {
     Action
     .scope('defaultScope',
       { method: ['filtered', req.query] },
-      { method: ['node',     req.node.id] },
+      { method: [resource,   req[resource].id] },
       { method: ['state',    req.query.state] }
     ).findAndCount(req.pagination).then(res.paginate('actions')).catch(next);
   })
