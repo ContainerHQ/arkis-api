@@ -56,6 +56,7 @@ router
 
 .route('/:node_id')
 .get((req, res) => {
+  console.log(req.baseUrl);
   res.json({ node: req.node });
 })
 .patch((req, res, next) => {

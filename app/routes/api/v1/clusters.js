@@ -23,7 +23,7 @@ router
 })
 .post('/', (req, res, next) => {
   req.user.createCluster(_.pick(req.body, CREATE_PARAMS)).then(cluster => {
-    res.status(201).json({ cluster: cluster });
+    res.status(201).serialize({ cluster: cluster });
   }).catch(next);
 })
 .param('cluster_id', (req, res, next, id) => {
@@ -45,7 +45,7 @@ router
   let clusterManager = new services.ClusterManager(req.cluster);
 
   clusterManager.upgrade().then(upgradeResult => {
-    res.status(202).json(
+    res.status(202).serialize(
       _.merge({ cluster: req.cluster }, upgradeResult)
     );
   }).catch(next);
@@ -55,11 +55,12 @@ router
 
 .route('/:cluster_id')
 .get((req, res) => {
-  res.json({ cluster: req.cluster });
+  console.log(res.serialize);
+  res.serialize({ cluster: req.cluster });
 })
 .patch((req, res, next) => {
   req.cluster.update(_.pick(req.body, UPDATE_PARAMS)).then(cluster => {
-    res.json({ cluster: cluster });
+    res.serialize({ cluster: cluster });
   }).catch(next);
 })
 .delete((req, res, next) => {
