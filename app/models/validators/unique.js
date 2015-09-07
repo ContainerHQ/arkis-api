@@ -13,11 +13,13 @@ module.exports = function({ attribute, scope }) {
       if (!value) { return Promise.resolve(); }
 
       let models  = require('../../models'),
-        modelName = this.__options.name.singular;
+        modelName = this.__options.name.singular,
+        criterias = _(this)
+          .pick(scopeId, attribute)
+          .merge({ id: { $ne: this.id } })
+          .value();
 
-      return models[modelName].findOne({ where:
-        _.pick(this, scopeId, attribute)
-      }).then(result => {
+      return models[modelName].findOne({ where: criterias }).then(result => {
         if (result) { return Promise.reject(`${error}.`); }
       });
     }
