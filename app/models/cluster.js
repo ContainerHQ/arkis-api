@@ -19,7 +19,10 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       defaultValue: null,
       unique: true,
-      validate: is.subdomainable
+      validate: _.merge(
+        is.subdomainable,
+        is.unique({ attribute: 'name', scope: 'user' })
+      )
     },
     cert: {
       type: DataTypes.JSONB,

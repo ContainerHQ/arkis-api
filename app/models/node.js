@@ -26,7 +26,10 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: null,
-      validate: is.subdomainable
+      validate: _.merge(
+        is.subdomainable,
+        is.unique({ attribute: 'name', scope: 'cluster' })
+      )
     },
     token: {
       type: DataTypes.TEXT,
@@ -38,19 +41,7 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
-      validate: {
-        isUnique: function(master) {
-          if (!master || !this.cluster_id) { return Promise.resolve(); }
-
-          return Node.findOne({
-            where: { cluster_id: this.cluster_id, master: true }
-          }).then(node => {
-            if (node) {
-              return Promise.reject('This cluster already has a master node!');
-            }
-          });
-        }
-      }
+      validate: is.unique({ attribute: 'master', scope: 'cluster' })
     },
     byon: {
       type: DataTypes.BOOLEAN,
