@@ -9,8 +9,8 @@ class Serialize {
   static all(data, opts) {
     return _.mapValues(data, value => {
       if (_.isArray(value)) {
-        return _.map(value, v => {
-          return this.transform(v, opts);
+        return _.map(value, obj => {
+          return this.transform(obj, opts);
         });
       }
       if (_.isObject(value)) {
