@@ -1,6 +1,6 @@
 'use strict';
 
-let models = require('../../../app/models');
+let models = require('../../../../app/models');
 
 describe('DELETE /clusters/:id', () => {
   db.sync();

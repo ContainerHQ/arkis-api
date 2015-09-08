@@ -1,7 +1,7 @@
 'use strict';
 
 let _ = require('lodash'),
-  Node = require('../../../app/models').Node;
+  Node = require('../../../../app/models').Node;
 
 describe('POST /clusters/:cluster_id/nodes', () => {
   db.sync();

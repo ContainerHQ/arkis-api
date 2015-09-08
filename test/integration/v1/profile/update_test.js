@@ -15,22 +15,11 @@ describe('PATCH /account/profile', () => {
   });
 
   it('updates the user profile', done => {
-    let form = factory.buildSync('profile').dataValues;
+    let form = factory.buildSync('profile').dataValues,
+      expected = _.pick(form, WHITELIST);
 
-    api.account(user).updateProfile()
-    .send(form)
-    .expect(200)
-    .end((err, res) => {
-      if (err) { return done(err); }
-
-      let profile = format.timestamps(res.body.profile);
-
-      user.getProfile().then(userProfile => {
-        expect(profile).to.deep.equal(userProfile.toJSON())
-          .and.include(_.pick(form, WHITELIST));
-        done();
-      }).catch(done);
-    });
+    api.account(user).updateProfile().send(form)
+    .expect(200, has.one(user, 'profile', { with: expected }, done));
   });
 
   context('with invalid attributes', () => {
@@ -39,15 +28,11 @@ describe('PATCH /account/profile', () => {
 
       api.account(user).updateProfile()
       .field('fullname', fullname)
-      .expect(400)
-      .end((err, res) => {
+      .expect(400, (err, res) => {
         if (err) { return done(err); }
 
-        expect(
-          user.getProfile()
-          .then(profile => {
-            profile.fullname = fullname;
-            return profile.save();
+        expect(user.getProfile().then(profile => {
+          return profile.update({ fullname: fullname });
         }))
         .to.be.rejectedWith(res.body.errors)
         .notify(done);
@@ -65,8 +50,7 @@ describe('PATCH /account/profile', () => {
       api.account(user).updateProfile()
       .field('id', 'lol')
       .field('user_id', 1)
-      .expect(200)
-      .end((err, res) => {
+      .expect(200, (err, res) => {
         if (err) { return done(err); }
 
         expect(user.getProfile()).to.eventually.exist
@@ -77,8 +61,7 @@ describe('PATCH /account/profile', () => {
 
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {
-      api.account().updateProfile()
-      .expect(401, done);
+      api.account().updateProfile().expect(401, done);
     });
   });
 });

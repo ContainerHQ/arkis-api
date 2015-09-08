@@ -1,6 +1,6 @@
 'use strict';
 
-let AgentManager = require('../../../app/services').AgentManager;
+let AgentManager = require('../../../../app/services').AgentManager;
 
 describe('GET /agent/:token/infos', () => {
   db.sync();

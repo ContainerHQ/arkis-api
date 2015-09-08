@@ -1,7 +1,7 @@
 'use strict';
 
 let  _ = require('lodash'),
-  config = require('../../../config');
+  config = require('../../../../config');
 
 describe('POST /clusters/:cluster_id/upgrade', () => {
   db.sync();
@@ -49,11 +49,11 @@ describe('POST /clusters/:cluster_id/upgrade', () => {
         .expect(202, (err, res) => {
           if (err) { return done(err); }
 
-          let clusterInfos = format.timestamps(res.body.cluster);
+          let clusterInfos = format.response(res.body.cluster);
 
           cluster.reload().then(() => {
             expect(clusterInfos)
-              .to.deep.equal(cluster.toJSON()).and
+              .to.deep.equal(format.serialize(cluster)).and
               .to.satisfy(has.latestVersions);
             done();
           }).catch(done);
@@ -84,7 +84,7 @@ describe('POST /clusters/:cluster_id/upgrade', () => {
           .expect(202, (err, res) => {
             if (err) { return done(err); }
 
-            let actions = format.allTimestamps(res.body.actions);
+            let actions = format.response(res.body.actions);
 
             expect(actions).to.not.be.empty;
             done();

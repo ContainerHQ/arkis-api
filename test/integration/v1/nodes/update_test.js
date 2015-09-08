@@ -1,7 +1,7 @@
 'use strict';
 
 let _ = require('lodash'),
-  models = require('../../../app/models');
+  models = require('../../../../app/models');
 
 describe('PATCH /clusters/:cluster_id/nodes/:node_id', () => {
   db.sync();

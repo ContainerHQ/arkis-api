@@ -12,14 +12,13 @@ describe('GET /account/profile', () => {
 
   it('returns the user profile', done => {
     api.account(user).getProfile()
-    .expect(200)
-    .end((err, res) => {
+    .expect(200, (err, res) => {
       if (err) { return done(err); }
 
-      let profile = format.timestamps(res.body.profile);
+      let profile = format.response(res.body.profile);
 
       user.getProfile().then(userProfile => {
-        expect(profile).to.deep.equal(userProfile.toJSON());
+        expect(profile).to.deep.equal(format.serialize(userProfile));
         done();
       }).catch(done);
     });
@@ -27,8 +26,7 @@ describe('GET /account/profile', () => {
 
   context('when API token is incorrect', () => {
     it('returns an unauthorized status', done => {
-      api.account().getProfile()
-      .expect(401, done);
+      api.account().getProfile().expect(401, done);
     });
   });
 });

@@ -1,6 +1,6 @@
 'use strict';
 
-let models = require('../../../app/models');
+let models = require('../../../../app/models');
 
 describe('GET /clusters/:id', () => {
   db.sync();
@@ -20,9 +20,9 @@ describe('GET /clusters/:id', () => {
       api.clusters(user).get(cluster.id).expect(200, (err, res) => {
         if (err) { return done(err); }
 
-        let clusterInfos = format.timestamps(res.body.cluster);
+        let clusterInfos = format.response(res.body.cluster);
 
-        expect(clusterInfos).to.deep.equal(cluster.toJSON());
+        expect(clusterInfos).to.deep.equal(format.serialize(cluster));
         done();
       });
     });

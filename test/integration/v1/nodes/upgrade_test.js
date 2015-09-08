@@ -1,7 +1,7 @@
 'use strict';
 
 let  _ = require('lodash'),
-  config = require('../../../config');
+  config = require('../../../../config');
 
 describe('POST /clusters/:cluster_id/nodes/:node_id/upgrade', () => {
   db.sync();

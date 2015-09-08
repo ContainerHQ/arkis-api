@@ -55,7 +55,6 @@ router
 
 .route('/:cluster_id')
 .get((req, res) => {
-  console.log(res.serialize);
   res.serialize({ cluster: req.cluster });
 })
 .patch((req, res, next) => {

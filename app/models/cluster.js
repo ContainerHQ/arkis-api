@@ -1,6 +1,7 @@
 'use strict';
 
 let _ = require('lodash'),
+  path = require('path'),
   mixins = require('./concerns'),
   config = require('../../config'),
   cert = require('../support').cert,
@@ -121,7 +122,7 @@ module.exports = function(sequelize, DataTypes) {
         return this.update(changes);
       },
       serialize({ baseUrl }) {
-        let nodesPath = `${baseUrl}/${this.id}/nodes`;
+        let nodesPath = path.resolve(baseUrl, this.id, 'nodes');
 
         return _(this.toJSON())
           .omit(['cert', 'last_state', 'user_id'])
