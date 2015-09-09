@@ -122,12 +122,12 @@ module.exports = function(sequelize, DataTypes) {
         return this.update(changes);
       },
       serialize({ baseUrl }) {
-        let nodesPath = path.resolve(baseUrl, this.id, 'nodes');
+        let nodesPath = path.join(baseUrl, this.id, 'nodes');
 
         return _(this.toJSON())
-          .omit(['cert', 'last_state', 'user_id'])
-          .merge({ links: { nodes: nodesPath } })
-          .value();
+        .omit(['cert', 'last_state', 'user_id'])
+        .merge({ links: { nodes: nodesPath } })
+        .value();
       }
     },
     classMethods: {

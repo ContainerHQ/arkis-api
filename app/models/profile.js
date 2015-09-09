@@ -1,5 +1,7 @@
 'use strict';
 
+let _ = require('lodash');
+
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('Profile', {
     id: {
@@ -24,6 +26,12 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true,
       defaultValue: null,
       validate: { len: [0, 64] }
+    }
+  }, {
+    instanceMethods: {
+      serialize: function() {
+        return _(this.toJSON()).omit(['user_id']).value();
+      }
     }
   });
 };

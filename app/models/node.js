@@ -1,6 +1,7 @@
 'use strict';
 
 let _ = require('lodash'),
+  path = require('path'),
   config = require('../../config'),
   fqdn = require('../support').fqdn,
   token = require('../support').token,
@@ -163,8 +164,6 @@ module.exports = function(sequelize, DataTypes) {
         }
       },
       agent_cmd: function() {
-        if (!this.get('byon')) { return null; }
-
         return `${config.agentCmd} ${this.get('token')}`;
       },
       fqdn: function() {
@@ -193,6 +192,17 @@ module.exports = function(sequelize, DataTypes) {
       beforeDestroy: function(node) {
         return fqdn.unregister(node.fqdn);
       },
+    },
+    instanceMethods: {
+      serialize: function({ baseUrl }) {
+        let actionsPath = path.join(baseUrl, this.id, 'actions');
+
+        return _(this.toJSON())
+        .omit(['token', 'machine_id', 'last_state'])
+        .merge(this.byon ? { agent_cmd: null } : {})
+        .merge({ links: { actions: actionsPath } })
+        .value();
+      }
     },
     classMethods: {
       associate: function(models) {

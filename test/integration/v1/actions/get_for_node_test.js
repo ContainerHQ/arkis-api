@@ -29,7 +29,7 @@ describe('GET /clusters/:cluster_id/nodes/:node_id/actions/:action_id', () => {
 
         let actionInfos = format.response(res.body.action);
 
-        expect(actionInfos).to.deep.equal(action.toJSON());
+        expect(actionInfos).to.deep.equal(format.serialize(action));
         done()
       });
     });

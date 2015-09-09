@@ -15,7 +15,7 @@ router
   req.user.generateToken();
 
   req.user.save().then(user => {
-    res.json({ token: user.token });
+    res.serialize({ token: user.token });
   }).catch(next);
 })
 .patch('/change_password', (req, res, next) => {
@@ -50,14 +50,14 @@ router
 .route('/profile')
 .get((req, res, next) => {
   req.user.getProfile().then(profile => {
-    res.json({ profile: profile });
+    res.serialize({ profile: profile });
   }).catch(next);
 })
 .patch((req, res, next) => {
   req.user.getProfile().then(profile => {
     return profile.update(_.pick(req.body, PROFILE_PARAMS));
   }).then(profile => {
-    res.json({ profile: profile });
+    res.serialize({ profile: profile });
   }).catch(next);
 });
 

@@ -30,7 +30,7 @@ module.exports = function({ resource }) {
     }).catch(next);
   })
   .get('/:action_id', (req, res) => {
-    res.json({ action: req.action });
+    res.serialize({ action: req.action });
   });
   return router;
 };

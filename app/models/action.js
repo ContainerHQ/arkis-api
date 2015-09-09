@@ -103,6 +103,11 @@ module.exports = function(sequelize, DataTypes) {
         return this.update({
           last_state: 'completed', completed_at: moment()
         });
+      },
+      serialize: function() {
+        return _(this.toJSON())
+        .omit(['created_at', 'updated_at', 'last_state'])
+        .value();
       }
     }
   });

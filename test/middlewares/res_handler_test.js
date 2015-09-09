@@ -73,8 +73,20 @@ describe('Response Handler Middleware', () => {
         );
       });
 
+      it("doesn't fail with null values", () => {
+        expect(function() {
+          res.serialize({ empty: null });
+        }).not.to.throw(Error);
+      });
+
+      it("doesn't fail with undefined values", () => {
+        expect(function() {
+          res.serialize({ empty: undefined });
+        }).not.to.throw(Error);
+      });
+
       it('sends the serialized response as json', () => {
-        let serialized = _.pick(data, ['nonSerializable', 'value']);
+        let serialized = _.omit(data, ['object', 'collection']);
 
         _.merge(serialized, {
           object: data.object.serialize(),

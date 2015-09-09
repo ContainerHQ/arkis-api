@@ -2,12 +2,17 @@
 
 let _ = require('lodash'),
   moment = require('moment'),
+  concerns = require('./concerns'),
   Action = require('../../app/models').Action;
 
 const DEFAULT_STATE = 'in-progress';
 
 describe('Action Model', () => {
   db.sync();
+
+  concerns('action').serializable({
+    omit: ['created_at', 'updated_at', 'last_state'] }
+  );
 
   describe('validations', () => {
     it('succeeds with valid attributes', done => {

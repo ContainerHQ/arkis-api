@@ -31,7 +31,7 @@ describe('GET /clusters/:cluster_id/nodes/:node_id', () => {
 
         let nodeInfos = format.response(res.body.node);
 
-        expect(nodeInfos).to.deep.equal(node.toJSON());
+        expect(nodeInfos).to.deep.equal(format.serialize(node));
         done();
       });
     });

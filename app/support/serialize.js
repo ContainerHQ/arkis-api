@@ -4,7 +4,9 @@ let _ = require('lodash');
 
 class Serialize {
   static transform(value, opts={}) {
-    return _.isFunction(value.serialize) ? value.serialize(opts) : value;
+    let model = value || {};
+
+    return _.isFunction(model.serialize) ? model.serialize(opts) : value;
   }
   static all(data, opts) {
     return _.mapValues(data, value => {
@@ -13,10 +15,7 @@ class Serialize {
           return this.transform(obj, opts);
         });
       }
-      if (_.isObject(value)) {
-        return this.transform(value, opts);
-      }
-      return value;
+      return this.transform(value, opts);
     });
   }
 }
