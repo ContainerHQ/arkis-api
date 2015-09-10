@@ -65,7 +65,7 @@ describe('User Model', () => {
       it('fails', () => {
         let user = factory.buildSync('user', OPTS);
 
-        return expect(user.save()).to.be.rejected;
+        return expect(user.validate()).to.eventually.exist;
       });
     });
   });

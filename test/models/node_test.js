@@ -82,13 +82,13 @@ describe('Node Model', () => {
         return cluster.save();
       });
 
-      it('fails with multiple node with the same name', done => {
+      it('fails with multiple node with the same name', () => {
         let opts = { name: 'test', cluster_id: cluster.id };
 
-        factory.createMany('node', opts, 2, err => {
-          expect(err).to.exist;
-          done();
-        });
+        return expect(factory.buildSync('node', opts).save()
+        .then(() => {
+          return factory.buildSync('node', opts).validate();
+        })).to.eventually.exist;
       });
     });
 
@@ -161,8 +161,8 @@ describe('Node Model', () => {
         _.merge(opts, { cluster_id: cluster.id });
         return factory.buildSync('node', opts).save();
       }).then(() => {
-        return factory.buildSync('node', opts).save();
-      })).to.be.rejected;
+        return factory.buildSync('node', opts).validate();
+      })).to.eventually.exist;
     });
   });
 

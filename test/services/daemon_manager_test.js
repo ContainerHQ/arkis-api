@@ -159,7 +159,7 @@ describe('DaemonManager Service', () => {
       });
 
       context('when changes are not empty', () => {
-        const CHANGES = { name: 'adrien' },
+        const CHANGES = { name: random.string() },
               PING    = Date.now();
 
         let action;

@@ -56,13 +56,13 @@ describe('Cluster Model', () => {
         return user.save();
       });
 
-      it('fails with multiple node with the same name', done => {
+      it('fails with multiple node with the same name', () => {
         let opts = { name: 'test', user_id: user.id };
 
-        factory.createMany('cluster', opts, 2, err => {
-          expect(err).to.exist;
-          done();
-        });
+        return expect(factory.buildSync('cluster', opts).save()
+        .then(() => {
+          return factory.buildSync('cluster', opts).validate();
+        })).to.eventually.exist;
       });
     });
 

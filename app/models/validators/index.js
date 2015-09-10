@@ -1,3 +1,6 @@
 'use strict';
 
-module.exports = { subdomainable: require('./subdomainable') };
+module.exports = {
+  subdomainable: require('./subdomainable'),
+  unique: require('./unique')
+};
