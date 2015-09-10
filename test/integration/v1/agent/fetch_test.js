@@ -2,7 +2,7 @@
 
 let _ = require('lodash'),
   moment = require('moment'),
-  AgentManager = require('../../../app/services').AgentManager;
+  AgentManager = require('../../../../app/services').AgentManager;
 
 describe('GET /agent/clusters/:token', () => {
   db.sync();
@@ -32,8 +32,8 @@ describe('GET /agent/clusters/:token', () => {
         if (err) { return done(err); }
 
         manager.fetch().then(addresses => {
-          done();
           expect(res.body).to.deep.equal(addresses);
+          done();
         }).catch(done);
       });
     });

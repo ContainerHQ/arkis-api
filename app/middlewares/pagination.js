@@ -27,7 +27,7 @@ module.exports = function(req, res, next) {
           .value()
       };
       data[entity] = result.rows;
-      res.json(data);
+      res.serialize(data);
     };
   };
   next();

@@ -18,6 +18,11 @@ describe('Cluster Model', () => {
 
   concerns('cluster').hasSubdomainable('name');
 
+  concerns('cluster').serializable({
+    omit:  ['user_id', 'cert', 'last_state'],
+    links: ['nodes']
+  });
+
   describe('validations', () => {
     it('succeeds with valid attributes', done => {
       factory.create('cluster', done);

@@ -10,7 +10,7 @@ router
   let manager = new RegionSizeManager();
 
   manager.getSizes().then(sizes => {
-    res.json({ sizes: sizes });
+    res.serialize({ sizes: sizes });
   }).catch(next);
 });
 

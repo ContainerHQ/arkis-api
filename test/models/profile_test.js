@@ -1,10 +1,13 @@
 'use strict';
 
 let _ = require('lodash'),
+  concerns = require('./concerns'),
   Profile = require('../../app/models').Profile;
 
 describe('Profile Model', () => {
   db.sync();
+
+  concerns('profile').serializable({ omit: ['user_id'] });
 
   describe('validations', () => {
     it('succeeds without attributes', () => {

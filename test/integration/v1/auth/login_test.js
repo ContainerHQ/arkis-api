@@ -1,7 +1,7 @@
 'use strict';
 
 let _ = require('lodash'),
-  User = require('../../../app/models').User;
+  User = require('../../../../app/models').User;
 
 describe('POST /auth/login', () => {
   db.sync();

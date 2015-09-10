@@ -9,10 +9,10 @@ module.exports = function(owner, modelName, opts, done) {
   return function(err, res) {
     if (err) { return done(err); }
 
-    let models = format.allTimestamps(res.body[modelName]);
+    let models = format.response(res.body[modelName]);
 
     owner[`get${_.capitalize(modelName)}`]()
-    .then(format.allToJSON)
+    .then(format.serialize)
     .then(ownerModels => {
       expect(res.body.meta).to.deep.equal({
         limit: opts.limit,

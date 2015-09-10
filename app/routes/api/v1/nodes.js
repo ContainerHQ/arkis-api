@@ -26,7 +26,7 @@ router
     machine = new services.MachineManager(req.cluster, node);
 
   return machine.deploy().then(action => {
-    res.status(202).json({ node: node, action: action });
+    res.status(202).serialize({ node: node, action: action });
   }).catch(next);
 })
 .param('node_id', (req, res, next, id) => {
@@ -49,20 +49,20 @@ router
   let daemon = new services.DaemonManager(req.cluster, req.node);
 
   daemon.upgrade().then(action => {
-    res.status(202).json({ node: req.node, action: action });
+    res.status(202).serialize({ node: req.node, action: action });
   }).catch(next);
 })
 .use('/:node_id/actions', require('./action')({ resource: 'node' }))
 
 .route('/:node_id')
 .get((req, res) => {
-  res.json({ node: req.node });
+  res.serialize({ node: req.node });
 })
 .patch((req, res, next) => {
   let daemon = new services.DaemonManager(req.cluster, req.node);
 
   daemon.update(_.pick(req.body, UPDATE_PARAMS)).then(action => {
-    res.status(202).json({ node: req.node, action: action });
+    res.status(202).serialize({ node: req.node, action: action });
   }).catch(next);
 })
 .delete((req, res, next) => {

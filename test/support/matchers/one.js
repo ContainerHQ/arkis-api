@@ -9,14 +9,21 @@ module.exports = function (owner, modelName, opts, done) {
   return function(err, res) {
     if (err) { return done(err); }
 
-    let model = format.timestamps(res.body[modelName]);
+    let name = _.capitalize(modelName),
+      model  = format.response(res.body[modelName]),
+      method = `get${name}`;
 
-    owner[`get${_.capitalize(modelName)}s`]({ where: { id: model.id } })
-    .then(ownerModels => {
-      return _.first(ownerModels).toJSON();
+    if (!_.isFunction(owner[method])) {
+      method += 's';
+    }
+
+    owner[method]({ where: { id: model.id } }).then(result => {
+      return _.isArray(result) ? _.first(result) : result;
     }).then(ownerModel => {
-      expect(model)
-        .to.deep.equal(ownerModel).and.to.containSubset(opts.with);
+      let serialized = format.serialize(ownerModel);
+
+      expect(model).to.deep.equal(serialized);
+      expect(ownerModel).to.containSubset(opts.with);
       done();
     }).catch(done);
   };

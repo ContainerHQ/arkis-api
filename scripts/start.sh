@@ -2,7 +2,7 @@
 set -e
 
 if [ "$NODE_ENV" = "" ]; then
-    #./scripts/jslint.sh
+    ./scripts/jslint.sh
 
     nodemon --ignore tests/
 else

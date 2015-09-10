@@ -77,7 +77,7 @@ describe('Pagination Middleware', () => {
       }};
 
     beforeEach(done => {
-      res.json = sinon.stub();
+      res.serialize = sinon.stub(res.serialize);
       pagination(req, res, done);
     });
 
@@ -98,7 +98,7 @@ describe('Pagination Middleware', () => {
 
         send(result);
 
-        expect(res.json).to.have.been.calledWithMatch(expected);
+        expect(res.serialize).to.have.been.calledWithMatch(expected);
       });
     });
   });

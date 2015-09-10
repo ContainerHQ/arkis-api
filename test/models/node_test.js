@@ -8,12 +8,23 @@ let _ = require('lodash'),
   support = require('../../app/support'),
   models = require('../../app/models');
 
+const SERIALIZATION = {
+  omit: ['token', 'machine_id', 'last_state'],
+  links: ['actions']
+};
+
 describe('Node Model', () => {
   db.sync();
 
   concerns('node').behavesAsAStateMachine({ default: 'deploying' });
 
   concerns('node').hasSubdomainable('name');
+
+  concerns('node').serializable(SERIALIZATION);
+
+  concerns('byonNode').serializable(
+    _.merge({ merge: { agent_cmd: null } }, SERIALIZATION)
+  );
 
   describe('validations', () => {
     /*
@@ -205,26 +216,8 @@ describe('Node Model', () => {
       });
     });
 
-    context('when non byon node', () => {
-      beforeEach(() => {
-        _.merge(node, { byon: false, region: 'ams1', node_size: '10GB' });
-        return node.save();
-      });
-
-      it('has no download link to get the agent', () => {
-        expect(node.agent_cmd).to.be.null;
-      });
-    });
-
-    context('when byon node', () => {
-      beforeEach(() => {
-        _.merge(node, { byon: true, region: null, node_size: null });
-        return node.save();
-      });
-
-      it('has a command to get the agent', () => {
-        expect(node.agent_cmd).to.equal(`${config.agentCmd} ${node.token}`);
-      });
+    it('has a command to get the agent', () => {
+      expect(node.agent_cmd).to.equal(`${config.agentCmd} ${node.token}`);
     });
   });
 

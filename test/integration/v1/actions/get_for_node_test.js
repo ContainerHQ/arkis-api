@@ -27,9 +27,9 @@ describe('GET /clusters/:cluster_id/nodes/:node_id/actions/:action_id', () => {
       .expect(200, (err, res) => {
         if (err) { return done(err); }
 
-        let actionInfos = format.timestamps(res.body.action);
+        let actionInfos = format.response(res.body.action);
 
-        expect(actionInfos).to.deep.equal(action.toJSON());
+        expect(actionInfos).to.deep.equal(format.serialize(action));
         done()
       });
     });

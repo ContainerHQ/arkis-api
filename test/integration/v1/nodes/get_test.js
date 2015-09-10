@@ -1,6 +1,6 @@
 'use strict';
 
-let models = require('../../../app/models');
+let models = require('../../../../app/models');
 
 describe('GET /clusters/:cluster_id/nodes/:node_id', () => {
   db.sync();
@@ -29,9 +29,9 @@ describe('GET /clusters/:cluster_id/nodes/:node_id', () => {
       .expect(200, (err, res) => {
         if (err) { return done(err); }
 
-        let nodeInfos = format.timestamps(res.body.node);
+        let nodeInfos = format.response(res.body.node);
 
-        expect(nodeInfos).to.deep.equal(node.toJSON());
+        expect(nodeInfos).to.deep.equal(format.serialize(node));
         done();
       });
     });

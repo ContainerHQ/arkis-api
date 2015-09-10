@@ -1,6 +1,6 @@
 'use strict';
 
-let RegionSizeManager = require('../../../app/services').RegionSizeManager;
+let RegionSizeManager = require('../../../../app/services').RegionSizeManager;
 
 describe('GET /nodesizes', () => {
   db.sync();

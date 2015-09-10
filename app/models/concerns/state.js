@@ -7,13 +7,13 @@ let moment = require('moment');
  */
 const EXPIRATION_TIME = 5;
 
-module.exports = function(DataTypes, opts={}) {
+module.exports = function({ defaultState, DataTypes }) {
   return {
     attributes: {
       last_state: {
         type: DataTypes.STRING,
         allowNull: false,
-        defaultValue: opts.default || 'empty',
+        defaultValue: defaultState || 'empty',
         validate: {
           isIn: [['empty', 'deploying', 'upgrading', 'updating', 'running']]
         }
