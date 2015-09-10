@@ -56,7 +56,6 @@ router
 
 .route('/:node_id')
 .get((req, res) => {
-  console.log(req.baseUrl);
   res.serialize({ node: req.node });
 })
 .patch((req, res, next) => {

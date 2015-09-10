@@ -11,7 +11,7 @@ module.exports = function(factoryName) {
         beforeEach(() => {
           model = factory.buildSync(factoryName);
           return model.save().then(() => {
-            params = { baseUrl: random.string() };
+            params     = { baseUrl: random.string() };
             serialized = model.serialize(params);
           });
         });

@@ -28,8 +28,6 @@ module.exports = function(original, attributes, created=true) {
         (!created && !_.isEqual(instanceValue, originalValue)) ||
         ( created &&  _.isEqual(instanceValue, originalValue))
       ) {
-        console.log(instanceValue, '-', originalValue);
-        
         throw new Error(`${attribute} is not filtered!`);
       }
     });

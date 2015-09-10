@@ -29,7 +29,6 @@ router
 .get('/github', passport.authenticate('github'))
 .get('/github/callback', passport.authenticate('github', { session: false }),
   (req, res) => {
-    console.log(req.headers);
     res.status(204).send();
 });
 

@@ -1,7 +1,6 @@
 'use strict';
 
 let _ = require('lodash'),
-  path = require('path'),
   config = require('../../config'),
   concerns = require('./concerns'),
   fqdn = require('../support').fqdn,
@@ -9,6 +8,11 @@ let _ = require('lodash'),
   is = require('./validators');
 
 const CONCERNS = {
+  serializable: {
+    omit:  ['token', 'machine_id', 'last_state'],
+    links: ['actions'],
+    specifics: { byon: { merge: { agent_cmd: null } } }
+  },
   state: { defaultState: 'deploying' }
 };
 
@@ -198,17 +202,6 @@ module.exports = function(sequelize, DataTypes) {
         beforeDestroy: function(node) {
           return fqdn.unregister(node.fqdn);
         },
-      },
-      instanceMethods: {
-        serialize: function({ baseUrl }) {
-          let actionsPath = path.join(baseUrl, this.id, 'actions');
-
-          return _(this.toJSON())
-          .omit(['token', 'machine_id', 'last_state'])
-          .merge(this.byon ? { agent_cmd: null } : {})
-          .merge({ links: { actions: actionsPath } })
-          .value();
-        }
       },
       classMethods: {
         associate: function(models) {

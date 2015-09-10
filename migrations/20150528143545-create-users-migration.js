@@ -12,7 +12,6 @@ module.exports = {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: null,
-        unique: true,
         validate: { isEmail: true }
       },
       password_hash: {

@@ -6,7 +6,7 @@ let _ = require('lodash'),
   is = require('./validators');
 
 module.exports = function(sequelize, DataTypes) {
-  let User = sequelize.define('User', {
+  return sequelize.define('User', {
     id: {
       type: DataTypes.INTEGER.UNSIGNED,
       primaryKey: true,
@@ -16,9 +16,8 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: null,
-      unique: true,
       validate: _.merge({ isEmail: true },
-        is.unique({ attribute: 'email'})
+        is.unique({ attribute: 'email' })
       )
     },
     password_hash: {
@@ -89,8 +88,8 @@ module.exports = function(sequelize, DataTypes) {
     },
     classMethods: {
       associate: function(models) {
-        User.hasOne(models.Profile,  { onDelete: 'cascade', hooks: true });
-        User.hasMany(models.Cluster, { onDelete: 'cascade', hooks: true });
+        this.hasOne(models.Profile,  { onDelete: 'cascade', hooks: true });
+        this.hasMany(models.Cluster, { onDelete: 'cascade', hooks: true });
       }
     },
     hooks: {
@@ -103,5 +102,4 @@ module.exports = function(sequelize, DataTypes) {
       }
     }
   });
-  return User;
 };

@@ -1,7 +1,6 @@
 'use strict';
 
 let _ = require('lodash'),
-  path = require('path'),
   concerns = require('./concerns'),
   config = require('../../config'),
   cert = require('../support').cert,
@@ -129,19 +128,10 @@ module.exports = function(sequelize, DataTypes) {
               });
           }
           return this.update(changes);
-        },
-        serialize({ baseUrl }) {
-          let nodesPath = path.join(baseUrl, this.id, 'nodes');
-
-          return _(this.toJSON())
-          .omit(['cert', 'last_state', 'user_id'])
-          .merge({ links: { nodes: nodesPath } })
-          .value();
         }
       },
       classMethods: {
         associate: function(models) {
-          console.log('node:', models.Node);
           this.hasMany(models.Node, { onDelete: 'cascade', hooks: true,
             counterCache: { as: 'nodes_count' }
           });
