@@ -60,7 +60,11 @@ describe('ErrorHandler Middleware', () => {
   });
 
   context('with a PaginationError', () => {
-    let err = new errors.PaginationError('limit', -5);
+    let err = new errors.PaginationError({
+      attribute: 'limit',
+      value: -5,
+      range: [0, 25]
+    });
 
     it('sends a bad request status', done => {
       errorHandler(err, {}, res, () => {
