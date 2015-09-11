@@ -1,6 +1,7 @@
 'use strict';
 
-let _ = require('lodash');
+let _ = require('lodash'),
+  moment = require('moment');
 
 const DEFAULT_LIMIT  = 25,
       DEFAULT_OFFSET = 0,
@@ -21,17 +22,25 @@ describe('GET /clusters/:cluster_id/nodes/:node_id/actions/', () => {
     }).then(() => {
       return cluster.addNode(node);
     }).then(() => {
-      let opts = { resource: 'node', resource_id: node.id };
-
+      /*
+       * We need to ensure that our actions are properly ordered by started_at.
+       */
+      let opts = { resource: 'node', resource_id: node.id,
+        started_at: function() {
+          return moment().subtract(random.positiveInt(20), 'seconds')
+        }
+      };
       factory.createMany('action', opts, ACTION_COUNT, done);
     }).catch(done);
   });
 
   it('retrieves the node actions', done => {
-    let opts = { limit: DEFAULT_LIMIT, offset: DEFAULT_OFFSET };
+    let opts = { limit: 4, offset: DEFAULT_OFFSET };
 
-    api.clusters(user).nodes(cluster).actions(node).getAll()
-    .expect(200, has.many(node, 'actions', opts, done));
+    api.clusters(user).nodes(cluster).actions(node).getAll(opts)
+    .expect(200, has.many(node, 'actions', _.merge(opts, {
+      order: [['started_at'],['desc']]
+    }), done));
   });
 
   context('when user limits the number of results', () => {
@@ -39,7 +48,9 @@ describe('GET /clusters/:cluster_id/nodes/:node_id/actions/', () => {
 
     it('retrieves a limited number of actions', done => {
       api.clusters(user).nodes(cluster).actions(node).getAll(opts)
-      .expect(200, has.many(node, 'actions', opts, done));
+      .expect(200, has.many(node, 'actions', _.merge(opts, {
+        order: [['started_at'],['desc']]
+      }), done));
     });
 
     context('with a negative limit', () => {
@@ -55,7 +66,9 @@ describe('GET /clusters/:cluster_id/nodes/:node_id/actions/', () => {
 
     it('retrieves the specified offset of action records', done => {
       api.clusters(user).nodes(cluster).actions(node).getAll(opts)
-      .expect(200, has.many(node, 'actions', opts, done));
+      .expect(200, has.many(node, 'actions', _.merge(opts, {
+        order: [['started_at'],['desc']]
+      }), done));
     });
 
     context('with a negative offset', () => {

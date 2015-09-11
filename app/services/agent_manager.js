@@ -32,10 +32,8 @@ class AgentManager {
       return cluster.notify(RUNNING_STATE);
     }).then(() => {
       return this.node.getActions({ scope: 'pending' });
-    }).then(actions => {
-      let pendingAction = _.first(actions);
-
-      return pendingAction ? pendingAction.complete() : Promise.resolve(null);
+    }).then(_.first).then(action => {
+      return action ? action.complete() : Promise.resolve(null);
     });
   }
   /*

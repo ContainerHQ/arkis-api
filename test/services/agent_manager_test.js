@@ -88,7 +88,7 @@ describe('AgentManager Service', () => {
       });
     });
 
-    context('when node as a pending action', () => {
+    context('when node has a pending action', () => {
       let action, result;
 
       beforeEach(() => {
@@ -117,7 +117,7 @@ describe('AgentManager Service', () => {
       });
     });
 
-    context('when node as a non pending action', () => {
+    context('when node has a no pending action', () => {
       let action, result;
 
       beforeEach(() => {

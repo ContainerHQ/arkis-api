@@ -12,7 +12,7 @@ module.exports = function({ resource }) {
   router
   .get('/', middlewares.pagination, (req, res, next) => {
     Action
-    .scope('defaultScope',
+    .scope('timeline',
       { method: ['filtered', req.query] },
       { method: [resource,   req[resource].id] },
       { method: ['state',    req.query.state] }
