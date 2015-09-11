@@ -100,7 +100,7 @@ describe('POST /clusters/:cluster_id/nodes/:node_id/upgrade', () => {
 
   context('when node is not running', () => {
     it("returns an error", done => {
-      api.clusters(user).nodes(cluster).upgrade(node.id).expect(409, done);
+      api.clusters(user).nodes(cluster).upgrade(node.id).expect(422, done);
     });
   });
 

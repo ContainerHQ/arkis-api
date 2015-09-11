@@ -82,7 +82,7 @@ describe('ErrorHandler Middleware', () => {
   });
 
   [
-    ['StateError', 409],
+    ['StateError', 422],
     ['AlreadyUpgradedError', 409],
     ['NotMasterError', 403],
     ['MachineCredentialsError', 401],

@@ -11,7 +11,6 @@ module.exports = function(err, req, res, next) {
     case 'PaginationError':
       res.status(400).json({ error: err.message });
       break;
-    case 'StateError':
     case 'AlreadyUpgradedError':
       res.status(409).json({ error: err.message });
       break;
@@ -24,6 +23,7 @@ module.exports = function(err, req, res, next) {
     case 'MachineNotFoundError':
       res.status(404).json({ error: err.message  });
       break;
+    case 'StateError':
     case 'MachineUnprocessableError':
       res.status(422).json({ error: err.message  });
       break;

@@ -84,7 +84,7 @@ describe('PATCH /clusters/:cluster_id/nodes/:node_id', () => {
 
     it('returns a conflict error', done => {
       api.clusters(user).nodes(cluster).update(node.id).send({ master: true })
-      .expect(409, done);
+      .expect(422, done);
     });
   });
 
