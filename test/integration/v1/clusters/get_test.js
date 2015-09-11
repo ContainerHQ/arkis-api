@@ -37,7 +37,7 @@ describe('GET /clusters/:id', () => {
     });
 
     it('returns a 404 not found', done => {
-      api.clusters(otherUser).get(cluster.id).expect(404, {}, done);
+      api.clusters(otherUser).get(cluster.id).expect(404, done);
     });
   });
 
