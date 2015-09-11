@@ -1,4 +1,4 @@
-FROM node:0.12.2
+FROM node:4.0.0
 
 ENV APP=/arkis-api VENDOR=/vendor
 
