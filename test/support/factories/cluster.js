@@ -31,13 +31,13 @@ module.exports = function(factory) {
   factory.define('runningCluster', Cluster, {
     name: random.string,
     last_state: 'running',
-    last_ping: moment
+    last_seen: moment
   });
 
   factory.define('unreachableCluster', Cluster, {
     name: random.string,
     last_state: 'running',
-    last_ping: moment().subtract(6, 'minutes')
+    last_seen: moment().subtract(6, 'minutes')
   });
 
   /*
@@ -48,7 +48,7 @@ module.exports = function(factory) {
     user_id: 0,
     name: random.string,
     last_state: 'running',
-    last_ping: moment(),
+    last_seen: moment(),
     strategy: 'spread',
     nodes_count: 1,
     containers_count: 2

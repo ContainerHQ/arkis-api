@@ -49,7 +49,7 @@ class AgentManager {
      */
     let public_ip = _.first((addr || 'null').split(':'));
 
-    return this.node.update({ public_ip: public_ip, last_ping: moment() });
+    return this.node.update({ public_ip: public_ip, last_seen: moment() });
   }
   /*
    * Called by the swarm manager to list the running nodes of the same cluster.
@@ -60,7 +60,7 @@ class AgentManager {
     if (this.isSlave) { return Promise.reject(new errors.NotMasterError()); }
 
     return this.node.getCluster().then(cluster => {
-      return cluster.notify({ last_ping: moment() });
+      return cluster.notify({ last_seen: moment() });
     }).then(cluster => {
       return cluster.getNodes({ scope: ['defaultScope', 'runningIPs'] });
     }).then(nodes => {

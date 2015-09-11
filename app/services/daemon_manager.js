@@ -50,10 +50,10 @@ class DaemonManager extends StateManager {
     let changes = {};
 
     if (attributes.master === true && !this.node.master) {
-      _.merge(changes, { last_ping: this.node.last_ping });
+      _.merge(changes, { last_seen: this.node.last_seen });
     }
     if (attributes.master === false && this.node.master) {
-      _.merge(changes, { last_ping: null });
+      _.merge(changes, { last_seen: null });
     }
     return _.merge(changes, UPDATING_STATE);
   }

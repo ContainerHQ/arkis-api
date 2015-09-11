@@ -108,7 +108,7 @@ describe('POST /agent/:token/notify', () => {
       attributes = _.difference(node.attributes,
         [
           'docker_version', 'swarm_version', 'cpu', 'memory',
-          'disk', 'last_state', 'last_ping', 'containers_count',
+          'disk', 'last_state', 'last_seen', 'containers_count',
           'id', 'created_at', 'updated_at'
         ]
       );

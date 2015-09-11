@@ -36,13 +36,13 @@ module.exports = function(factoryName) {
           });
 
           context(`when last state is equal to ${state}`, () => {
-            context('when last ping is recent', () => {
+            context('when last seen is recent', () => {
               let model;
 
               beforeEach(() => {
                 model = factory.buildSync(factoryName, {
                   last_state: state,
-                  last_ping: moment()
+                  last_seen: moment()
                 });
                 return model.save();
               });
@@ -52,13 +52,13 @@ module.exports = function(factoryName) {
               });
             });
 
-            context('when last ping is null' ,() => {
+            context('when last seen is null' ,() => {
               let model;
 
                beforeEach(() => {
                 model = factory.buildSync(factoryName, {
                   last_state: state,
-                  last_ping: null
+                  last_seen: null
                 });
                 return model.save();
               });
@@ -74,13 +74,13 @@ module.exports = function(factoryName) {
               }
             });
 
-            context('when last ping has expired', () => {
+            context('when last seen has expired', () => {
               let model;
 
                beforeEach(() => {
                 model = factory.buildSync(factoryName, {
                   last_state: state,
-                  last_ping: moment().subtract(6, 'minutes')
+                  last_seen: moment().subtract(6, 'minutes')
                 });
                 return model.save();
               });

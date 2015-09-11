@@ -3,7 +3,7 @@
 let _ = require('lodash');
 
 const TIMESTAMPS = [
-  'created_at', 'updated_at', 'started_at', 'completed_at', 'last_ping'
+  'created_at', 'updated_at', 'started_at', 'completed_at', 'last_seen'
 ];
 
 const IGNORE = ['links'];

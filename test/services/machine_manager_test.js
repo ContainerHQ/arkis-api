@@ -217,7 +217,7 @@ describe('MachineManager Service', () => {
 
       context('when node is a master', () => {
         beforeEach(() => {
-          return manager.cluster.update({ last_ping: Date.now() })
+          return manager.cluster.update({ last_seen: Date.now() })
           .then(() => {
             return manager.node.update({
               master: true, machine_id: machineId
@@ -240,8 +240,8 @@ describe('MachineManager Service', () => {
           expect(manager.cluster.state).to.equal('empty');
         });
 
-        it('notifies the cluster with last_ping', () => {
-          expect(manager.cluster.last_ping).to.be.null;
+        it('notifies the cluster with last_seen', () => {
+          expect(manager.cluster.last_seen).to.be.null;
         });
 
         it('removes its actions', () => {
@@ -251,7 +251,7 @@ describe('MachineManager Service', () => {
 
       context('when node is a slave', () => {
         beforeEach(() => {
-          return manager.cluster.update({ last_ping: Date.now() })
+          return manager.cluster.update({ last_seen: Date.now() })
           .then(() => {
             return manager.node.update({
               master: false, machine_id: machineId
@@ -274,8 +274,8 @@ describe('MachineManager Service', () => {
           expect(manager.cluster.state).to.equal('empty');
         });
 
-        it("doens't notify the cluster with last_ping", () => {
-          expect(manager.cluster.last_ping).to.not.be.null;
+        it("doens't notify the cluster with last_seen", () => {
+          expect(manager.cluster.last_seen).to.not.be.null;
         });
 
         it('removes its actions', () => {

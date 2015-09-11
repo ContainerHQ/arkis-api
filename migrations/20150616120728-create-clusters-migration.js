@@ -54,7 +54,7 @@ module.exports = {
           isIn: [['empty', 'deploying', 'upgrading', 'updating', 'running']]
         }
       },
-      last_ping: {
+      last_seen: {
         type: DataTypes.DATE,
         allowNull: true,
         defaultValue: null

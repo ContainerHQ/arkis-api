@@ -22,7 +22,7 @@ module.exports = function(factory) {
     region: 'london',
     node_size: 'deathstar',
     last_state: 'running',
-    last_ping: Date.now,
+    last_seen: Date.now,
     cpu: 1,
     memory: 128,
     disk: 1.0,
@@ -59,7 +59,7 @@ module.exports = function(factory) {
     region: 'london',
     node_size: 'deathstar',
     last_state: 'running',
-    last_ping: moment
+    last_seen: moment
   });
 
   factory.define('unreachableNode', Node, {
@@ -67,7 +67,7 @@ module.exports = function(factory) {
     region: 'london',
     node_size: 'deathstar',
     last_state: 'running',
-    last_ping: moment().subtract(6, 'minutes')
+    last_seen: moment().subtract(6, 'minutes')
   });
 
   /*
@@ -82,7 +82,7 @@ module.exports = function(factory) {
     node_size: 'whatever',
     public_ip: random.ip,
     last_state: 'running',
-    last_ping: moment().subtract(3, 'minutes'),
+    last_seen: moment().subtract(3, 'minutes'),
     cpu: 2,
     memory: 256,
     disk: 2.0,

@@ -117,7 +117,7 @@ module.exports = function(sequelize, DataTypes) {
          * changes, sequelize won't try to update them again.
          */
         notify: function(changes={}) {
-          changes = _.pick(changes, ['last_state', 'last_ping']);
+          changes = _.pick(changes, ['last_state', 'last_seen']);
 
           switch (changes.last_state) {
             case 'destroyed':

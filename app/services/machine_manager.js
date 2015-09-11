@@ -40,7 +40,7 @@ class MachineManager {
     return _.pick(this.node, 'last_state');
   }
   get destroyChanges() {
-    let changes = this.node.master ? { last_ping: null } : {};
+    let changes = this.node.master ? { last_seen: null } : {};
 
     return _.merge(changes, { last_state: 'destroyed' });
   }

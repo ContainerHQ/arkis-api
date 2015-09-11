@@ -223,10 +223,10 @@ describe('Cluster Model', () => {
 
     BUSY_STATES.forEach(state => {
       context(`with a last state equal to ${state}`, () => {
-        let lastPing;
+        let lastSeen;
 
         beforeEach(() => {
-          lastPing = cluster.last_ping;
+          lastSeen = cluster.last_seen;
           return cluster.notify({ last_state: state });
         });
 
@@ -234,8 +234,8 @@ describe('Cluster Model', () => {
           expect(cluster.state).to.equal(state);
         });
 
-        it('has the same last ping than before', () => {
-          expect(cluster.last_ping).to.deep.equal(lastPing);
+        it('has the same last seen than before', () => {
+          expect(cluster.last_seen).to.deep.equal(lastSeen);
         });
       });
     });
@@ -300,7 +300,7 @@ describe('Cluster Model', () => {
 
         context('when master is destroyed', () => {
           beforeEach(() => {
-            return cluster.notify({ last_state: 'destroyed', last_ping: null });
+            return cluster.notify({ last_state: 'destroyed', last_seen: null });
           });
 
           it(`is in unreachable state`, () => {
@@ -332,17 +332,17 @@ describe('Cluster Model', () => {
       });
     });
 
-    context('with last ping', () => {
-      let lastPing, lastState;
+    context('with last seen', () => {
+      let lastSeen, lastState;
 
       beforeEach(() => {
-        lastPing = moment();
+        lastSeen = moment();
         lastState = cluster.state;
-        return cluster.notify({ last_ping: lastPing });
+        return cluster.notify({ last_seen: lastSeen });
       });
 
-      it('updates the cluster last ping with the provided value', () => {
-        expect(cluster.last_ping).to.deep.equal(lastPing.toDate());
+      it('updates the cluster last seen with the provided value', () => {
+        expect(cluster.last_seen).to.deep.equal(lastSeen.toDate());
       });
 
       it('has the same state than before', () => {

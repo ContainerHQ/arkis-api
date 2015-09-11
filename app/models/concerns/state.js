@@ -18,7 +18,7 @@ module.exports = function({ defaultState, DataTypes }) {
           isIn: [['empty', 'deploying', 'upgrading', 'updating', 'running']]
         }
       },
-      last_ping: {
+      last_seen: {
         type: DataTypes.DATE,
         allowNull: true,
         defaultValue: null
@@ -33,12 +33,12 @@ module.exports = function({ defaultState, DataTypes }) {
           switch (state) {
             case 'running':
               opts = {
-                last_state: 'running', last_ping: { $gte: expired }
+                last_state: 'running', last_seen: { $gte: expired }
               };
               break;
             case 'unreachable':
               opts = {
-                last_state: 'running', last_ping: { $lt: expired }
+                last_state: 'running', last_seen: { $lt: expired }
               };
               break;
             default:
@@ -49,12 +49,12 @@ module.exports = function({ defaultState, DataTypes }) {
       },
       getterMethods: {
         state: function() {
-          let lastPing  = this.getDataValue('last_ping'),
+          let lastSeen  = this.getDataValue('last_seen'),
               lastState = this.getDataValue('last_state'),
               expirationTime = moment().subtract(EXPIRATION_TIME, 'minutes');
 
           if (lastState === 'running' &&
-             (lastPing  === null || lastPing < expirationTime)) {
+             (lastSeen  === null || lastSeen < expirationTime)) {
             return 'unreachable';
           }
           return lastState;

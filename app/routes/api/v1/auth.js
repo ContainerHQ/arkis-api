@@ -22,7 +22,7 @@ router
     }
     let statusCode = created ? 201 : 200;
 
-    res.status(statusCode).json({ token: user.token });
+    res.status(statusCode).serialize({ token: user.token });
   }).catch(next);
 })
 
