@@ -83,7 +83,9 @@ module.exports = function(sequelize, DataTypes) {
         allowNull: true,
         defaultValue: null,
         unique: true,
-        validate: { isIP: true }
+        validate: _.merge({ isIP: true },
+          is.unique({ attribute: 'public_ip' })
+        )
       },
       machine_id: {
         type: DataTypes.TEXT,
