@@ -5,7 +5,8 @@ let _ = require('lodash'),
 
 const DEFAULT_LIMIT  = 25,
       DEFAULT_OFFSET = 0,
-      ACTION_COUNT   = DEFAULT_LIMIT + 1;
+      ACTION_COUNT   = DEFAULT_LIMIT + 1,
+      TIMELINE_SCOPE = [['started_at', 'id'],['desc', 'asc']];
 
 describe('GET /clusters/:cluster_id/nodes/:node_id/actions/', () => {
   db.sync();
@@ -39,7 +40,7 @@ describe('GET /clusters/:cluster_id/nodes/:node_id/actions/', () => {
 
     api.clusters(user).nodes(cluster).actions(node).getAll(opts)
     .expect(200, has.many(node, 'actions', _.merge(opts, {
-      order: [['started_at'],['desc']]
+      order: TIMELINE_SCOPE
     }), done));
   });
 
@@ -49,7 +50,7 @@ describe('GET /clusters/:cluster_id/nodes/:node_id/actions/', () => {
     it('retrieves a limited number of actions', done => {
       api.clusters(user).nodes(cluster).actions(node).getAll(opts)
       .expect(200, has.many(node, 'actions', _.merge(opts, {
-        order: [['started_at'],['desc']]
+        order: TIMELINE_SCOPE
       }), done));
     });
 
@@ -67,7 +68,7 @@ describe('GET /clusters/:cluster_id/nodes/:node_id/actions/', () => {
     it('retrieves the specified offset of action records', done => {
       api.clusters(user).nodes(cluster).actions(node).getAll(opts)
       .expect(200, has.many(node, 'actions', _.merge(opts, {
-        order: [['started_at'],['desc']]
+        order: TIMELINE_SCOPE
       }), done));
     });
 

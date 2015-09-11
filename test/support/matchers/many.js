@@ -8,9 +8,7 @@ let _ = require('lodash'),
 function scopes(order=[[], []]) {
   let [attributes, sorts] = order;
 
-  attributes.push('id');
-  sorts.push('asc');
-  return [attributes, sorts];
+  return [attributes || ['id'], sorts || ['asc']];
 }
 
 module.exports = function(owner, modelName, opts, done) {

@@ -63,7 +63,7 @@ module.exports = function(sequelize, DataTypes) {
     options: {
       defaultScope: { order: [['id', 'ASC']] },
       scopes: {
-        timeline: { order: [['started_at', 'DESC']] },
+        timeline: { order: [['started_at', 'DESC'], ['id', 'ASC']] },
         pending: {
           where: { last_state: 'in-progress' },
           limit: 1
