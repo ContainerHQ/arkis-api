@@ -8,7 +8,7 @@ module.exports = function(factory) {
   factory.define('node', Node, {
     name: random.string,
     region: 'london',
-    node_size: 'deathstar'
+    size: 'deathstar'
   });
 
   factory.define('byonNode', Node, {
@@ -20,7 +20,7 @@ module.exports = function(factory) {
     name: random.string,
     master: false,
     region: 'london',
-    node_size: 'deathstar',
+    size: 'deathstar',
     last_state: 'running',
     last_seen: Date.now,
     cpu: 1,
@@ -37,27 +37,27 @@ module.exports = function(factory) {
   factory.define('deployingNode', Node, {
     name: random.string,
     region: 'london',
-    node_size: 'deathstar'
+    size: 'deathstar'
   });
 
   factory.define('upgradingNode', Node, {
     name: random.string,
     region: 'london',
-    node_size: 'deathstar',
+    size: 'deathstar',
     last_state: 'upgrading'
   });
 
   factory.define('updatingNode', Node, {
     name: random.string,
     region: 'london',
-    node_size: 'deathstar',
+    size: 'deathstar',
     last_state: 'updating'
   });
 
   factory.define('runningNode', Node, {
     name: random.string,
     region: 'london',
-    node_size: 'deathstar',
+    size: 'deathstar',
     last_state: 'running',
     last_seen: moment
   });
@@ -65,7 +65,7 @@ module.exports = function(factory) {
   factory.define('unreachableNode', Node, {
     name: random.string,
     region: 'london',
-    node_size: 'deathstar',
+    size: 'deathstar',
     last_state: 'running',
     last_seen: moment().subtract(6, 'minutes')
   });
@@ -79,7 +79,7 @@ module.exports = function(factory) {
     name: random.string,
     master: true,
     region: 'test',
-    node_size: 'whatever',
+    size: 'whatever',
     public_ip: random.ip,
     last_state: 'running',
     last_seen: moment().subtract(3, 'minutes'),

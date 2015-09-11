@@ -128,19 +128,19 @@ describe('Node Model', () => {
       return expect(node.save()).to.be.rejected;
     });
 
-    it('fails with a null node_size and byon false', () => {
-      let node = factory.buildSync('node', { byon: false, node_size: null });
+    it('fails with a null size and byon false', () => {
+      let node = factory.buildSync('node', { byon: false, size: null });
 
       return expect(node.save()).to.be.rejected;
     });
 
     it('fails with a region and byon true', () => {
-      let node = factory.buildSync('node', { byon: true, node_size: null });
+      let node = factory.buildSync('node', { byon: true, size: null });
 
       return expect(node.save()).to.be.rejected;
     });
 
-    it('fails with a node_size and byon true', () => {
+    it('fails with a size and byon true', () => {
       let node = factory.buildSync('node', { byon: true, region: null });
 
       return expect(node.save()).to.be.rejected;

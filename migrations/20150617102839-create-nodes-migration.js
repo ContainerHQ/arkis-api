@@ -44,7 +44,7 @@ module.exports = {
         allowNull: true,
         defaultValue: null,
       },
-      node_size: {
+      size: {
         type: DataTypes.STRING,
         allowNull: true,
         defaultValue: null,

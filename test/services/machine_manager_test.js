@@ -6,7 +6,7 @@ var _ = require('lodash'),
   Node = require('../../app/models').Node,
   MachineManager = require('../../app/services').MachineManager;
 
-const BYON_OPTS = { byon: true, region: null, node_size: null };
+const BYON_OPTS = { byon: true, region: null, size: null };
 
 describe('MachineManager Service', () => {
   let manager;
@@ -74,7 +74,7 @@ describe('MachineManager Service', () => {
         expect(manager.machine.create).to.have.been.calledWith({
           name: manager.node.id,
           region: manager.node.region,
-          size: manager.node.node_size
+          size: manager.node.size
         });
       });
 

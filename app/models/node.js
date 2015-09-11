@@ -59,10 +59,10 @@ module.exports = function(sequelize, DataTypes) {
         defaultValue: false,
         validate: {
           followOrigin: function(byon) {
-            if (byon && (this.region || this.node_size)) {
+            if (byon && (this.region || this.size)) {
               throw new Error("A byon node canno't have a region and size!");
             }
-            if (!byon && !(this.region && this.node_size)) {
+            if (!byon && !(this.region && this.size)) {
               throw new Error("A provided node must have a region and size!");
             }
           }
@@ -73,7 +73,7 @@ module.exports = function(sequelize, DataTypes) {
         allowNull: true,
         defaultValue: null,
       },
-      node_size: {
+      size: {
         type: DataTypes.STRING,
         allowNull: true,
         defaultValue: null,
@@ -142,7 +142,7 @@ module.exports = function(sequelize, DataTypes) {
         },
         filtered: function(filters) {
           let criterias = _.pick(filters, [
-            'byon', 'master', 'name', 'region', 'node_size', 'labels'
+            'byon', 'master', 'name', 'region', 'size', 'labels'
           ]);
           return { where: criterias };
         },

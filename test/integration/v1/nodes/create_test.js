@@ -21,7 +21,7 @@ describe('POST /clusters/:cluster_id/nodes', () => {
       environment: 'production', storage: 'hdd'
     }}],
     ['arkis master', { name: 'create', master: true, region: 'europe',
-      node_size: 'small'
+      size: 'small'
     }]
   ].forEach(([title, form]) => {
     context(`with a ${title} node`, () => {
@@ -46,7 +46,7 @@ describe('POST /clusters/:cluster_id/nodes', () => {
     });
   });
 
-  ['region', 'node_size'].forEach(machineOption => {
+  ['region', 'size'].forEach(machineOption => {
     context(`with unavailable ${machineOption}`, () => {
       let form = { name: machineOption, byon: false };
 
@@ -78,7 +78,7 @@ describe('POST /clusters/:cluster_id/nodes', () => {
       attributes = _.difference(node.attributes,
         [
           'id', 'cluster_id', 'token', 'fqdn',
-          'name', 'master', 'labels', 'byon', 'region', 'node_size',
+          'name', 'master', 'labels', 'byon', 'region', 'size',
         ]
       );
     });

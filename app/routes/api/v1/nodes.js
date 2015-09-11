@@ -9,7 +9,7 @@ let _ = require('lodash'),
 
 let router = express.Router();
 
-const CREATE_PARAMS = ['name', 'master', 'labels', 'byon', 'region', 'node_size'],
+const CREATE_PARAMS = ['name', 'master', 'labels', 'byon', 'region', 'size'],
       UPDATE_PARAMS = ['name', 'master', 'labels'];
 
 router

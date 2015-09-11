@@ -48,7 +48,7 @@ class MachineManager {
     return this.node.byon ? Promise.resolve() : this.machine.create({
       name:   this.node.id,
       region: this.node.region,
-      size:   this.node.node_size
+      size:   this.node.size
     });
   }
   _deleteMachine()  {
