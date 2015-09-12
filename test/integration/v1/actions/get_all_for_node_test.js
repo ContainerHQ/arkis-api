@@ -36,7 +36,7 @@ describe('GET /clusters/:cluster_id/nodes/:node_id/actions/', () => {
   });
 
   it('retrieves the node actions', done => {
-    let opts = { limit: 4, offset: DEFAULT_OFFSET };
+    let opts = { limit: 25, offset: DEFAULT_OFFSET };
 
     api.clusters(user).nodes(cluster).actions(node).getAll()
     .expect(200, has.many(node, 'actions', _.merge(opts, {
