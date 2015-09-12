@@ -1,35 +1,63 @@
 'use strict';
 
-const INTERNAL_SERVER_ERROR = 'internal server error';
+let _ = require('lodash');
+
+const INTERNAL_SERVER_ERROR = {
+  name: 'internal_server_error',
+  message: `There was a server error while processing your request.
+  Try again later, or contact support.`
+};
+
+/*
+ * Format error types/name to snake case and removes sequelize indications.
+ */
+function serializeError(error) {
+  return _.mapValues(error, (value, key) => {
+    switch (key) {
+      case 'name':
+        return _.snakeCase(value.replace('Sequelize', ''));
+      case 'errors':
+        return _.map(value, err => {
+          err.type = _.snakeCase(err.type);
+          return err;
+        });
+      default:
+        return value;
+    }
+  });
+}
 
 module.exports = function(err, req, res, next) {
+  let statusCode;
+
   switch (err.name) {
     case 'SequelizeValidationError':
-    case 'SequelizeUniqueConstraintError':
-      res.status(400).json({ errors: err.errors });
+      statusCode = 400;
       break;
     case 'PaginationError':
-      res.status(400).json({ error: err.message });
+      statusCode = 400;
       break;
     case 'AlreadyUpgradedError':
-      res.status(409).json({ error: err.message });
+      statusCode = 409;
       break;
     case 'NotMasterError':
-      res.status(403).json({ error: err.message  });
+      statusCode = 403;
       break;
     case 'MachineCredentialsError':
-      res.status(401).json({ error: err.message  });
+      statusCode = 401;
       break;
     case 'MachineNotFoundError':
-      res.status(404).json({ error: err.message  });
+      statusCode = 404;
       break;
     case 'StateError':
     case 'MachineUnprocessableError':
-      res.status(422).json({ error: err.message  });
+      statusCode = 422;
       break;
     default:
-      console.error(err.message);
-      res.status(500).json({ error: INTERNAL_SERVER_ERROR });
+      console.error(err);
+      res.status(500).json(INTERNAL_SERVER_ERROR);
+      return next();
   }
+  res.status(statusCode).json(serializeError(err));
   next();
 };
