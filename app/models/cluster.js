@@ -27,7 +27,7 @@ module.exports = function(sequelize, DataTypes) {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: null,
-        validate: _.merge(
+        validate: _.merge({ len: [1, 64] },
           is.subdomainable,
           is.unique({ attribute: 'name', scope: 'user' })
         )

@@ -36,7 +36,7 @@ module.exports = function(sequelize, DataTypes) {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: null,
-        validate: _.merge(
+        validate: _.merge({ len: [1, 64] },
           is.subdomainable,
           is.unique({ attribute: 'name', scope: 'cluster' })
         )
@@ -60,10 +60,10 @@ module.exports = function(sequelize, DataTypes) {
         validate: {
           followOrigin: function(byon) {
             if (byon && (this.region || this.size)) {
-              throw new Error("A byon node canno't have a region and size!");
+              throw new Error("A byon node canno't have a region and size.");
             }
             if (!byon && !(this.region && this.size)) {
-              throw new Error("A provided node must have a region and size!");
+              throw new Error("A provided node must have a region and size.");
             }
           }
         }
@@ -116,9 +116,9 @@ module.exports = function(sequelize, DataTypes) {
         allowNull: false,
         defaultValue: {},
         validate: {
-          isKeyValue: function(labels) {
+          isPlainObject: function(labels) {
             if (!_.isPlainObject(labels)) {
-              throw new Error('Labels must only contain key/value pairs!');
+              throw new Error('Labels must be a json object.');
             }
           }
         }
