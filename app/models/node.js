@@ -181,16 +181,17 @@ module.exports = function(sequelize, DataTypes) {
           }
         },
         agent_cmd: function() {
-          return `${config.agentCmd} ${this.get('token')}`;
+          return `${config.agent.cmd} ${this.get('token')}`;
         },
         fqdn: function() {
           let clusterId = this.get('cluster_id');
 
           if (!clusterId) { return null; }
 
-          let clusterShortId = clusterId.slice(0, 8);
+          let name = this.get('name'),
+            clusterShortId = clusterId.slice(0, 8);
 
-          return `${this.get('name')}-${clusterShortId}.${config.nodeDomain}`;
+          return `${name}-${clusterShortId}.node.${config.domain}`;
         }
       },
       hooks: {

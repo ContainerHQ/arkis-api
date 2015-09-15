@@ -6,10 +6,6 @@ let _ = require('lodash'),
   config = require('../../config'),
   AgentManager = require('../../app/services').AgentManager;
 
-const CLUSTER_INFOS = ['docker_version', 'swarm_version', 'strategy', 'cert'],
-      NODE_INFOS    = ['name', 'master', 'labels'],
-      CONFIG_INFOS  = ['dockerPort', 'swarmPort'];
-
 describe('AgentManager Service', () => {
   let cluster, node, manager;
 
@@ -25,15 +21,21 @@ describe('AgentManager Service', () => {
 
   describe('#infos', () => {
     it('returns infos required by the agent', () => {
-      let expected = _.merge(
-        _.pick(cluster, CLUSTER_INFOS),
-        _.pick(node,    NODE_INFOS),
-        _(config)
-        .pick(CONFIG_INFOS)
-        .mapKeys((value, key) => {
-          return _.snakeCase(key);
-        }).value()
-      );
+      let expected = {
+        docker: {
+          port:    config.agent.ports.docker,
+          version: config.latestVersions.docker,
+          name:    node.name,
+          labels:  node.labels,
+          cert:    cluster.cert
+        },
+        swarm: {
+          port:     config.agent.ports.swarm,
+          version:  config.latestVersions.swarm,
+          strategy: cluster.strategy,
+          master:   node.master
+        },
+      };
       return expect(manager.infos()).to.eventually.deep.equal(expected);
     });
   });
@@ -335,7 +337,7 @@ describe('AgentManager Service', () => {
           return _.remove(nodes, null);
         }).then(nodesIPs => {
           return _.map(nodesIPs, ip => {
-            return `${ip}:${config.dockerPort}`;
+            return `${ip}:${config.agent.ports.docker || '0000'}`;
           });
         }).then(nodesAddresses => {
           expect(actualAddresses).to.deep.equal(nodesAddresses)

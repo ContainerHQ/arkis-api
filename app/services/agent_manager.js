@@ -5,10 +5,7 @@ let _ = require('lodash'),
   config = require('../../config'),
   errors = require('../support').errors;
 
-const CLUSTER_INFOS = ['docker_version', 'swarm_version', 'strategy', 'cert'],
-      NODE_INFOS    = ['name', 'master', 'labels'],
-      CONFIG_INFOS  = ['dockerPort', 'swarmPort'],
-      RUNNING_STATE = { last_state: 'running' };
+const RUNNING_STATE = { last_state: 'running' };
 
 class AgentManager {
   constructor(node) {
@@ -16,10 +13,21 @@ class AgentManager {
   }
   infos() {
     return this.node.getCluster().then(cluster => {
-      return _.merge(this.config,
-        _.pick(cluster,   CLUSTER_INFOS),
-        _.pick(this.node, NODE_INFOS)
-      );
+      return {
+        docker: {
+          port:    config.agent.ports.docker,
+          version: config.latestVersions.docker,
+          name:    this.node.name,
+          labels:  this.node.labels,
+          cert:    cluster.cert
+        },
+        swarm: {
+          port:     config.agent.ports.swarm,
+          version:  config.latestVersions.swarm,
+          strategy: cluster.strategy,
+          master:   this.node.master
+        }
+      };
     });
   }
   /*
@@ -64,19 +72,12 @@ class AgentManager {
       return cluster.getNodes({ scope: ['defaultScope', 'runningIPs'] });
     }).then(nodes => {
       return _.map(nodes, node => {
-        return `${node.public_ip}:${config.dockerPort}`;
+        return `${node.public_ip}:${config.agent.ports.docker}`;
       });
     });
   }
   get isSlave() {
     return !this.node.master;
-  }
-  get config() {
-    return _(config)
-    .pick(CONFIG_INFOS)
-    .mapKeys((value, key) => {
-      return _.snakeCase(key);
-    }).value();
   }
   get _notifyAttributes() {
     if (this.node.state === 'deploying') {

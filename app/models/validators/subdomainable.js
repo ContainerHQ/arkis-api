@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  len: [1, 64],
+  len: [1, 32],
   is: {
     args: ['^[a-z0-9\-]+$', 'i'],
     msg: 'Must contain only a-z, 0-9, -'

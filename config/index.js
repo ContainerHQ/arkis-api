@@ -18,10 +18,15 @@ let config = {
       token: process.env.DIGITAL_OCEAN_TOKEN || ''
     }
   },
-  nodeDomain: 'node.arkis.io',
-  agentCmd:   'curl -Ls https://get.arkis.io/ | sudo -H sh -s',
-  dockerPort: 2375,
-  swarmPort:  2376
+  domain: 'arkis.io',
+  agent: {
+    cmd: 'curl -Ls https://get.arkis.io/ | sudo -H sh -s',
+    ports: {
+      api:    2374,
+      docker: 2375,
+      swarm:  2376
+    }
+  }
 };
 
 config.db = require('./database')[config.env];

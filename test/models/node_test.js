@@ -186,36 +186,31 @@ describe('Node Model', () => {
       cluster = factory.buildSync('cluster');
       return cluster.save().then(() => {
         node = factory.buildSync('node', { cluster_id: cluster.id });
+        return node.save();
       });
     });
 
-    context('for all nodes', () => {
-      beforeEach(() => {
-        return node.save();
-      });
+    it('has a fqdn with its name and cluster_id', () => {
+      let shortId = cluster.id.slice(0, 8),
+        expected  = `${node.name}-${shortId}.node.${config.domain || '.'}`;
 
-      it('has a fqdn with its name and cluster_id', () => {
-        let shortId = cluster.id.slice(0, 8),
-          expected  = `${node.name}-${shortId}.${config.nodeDomain}`;
+      expect(node.fqdn).to.equal(expected);
+    });
 
-        expect(node.fqdn).to.equal(expected);
-      });
+    it('initializes its jwt token', () => {
+      expect(node).to.satisfy(has.validJWT);
+    });
 
-      it('initializes its jwt token', () => {
-        expect(node).to.satisfy(has.validJWT);
-      });
+    it('initialized its state to deploying', () => {
+      expect(node.state).to.equal('deploying');
+    });
 
-      it('initialized its state to deploying', () => {
-        expect(node.state).to.equal('deploying');
-      });
+    it('is not a master node by default', () => {
+      expect(node.master).to.be.false;
+    });
 
-      it('is not a master node by default', () => {
-        expect(node.master).to.be.false;
-      });
-
-      it('has empty json labels by default', () => {
-        expect(node.labels).to.deep.equal({});
-      });
+    it('has empty json labels by default', () => {
+      expect(node.labels).to.deep.equal({});
     });
 
     it('initializes deployed_at to null', () => {
@@ -223,7 +218,9 @@ describe('Node Model', () => {
     });
 
     it('has a command to get the agent', () => {
-      expect(node.agent_cmd).to.equal(`${config.agentCmd} ${node.token}`);
+      let agentCmd = `${config.agent.cmd || '.'} ${node.token || '.'}`;
+
+      expect(node.agent_cmd).to.equal(agentCmd);
     });
   });
 
