@@ -103,15 +103,15 @@ describe('POST /agent/:token/notify', () => {
     /*
      * last_state is automatically set to running and therefore is
      * ignored in this test.
+     *
+     * Same thing happens to deployed_at.
      */
     beforeEach(() => {
-      attributes = _.difference(node.attributes,
-        [
-          'docker_version', 'swarm_version', 'cpu', 'memory',
-          'disk', 'last_state', 'last_seen', 'containers_count',
-          'id', 'created_at', 'updated_at'
-        ]
-      );
+      attributes = _.difference(node.attributes, [
+        'docker_version', 'swarm_version', 'cpu', 'memory',
+        'disk', 'last_state', 'last_seen', 'containers_count',
+        'id', 'created_at', 'updated_at', 'deployed_at'
+      ]);
       form = factory.buildSync('forbiddenNode').dataValues;
     })
 

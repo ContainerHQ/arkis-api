@@ -91,6 +91,8 @@ module.exports = function(factory) {
       environment: 'staging'
     },
     docker_version: '1.6.0',
-    swarm_version: '0.3.0'
+    swarm_version: '0.3.0',
+    machine_id: 1,
+    deployed_at: moment()
   });
 };

@@ -133,6 +133,11 @@ module.exports = function(sequelize, DataTypes) {
         allowNull: true,
         defaultValue: null,
       },
+      deployed_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: null
+      }
     },
     options: {
       defaultScope: {

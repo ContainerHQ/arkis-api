@@ -108,6 +108,11 @@ module.exports = {
         allowNull: true,
         defaultValue: null
       },
+      deployed_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: null
+      },
 
       created_at: DataTypes.DATE,
       updated_at: DataTypes.DATE

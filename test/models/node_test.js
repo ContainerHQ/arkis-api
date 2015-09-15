@@ -218,6 +218,10 @@ describe('Node Model', () => {
       });
     });
 
+    it('initializes deployed_at to null', () => {
+      expect(node.deployed_at).to.be.null;
+    });
+
     it('has a command to get the agent', () => {
       expect(node.agent_cmd).to.equal(`${config.agentCmd} ${node.token}`);
     });

@@ -67,7 +67,7 @@ describe('AgentManager Service', () => {
 
       it('notifies the cluster with last_state', () => {
         expect(clusterNotify)
-          .to.have.been.calledWith({ last_state: 'running'});
+          .to.have.been.calledWith({ last_state: 'running' });
       });
     });
 
@@ -84,7 +84,45 @@ describe('AgentManager Service', () => {
 
       it('notifies the cluster with last_state', () => {
         expect(clusterNotify)
-          .to.have.been.calledWith({ last_state: 'running'});
+          .to.have.been.calledWith({ last_state: 'running' });
+      });
+    });
+
+    context('when node is in deploying state', () => {
+      let clock;
+
+      beforeEach(() => {
+        return node.update({ last_state: 'deploying' }).then(() => {
+          clock = sinon.useFakeTimers();
+          return manager.notify();
+        }).then(() => {
+          return node.reload();
+        });
+      });
+
+      afterEach(() => {
+        clock.restore();
+      });
+
+      it('updates node deployed_at to current datetime', () => {
+        expect(node.deployed_at).to.deep.equal(moment().toDate());
+      });
+    });
+
+    context('node is not in deploying state', () => {
+      let deployedAt;
+
+      beforeEach(() => {
+        deployedAt = manager.node.deployed_at;
+        return node.update({ last_state: 'updating' }).then(() => {
+          return manager.notify();
+        }).then(() => {
+          return node.reload();
+        });
+      });
+
+      it("doesn't change node deployed_at", () => {
+        expect(node.deployed_at).to.deep.equal(deployedAt);
       });
     });
 

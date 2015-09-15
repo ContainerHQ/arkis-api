@@ -26,7 +26,8 @@ class AgentManager {
    * Must be called whenever an agent has finished its pending work.
    */
   notify(attributes={}) {
-    return this.node.update(_.merge(attributes, RUNNING_STATE)).then(() => {
+    return this.node.update(_.merge(this._notifyAttributes, attributes))
+    .then(() => {
       return this.node.getCluster();
     }).then(cluster => {
       return cluster.notify(RUNNING_STATE);
@@ -76,6 +77,12 @@ class AgentManager {
     .mapKeys((value, key) => {
       return _.snakeCase(key);
     }).value();
+  }
+  get _notifyAttributes() {
+    if (this.node.state === 'deploying') {
+      return _.merge({ deployed_at: moment() }, RUNNING_STATE);
+    }
+    return RUNNING_STATE;
   }
 }
 

@@ -47,10 +47,10 @@ module.exports = function(factory) {
     id: 0,
     user_id: 0,
     name: random.string,
+    cert: { ca: random.string() },
     last_state: 'running',
     last_seen: moment(),
     strategy: 'spread',
     nodes_count: 1,
-    containers_count: 2
   });
 };
