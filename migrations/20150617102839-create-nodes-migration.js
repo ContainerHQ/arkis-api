@@ -14,8 +14,7 @@ module.exports = {
         references: {
           model: 'Clusters',
           key: 'id'
-        },
-        onDelete: 'CASCADE'
+        }
       },
       name: {
         type: DataTypes.STRING,

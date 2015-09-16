@@ -132,9 +132,7 @@ module.exports = function(sequelize, DataTypes) {
       },
       classMethods: {
         associate: function(models) {
-          this.hasMany(models.Node, { onDelete: 'cascade', hooks: true,
-            counterCache: { as: 'nodes_count' }
-          });
+          this.hasMany(models.Node, { counterCache: { as: 'nodes_count' } });
         }
       }
     }

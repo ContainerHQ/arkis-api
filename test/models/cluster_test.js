@@ -175,42 +175,6 @@ describe('Cluster Model', () => {
     });
   });
 
-  /*
-   * A cluster is currently created with the latest versions avaiable.
-   * We need to update it with a prior versions in order to validate
-   * the following test suite.
-   */
-  function updateClusterToOldestVersions(cluster) {
-    return cluster.save().then(() => {
-      return cluster.update({
-        docker_version: config.oldestVersions.docker,
-        swarm_version:  config.latestVersions.swarm
-      });
-    });
-  }
-
-  describe('#destroy', () => {
-    let cluster, nodesId;
-
-    beforeEach(done => {
-      cluster = factory.buildSync('cluster');
-      cluster.save().then(() => {
-        let opts = { cluster_id: cluster.id };
-
-        factory.createMany('node', opts, 10, (err, nodes) => {
-          nodesId = _.pluck(nodes, 'id');
-          done(err);
-        });
-      }).catch(done);
-    });
-
-    it('removes its nodes', () => {
-      return expect(cluster.destroy().then(() => {
-        return models.Node.findAll({ where: { id: nodesId } });
-      })).to.be.fulfilled.and.to.eventually.be.empty;
-    });
-  });
-
   describe('#notify', () => {
     const BUSY_STATES = ['deploying', 'upgrading', 'updating'];
 
@@ -300,7 +264,9 @@ describe('Cluster Model', () => {
 
         context('when master is destroyed', () => {
           beforeEach(() => {
-            return cluster.notify({ last_state: 'destroyed', last_seen: null });
+            return cluster.notify(
+              { last_state: 'destroyed', last_seen: null }
+            );
           });
 
           it(`is in unreachable state`, () => {
