@@ -1,73 +1,22 @@
 'use strict';
 
 let _ = require('lodash'),
+  concerns = require('./concerns'),
   models = require('../../app/models');
 
 describe('User Model', () => {
   db.sync();
 
-  describe('validations', () => {
-    it('succeed with valid attributes', () => {
-      let user = factory.buildSync('user');
-
-      return expect(user.save()).to.be.fulfilled;
-    });
-
-    it('succeed with min size password', () => {
-      let user = factory.buildSync('user', { password: _.repeat('*', 6) });
-
-      return expect(user.save()).to.be.fulfilled;
-    });
-
-    it('succeed with max size password', () => {
-      let user = factory.buildSync('user', { password: _.repeat('*', 128) });
-
-      return expect(user.save()).to.be.fulfilled;
-    });
-
-    it('fail without email address', () => {
-      let user = factory.buildSync('user', { email: '' });
-
-      return expect(user.save()).to.be.rejected;
-    });
-
-    it('fail with invalid email address', () => {
-      let user = factory.buildSync('user', { email: 'max@furyroad' });
-
-      return expect(user.save()).to.be.rejected;
-    });
-
-    it('fail without password', () => {
-      let user = factory.buildSync('user', { password: '' });
-
-      return expect(user.save()).to.be.rejected;
-    });
-
-    it('fail with a too short password', () => {
-      let user = factory.buildSync('user', { password: _.repeat('*', 5) });
-
-      return expect(user.save()).to.be.rejected;
-    });
-
-    it('fail with a too long password', () => {
-      let user = factory.buildSync('user', { password: _.repeat('*', 129) });
-
-      return expect(user.save()).to.be.rejected;
-    });
-
-    context('when email address is already taken', () => {
-      const OPTS = { email: 'max@furyroad.io' };
-
-      beforeEach(() => {
-        return factory.buildSync('user', OPTS).save();
-      });
-
-      it('fails', () => {
-        let user = factory.buildSync('user', OPTS);
-
-        return expect(user.validate()).to.eventually.exist;
-      });
-    });
+  concerns('user').validates({
+    email: {
+      presence: true,
+      is: 'email',
+      uniqueness: { type: 'email' }
+    },
+    password: {
+      presence: true,
+      length: { min: 6, max: 128, convert: true }
+    }
   });
 
   describe('#create', () => {

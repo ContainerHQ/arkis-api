@@ -97,19 +97,19 @@ module.exports = function(sequelize, DataTypes) {
         type: DataTypes.INTEGER.UNSIGNED,
         defaultValue: null,
         allowNull: true,
-        validate: { min: 1 }
+        validate: { min: 1, max: 4000000 }
       },
       memory: {
         type: DataTypes.INTEGER.UNSIGNED,
         defaultValue: null,
         allowNull: true,
-        validate: { min: 128 }
+        validate: { min: 128, max: 4000000 }
       },
       disk: {
         type: DataTypes.REAL.UNSIGNED,
         defaultValue: null,
         allowNull: true,
-        validate: { min: 1.0 }
+        validate: { min: 1.0, max: 4000000.0 }
       },
       labels: {
         type: DataTypes.JSONB,

@@ -19,9 +19,9 @@ module.exports = function(factoryName) {
         it(`removes ${opts.omit || 'nothing'} and
             add ${opts.merge || 'nothing'}`, () => {
           let expected = _(model.toJSON())
-          .omit(opts.omit   || {})
-          .merge(opts.merge || {})
-          .value();
+            .omit(opts.omit   || {})
+            .merge(opts.merge || {})
+            .value();
 
           expect(_.omit(serialized, 'links')).to.deep.equal(expected);
         });

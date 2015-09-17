@@ -27,6 +27,7 @@ module.exports = function(factory) {
     memory: 128,
     disk: 1.0,
     public_ip: random.ip,
+    machine_id: random.string,
     labels: {
       environment: 'production',
       storage: 'ssd',

@@ -8,106 +8,34 @@ let _ = require('lodash'),
   concerns = require('./concerns'),
   config = require('../../config');
 
-const DEFAULT_STRATEGY = 'spread',
-      VALID_STRATEGIES = [DEFAULT_STRATEGY, 'binpack', 'random'];
-
 describe('Cluster Model', () => {
   db.sync();
 
   concerns('cluster').behavesAsAStateMachine();
-
-  concerns('cluster').hasSubdomainable('name');
 
   concerns('cluster').serializable({
     omit:  ['user_id', 'cert', 'last_state'],
     links: ['nodes']
   });
 
-  describe('validations', () => {
-    it('succeeds with valid attributes', done => {
-      factory.create('cluster', done);
-    });
-
-    it('succeeds to create multiple clusters', done => {
-      factory.createMany('cluster', 3, done);
-    });
-
-    VALID_STRATEGIES.forEach(strategy => {
-      it(`succeeds with a ${strategy} strategy`, () => {
-        let cluster = factory.buildSync('cluster', { strategy: strategy });
-
-        return expect(cluster.save()).to.be.fulfilled;
-      });
-    });
-
-    it('succeeds with the same name for different users', () => {
-      let user1 = factory.buildSync('user'),
-        user2 = factory.buildSync('user');
-
-      return expect(user1.save().then(() => {
-        return factory.buildSync('cluster', { user_id: user1.id }).save();
-      }).then(() => {
-        return user2.save();
-      }).then(() => {
-        return factory.buildSync('cluster', { user_id: user2.id }).save();
-      })).to.be.fulfilled;
-    });
-
-    context('when it belongs to the same user', () => {
-      let user;
-
-      beforeEach(() => {
-        user = factory.buildSync('user');
-        return user.save();
-      });
-
-      it('fails with multiple node with the same name', () => {
-        let opts = { name: 'test', user_id: user.id };
-
-        return expect(factory.buildSync('cluster', opts).save()
-        .then(() => {
-          return factory.buildSync('cluster', opts).validate();
-        })).to.eventually.exist;
-      });
-    });
-
-
-    it('fails with an empty strategy', () => {
-      let cluster = factory.buildSync('cluster', { strategy: null });
-
-      return expect(cluster.save()).to.be.rejected;
-    });
-
-    it('fails with an invalid strategy', () => {
-      let cluster = factory.buildSync('cluster', { strategy: 'whatever' });
-
-      return expect(cluster.save()).to.be.rejected;
-    });
+  concerns('cluster').has({
+    default: {
+      strategy: 'spread',
+      docker_version: config.latestVersions.docker || '.',
+      swarm_version:  config.latestVersions.swarm  || '.'
+    },
+    counterCache: ['node']
   });
 
-  it('has a default strategy', () => {
-    let cluster = factory.buildSync('cluster');
-
-    return expect(cluster.save())
-      .to.eventually.have.property('strategy', DEFAULT_STRATEGY);
-  });
-
-  context('adding a node to this cluster', () => {
-    let cluster, previousNodesCount;
-
-    beforeEach(() => {
-      cluster = factory.buildSync('cluster');
-      return cluster.save().then(() => {
-        previousNodesCount = cluster.nodes_count;
-        return factory.buildSync('node', { cluster_id: cluster.id }).save();
-      }).then(() => {
-        return cluster.reload();
-      });
-    });
-
-    it('increases its node counter cache', () => {
-      expect(cluster.nodes_count).to.equal(previousNodesCount + 1);
-    });
+  concerns('cluster').validates({
+    strategy: {
+      presence: true,
+      inclusion: ['spread', 'binpack', 'random']
+    },
+    name: {
+      uniqueness: { scope: 'user', type: 'string' },
+      subdomainable: true
+    },
   });
 
   describe('#create', () => {
@@ -140,13 +68,6 @@ describe('Cluster Model', () => {
 
       it('initializes its ssl certificates', () => {
         expect(cluster.cert).to.deep.equal(FAKE_CERTS);
-      });
-
-      ['docker', 'swarm'].forEach(binary => {
-        it(`initializes ${binary} with the latest version available`, () => {
-          expect(cluster[`${binary}_version`])
-            .to.equal(config.latestVersions[binary]);
-        });
       });
     });
 

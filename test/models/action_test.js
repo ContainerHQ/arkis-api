@@ -14,60 +14,22 @@ describe('Action Model', () => {
     omit: ['created_at', 'updated_at', 'last_state'] }
   );
 
-  describe('validations', () => {
-    it('succeeds with valid attributes', done => {
-      factory.create('action', done);
-    });
-
-    ['deploy', 'update', 'upgrade'].forEach(type => {
-      it(`succeeds with type ${type}`, done => {
-        factory.create('action', { type: type }, done);
-      });
-    });
-
-    ['node', 'cluster'].forEach(resource => {
-      it(`succeeds with resource ${resource}`, done => {
-        factory.create('action', { resource: resource }, done);
-      });
-    });
-
-    ['in-progress', 'completed'].forEach(lastState => {
-      it(`succeeds with last_state ${lastState}`, done => {
-        factory.create('action', { last_state: lastState }, done);
-      });
-    });
-
-    ['last_state', 'type', 'resource'].forEach(attribute => {
-      let opts;
-
-      beforeEach(() => {
-        opts = {};
-      });
-
-      it(`fails with null ${attribute}`, () => {
-        opts[attribute] = null;
-
-        return expect(factory.buildSync('action', opts).save()).to.be.rejected;
-      });
-
-      it(`fails with empty ${attribute}`, () => {
-        opts[attribute] = '';
-
-        return expect(factory.buildSync('action', opts).save()).to.be.rejected;
-      });
-
-      it(`fails with invalid ${attribute}`, () => {
-        opts[attribute] = random.string();
-
-        return expect(factory.buildSync('action', opts).save()).to.be.rejected;
-      });
-    });
-
-    it('fails with null resource_id', () => {
-      let opts = { resource_id: null };
-
-      return expect(factory.buildSync('action', opts).save()).to.be.rejected;
-    });
+  concerns('action').validates({
+    type: {
+      inclusion: ['deploy', 'update', 'upgrade'],
+      presence: true
+    },
+    last_state: {
+      inclusion: ['in-progress', 'completed'],
+      presence: true
+    },
+    resource: {
+      inclusion: ['node', 'cluster'],
+      presence: true
+    },
+    resource_id: {
+      presence: true
+    }
   });
 
   describe('scopes', () => {
