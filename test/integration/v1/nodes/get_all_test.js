@@ -73,8 +73,8 @@ describe('GET /clusters/:cluster_id/nodes', () => {
     ['name', 'jean'],
     ['state', 'unreachable'],
     ['state', 'running'],
-    ['node_size', 'giant'],
-    ['node_size', 'small'],
+    ['size', 'giant'],
+    ['size', 'small'],
     ['labels', { environment: 'production' }],
     ['labels', { support:     'opts' }]
   ].forEach(([name, value]) => {

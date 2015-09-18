@@ -14,7 +14,7 @@ describe('GET /agent/clusters/:token', () => {
     return cluster.save().then(cluster => {
       node = factory.buildSync('runningNode', {
         cluster_id: cluster.id,
-        last_ping: Date.now()
+        last_seen: Date.now()
       });
       return node.save();
     }).then(node => {
@@ -38,12 +38,12 @@ describe('GET /agent/clusters/:token', () => {
       });
     });
 
-    it('updates the cluster last_ping', done => {
+    it('updates the cluster last_seen', done => {
       api.agent(node).fetch().expect(200, (err, res) => {
         if (err) { return done(err); }
 
         cluster.reload().then(() => {
-          expect(moment(cluster.last_ping).fromNow())
+          expect(moment(cluster.last_seen).fromNow())
             .to.equal('a few seconds ago');
           done();
         }).catch(done);

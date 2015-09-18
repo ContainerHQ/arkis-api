@@ -8,7 +8,7 @@ module.exports = function(factory) {
   factory.define('node', Node, {
     name: random.string,
     region: 'london',
-    node_size: 'deathstar'
+    size: 'deathstar'
   });
 
   factory.define('byonNode', Node, {
@@ -20,9 +20,9 @@ module.exports = function(factory) {
     name: random.string,
     master: false,
     region: 'london',
-    node_size: 'deathstar',
+    size: 'deathstar',
     last_state: 'running',
-    last_ping: Date.now,
+    last_seen: Date.now,
     cpu: 1,
     memory: 128,
     disk: 1.0,
@@ -37,37 +37,37 @@ module.exports = function(factory) {
   factory.define('deployingNode', Node, {
     name: random.string,
     region: 'london',
-    node_size: 'deathstar'
+    size: 'deathstar'
   });
 
   factory.define('upgradingNode', Node, {
     name: random.string,
     region: 'london',
-    node_size: 'deathstar',
+    size: 'deathstar',
     last_state: 'upgrading'
   });
 
   factory.define('updatingNode', Node, {
     name: random.string,
     region: 'london',
-    node_size: 'deathstar',
+    size: 'deathstar',
     last_state: 'updating'
   });
 
   factory.define('runningNode', Node, {
     name: random.string,
     region: 'london',
-    node_size: 'deathstar',
+    size: 'deathstar',
     last_state: 'running',
-    last_ping: moment
+    last_seen: moment
   });
 
   factory.define('unreachableNode', Node, {
     name: random.string,
     region: 'london',
-    node_size: 'deathstar',
+    size: 'deathstar',
     last_state: 'running',
-    last_ping: moment().subtract(6, 'minutes')
+    last_seen: moment().subtract(6, 'minutes')
   });
 
   /*
@@ -79,10 +79,10 @@ module.exports = function(factory) {
     name: random.string,
     master: true,
     region: 'test',
-    node_size: 'whatever',
+    size: 'whatever',
     public_ip: random.ip,
     last_state: 'running',
-    last_ping: moment().subtract(3, 'minutes'),
+    last_seen: moment().subtract(3, 'minutes'),
     cpu: 2,
     memory: 256,
     disk: 2.0,
@@ -91,6 +91,8 @@ module.exports = function(factory) {
       environment: 'staging'
     },
     docker_version: '1.6.0',
-    swarm_version: '0.3.0'
+    swarm_version: '0.3.0',
+    machine_id: 1,
+    deployed_at: moment()
   });
 };

@@ -6,7 +6,7 @@ var _ = require('lodash'),
   Node = require('../../app/models').Node,
   DaemonManager = require('../../app/services').DaemonManager;
 
-const RUNNING_OPTS = { last_state: 'running', last_ping: Date.now() };
+const RUNNING_OPTS = { last_state: 'running', last_seen: Date.now() };
 
 describe('DaemonManager Service', () => {
   let manager;
@@ -165,7 +165,7 @@ describe('DaemonManager Service', () => {
         let action;
 
         beforeEach(() => {
-          return manager.cluster.update({ last_ping: PING }).then(() => {
+          return manager.cluster.update({ last_seen: PING }).then(() => {
             return manager.update(CHANGES);
           }).then(nodeAction => {
             action = nodeAction;
@@ -201,7 +201,7 @@ describe('DaemonManager Service', () => {
         });
 
         it("doesn't notify the cluster with the ping", () => {
-          let clusterPing = moment(manager.cluster.last_ping).toDate(),
+          let clusterPing = moment(manager.cluster.last_seen).toDate(),
             expectedPing  = moment(PING).toDate();
 
           expect(clusterPing).to.deep.equal(expectedPing);
@@ -210,7 +210,7 @@ describe('DaemonManager Service', () => {
 
       context('node is promoted to master', () => {
         beforeEach(() => {
-          return manager.node.update({ last_ping: Date.now() }).then(() => {
+          return manager.node.update({ last_seen: Date.now() }).then(() => {
             return manager.node.update({ master: false });
           }).then(() => {
             return manager.update({ master: true });
@@ -220,14 +220,14 @@ describe('DaemonManager Service', () => {
         });
 
         it('notifies the cluster with the ping', () => {
-          expect(manager.cluster.last_ping)
-            .to.deep.equal(manager.node.last_ping);
+          expect(manager.cluster.last_seen)
+            .to.deep.equal(manager.node.last_seen);
         });
       });
 
       context('node is downgraded to slave', () => {
         beforeEach(() => {
-          return manager.cluster.update({ last_ping: Date.now() }).then(() => {
+          return manager.cluster.update({ last_seen: Date.now() }).then(() => {
             return manager.node.update({ master: true });
           }).then(() => {
             return manager.update({ master: false });
@@ -237,7 +237,7 @@ describe('DaemonManager Service', () => {
         });
 
         it('notifies the cluster', () => {
-          expect(manager.cluster.last_ping).to.be.null;
+          expect(manager.cluster.last_seen).to.be.null;
         });
       });
     });

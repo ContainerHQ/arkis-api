@@ -1,6 +1,7 @@
 'use strict';
 
-let sequelize = require('sequelize'),
+let _ = require('lodash'),
+  sequelize = require('sequelize'),
   errors = require('../../app/support').errors,
   errorHandler = rewire('../../app/middlewares/error_handler');
 
@@ -19,12 +20,10 @@ describe('ErrorHandler Middleware', () => {
   });
 
   [
-    'ValidationError',
-    'UniqueConstraintError'
-  ].forEach(errorName => {
-    context(`with a ${errorName}`, () => {
-      let err = new sequelize[errorName]();
-
+    ['validation', new sequelize.ValidationError()],
+    ['mismatch',   new errors.MismatchError('test')]
+  ].forEach(([name, err]) => {
+    context(`with a ${name} error`, () => {
       it('sends a bad request status', done => {
         errorHandler(err, {}, res, () => {
           expect(res.status).to.have.been.calledWith(400);
@@ -34,33 +33,26 @@ describe('ErrorHandler Middleware', () => {
 
       it('sends validation errors', done => {
         errorHandler(err, {}, res, () => {
-          expect(res.json).to.have.been.calledWith({ errors: err.errors });
+          expect(res.json).to.have.been.calledWith({
+            name: 'validation_error',
+            message: err.message,
+            errors: _.map(err.errors, err => {
+              err.type = _.snakeCase(err.type);
+              return err;
+            })
+          });
           done();
         });
       });
     });
   });
 
-  context('with a MismatchError', () => {
-    let err = new errors.MismatchError('test');
-
-    it('sends a bad request status', done => {
-      errorHandler(err, {}, res, () => {
-        expect(res.status).to.have.been.calledWith(400);
-        done();
-      });
-    });
-
-    it('sends validation errors', done => {
-      errorHandler(err, {}, res, () => {
-        expect(res.json).to.have.been.calledWith({ errors: err.errors });
-        done();
-      });
-    });
-  });
-
   context('with a PaginationError', () => {
-    let err = new errors.PaginationError('limit', -5);
+    let err = new errors.PaginationError({
+      attribute: 'limit',
+      value: -5,
+      range: [0, 25]
+    });
 
     it('sends a bad request status', done => {
       errorHandler(err, {}, res, () => {
@@ -71,14 +63,17 @@ describe('ErrorHandler Middleware', () => {
 
     it('sends a pagination error', done => {
       errorHandler(err, {}, res, () => {
-        expect(res.json).to.have.been.calledWith({ error: err.message });
+        expect(res.json).to.have.been.calledWith({
+          name: 'pagination_error',
+          message: err.message
+        });
         done();
       });
     });
   });
 
   [
-    ['StateError', 409],
+    ['StateError', 422],
     ['AlreadyUpgradedError', 409],
     ['NotMasterError', 403],
     ['MachineCredentialsError', 401],
@@ -97,7 +92,10 @@ describe('ErrorHandler Middleware', () => {
 
       it('sends the error message back', done => {
         errorHandler(err, {}, res, () => {
-          expect(res.json).to.have.been.calledWith({ error: err.message });
+          expect(res.json).to.have.been.calledWith({
+            name: _.snakeCase(errorName),
+            message: err.message
+          });
           done();
         });
       });
@@ -117,14 +115,14 @@ describe('ErrorHandler Middleware', () => {
     it('sends an internal server error message', done => {
       errorHandler(err, {}, res, () => {
         expect(res.json)
-          .to.have.been.calledWith({ error: INTERNAL_SERVER_ERROR });
+          .to.have.been.calledWith(INTERNAL_SERVER_ERROR);
         done();
       });
     });
 
     it('logs the error message', done => {
       errorHandler(err, {}, res, () => {
-        expect(fakeConsole.error).to.have.been.calledWith(err.message);
+        expect(fakeConsole.error).to.have.been.calledWith(err);
         done();
       });
     });

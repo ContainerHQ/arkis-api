@@ -193,7 +193,11 @@ describe('ClusterManager Service', () => {
             return expect(_.map(nodes, node => {
               if (node.state === 'upgrading') { return null; }
 
+              let err = new errors.StateError('upgrade', 'deploying');
+
               return _.findWhere(result.errors, {
+                name: _.snakeCase(err.name),
+                message: err.message,
                 resource: 'node',
                 resource_id: node.id
               });

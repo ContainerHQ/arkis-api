@@ -6,10 +6,6 @@ let _ = require('lodash'),
   config = require('../../config'),
   AgentManager = require('../../app/services').AgentManager;
 
-const CLUSTER_INFOS = ['docker_version', 'swarm_version', 'strategy', 'cert'],
-      NODE_INFOS    = ['name', 'master', 'labels'],
-      CONFIG_INFOS  = ['dockerPort', 'swarmPort'];
-
 describe('AgentManager Service', () => {
   let cluster, node, manager;
 
@@ -25,15 +21,21 @@ describe('AgentManager Service', () => {
 
   describe('#infos', () => {
     it('returns infos required by the agent', () => {
-      let expected = _.merge(
-        _.pick(cluster, CLUSTER_INFOS),
-        _.pick(node,    NODE_INFOS),
-        _(config)
-        .pick(CONFIG_INFOS)
-        .mapKeys((value, key) => {
-          return _.snakeCase(key);
-        }).value()
-      );
+      let expected = {
+        docker: {
+          port:    config.agent.ports.docker,
+          version: config.latestVersions.docker,
+          name:    node.name,
+          labels:  node.labels,
+          cert:    cluster.cert
+        },
+        swarm: {
+          port:     config.agent.ports.swarm,
+          version:  config.latestVersions.swarm,
+          strategy: cluster.strategy,
+          master:   node.master
+        },
+      };
       return expect(manager.infos()).to.eventually.deep.equal(expected);
     });
   });
@@ -67,7 +69,7 @@ describe('AgentManager Service', () => {
 
       it('notifies the cluster with last_state', () => {
         expect(clusterNotify)
-          .to.have.been.calledWith({ last_state: 'running'});
+          .to.have.been.calledWith({ last_state: 'running' });
       });
     });
 
@@ -84,11 +86,49 @@ describe('AgentManager Service', () => {
 
       it('notifies the cluster with last_state', () => {
         expect(clusterNotify)
-          .to.have.been.calledWith({ last_state: 'running'});
+          .to.have.been.calledWith({ last_state: 'running' });
       });
     });
 
-    context('when node as a pending action', () => {
+    context('when node is in deploying state', () => {
+      let clock;
+
+      beforeEach(() => {
+        return node.update({ last_state: 'deploying' }).then(() => {
+          clock = sinon.useFakeTimers();
+          return manager.notify();
+        }).then(() => {
+          return node.reload();
+        });
+      });
+
+      afterEach(() => {
+        clock.restore();
+      });
+
+      it('updates node deployed_at to current datetime', () => {
+        expect(node.deployed_at).to.deep.equal(moment().toDate());
+      });
+    });
+
+    context('node is not in deploying state', () => {
+      let deployedAt;
+
+      beforeEach(() => {
+        deployedAt = manager.node.deployed_at;
+        return node.update({ last_state: 'updating' }).then(() => {
+          return manager.notify();
+        }).then(() => {
+          return node.reload();
+        });
+      });
+
+      it("doesn't change node deployed_at", () => {
+        expect(node.deployed_at).to.deep.equal(deployedAt);
+      });
+    });
+
+    context('when node has a pending action', () => {
       let action, result;
 
       beforeEach(() => {
@@ -117,7 +157,7 @@ describe('AgentManager Service', () => {
       });
     });
 
-    context('when node as a non pending action', () => {
+    context('when node has a no pending action', () => {
       let action, result;
 
       beforeEach(() => {
@@ -183,7 +223,7 @@ describe('AgentManager Service', () => {
 
     /*
      * We are faking the time and increasing it a bit here to ensure that
-     * last_ping is properly set to the current date and time.
+     * last_seen is properly set to the current date and time.
      */
     beforeEach(() => {
       clock = sinon.useFakeTimers();
@@ -196,10 +236,10 @@ describe('AgentManager Service', () => {
 
     [undefined, null, '', ':', 'invalid'].forEach(addr => {
       context(`with address: "${addr}"`, () => {
-        let actualErr, previousLastPing;
+        let actualErr, previousLastSeen;
 
         beforeEach(done => {
-          previousLastPing = node.last_ping;
+          previousLastSeen = node.last_seen;
           manager.register(addr).then(done).catch(err => {
             actualErr = err;
             done();
@@ -213,9 +253,9 @@ describe('AgentManager Service', () => {
           });
         });
 
-        it("doesn't update node last_ping", () => {
+        it("doesn't update node last_seen", () => {
           return expect(node.reload())
-            .to.eventually.have.property('last_ping', previousLastPing);
+            .to.eventually.have.property('last_seen', previousLastSeen);
         });
       });
     });
@@ -234,8 +274,8 @@ describe('AgentManager Service', () => {
         expect(node.public_ip).to.equal(ip);
       });
 
-      it('updates node last_ping to current datetime', () => {
-        expect(node.last_ping).to.deep.equal(moment().toDate());
+      it('updates node last_seen to current datetime', () => {
+        expect(node.last_seen).to.deep.equal(moment().toDate());
       });
     });
 
@@ -243,10 +283,10 @@ describe('AgentManager Service', () => {
 
   describe('#fetch', () => {
     context('when node is not master', () => {
-      let actualErr, previousLastPing;
+      let actualErr, previousLastSeen;
 
       beforeEach(done => {
-        previousLastPing = cluster.last_ping;
+        previousLastSeen = cluster.last_seen;
         node.update({ master: false }).then(() => {
           return manager.fetch();
         }).catch(err => {
@@ -261,7 +301,7 @@ describe('AgentManager Service', () => {
 
       it("doesn't update the node cluster ping", () => {
         return expect(cluster.reload())
-          .to.eventually.have.property('last_ping', previousLastPing);
+          .to.eventually.have.property('last_seen', previousLastSeen);
       });
     });
 
@@ -285,7 +325,7 @@ describe('AgentManager Service', () => {
       });
 
       it("updates node's cluster ping", () => {
-        expect(cluster.last_ping).to.deep.equal(moment().toDate());
+        expect(cluster.last_seen).to.deep.equal(moment().toDate());
       });
 
       it('returns running nodes existing addresses', done => {
@@ -297,7 +337,7 @@ describe('AgentManager Service', () => {
           return _.remove(nodes, null);
         }).then(nodesIPs => {
           return _.map(nodesIPs, ip => {
-            return `${ip}:${config.dockerPort}`;
+            return `${ip}:${config.agent.ports.docker || '0000'}`;
           });
         }).then(nodesAddresses => {
           expect(actualAddresses).to.deep.equal(nodesAddresses)
@@ -320,7 +360,7 @@ describe('AgentManager Service', () => {
           let opts = {
             cluster_id: cluster.id,
             last_state: 'running',
-            last_ping: Date.now,
+            last_seen: Date.now,
             public_ip: random.ip
           };
           /*
@@ -335,7 +375,7 @@ describe('AgentManager Service', () => {
             let opts = {
               cluster_id: cluster.id,
               last_state: 'running',
-              last_ping: Date.now,
+              last_seen: Date.now,
               public_ip: null
             };
 

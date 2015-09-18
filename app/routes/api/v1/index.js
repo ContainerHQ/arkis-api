@@ -15,7 +15,7 @@ router
  */
 .use('/account', require('./account'))
 .use('/clusters', require('./clusters'))
-.use('/nodesizes', require('./nodesizes'))
+.use('/sizes', require('./sizes'))
 .use('/regions', require('./regions'));
 
 module.exports = router;

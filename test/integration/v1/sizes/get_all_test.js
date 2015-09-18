@@ -2,7 +2,7 @@
 
 let RegionSizeManager = require('../../../../app/services').RegionSizeManager;
 
-describe('GET /nodesizes', () => {
+describe('GET /sizes', () => {
   db.sync();
 
   let user, manager;

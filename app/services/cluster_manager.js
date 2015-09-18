@@ -38,9 +38,10 @@ class ClusterManager extends StateManager {
           action => { return { actions: action }; },
           error  => {
             return { errors: {
+              name: _.snakeCase(error.name),
+              message: error.message,
               resource: 'node',
-              resource_id: daemon.node.id,
-              message: error.message
+              resource_id: daemon.node.id
             }};
           }
         );

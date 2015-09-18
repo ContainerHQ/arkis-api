@@ -5,10 +5,7 @@ let _ = require('lodash'),
   config = require('../../config'),
   errors = require('../support').errors;
 
-const CLUSTER_INFOS = ['docker_version', 'swarm_version', 'strategy', 'cert'],
-      NODE_INFOS    = ['name', 'master', 'labels'],
-      CONFIG_INFOS  = ['dockerPort', 'swarmPort'],
-      RUNNING_STATE = { last_state: 'running' };
+const RUNNING_STATE = { last_state: 'running' };
 
 class AgentManager {
   constructor(node) {
@@ -16,26 +13,36 @@ class AgentManager {
   }
   infos() {
     return this.node.getCluster().then(cluster => {
-      return _.merge(this.config,
-        _.pick(cluster,   CLUSTER_INFOS),
-        _.pick(this.node, NODE_INFOS)
-      );
+      return {
+        docker: {
+          port:    config.agent.ports.docker,
+          version: config.latestVersions.docker,
+          name:    this.node.name,
+          labels:  this.node.labels,
+          cert:    cluster.cert
+        },
+        swarm: {
+          port:     config.agent.ports.swarm,
+          version:  config.latestVersions.swarm,
+          strategy: cluster.strategy,
+          master:   this.node.master
+        }
+      };
     });
   }
   /*
    * Must be called whenever an agent has finished its pending work.
    */
   notify(attributes={}) {
-    return this.node.update(_.merge(attributes, RUNNING_STATE)).then(() => {
+    return this.node.update(_.merge(this._notifyAttributes, attributes))
+    .then(() => {
       return this.node.getCluster();
     }).then(cluster => {
       return cluster.notify(RUNNING_STATE);
     }).then(() => {
       return this.node.getActions({ scope: 'pending' });
-    }).then(actions => {
-      let pendingAction = _.first(actions);
-
-      return pendingAction ? pendingAction.complete() : Promise.resolve(null);
+    }).then(_.first).then(action => {
+      return action ? action.complete() : Promise.resolve(null);
     });
   }
   /*
@@ -49,7 +56,7 @@ class AgentManager {
      */
     let public_ip = _.first((addr || 'null').split(':'));
 
-    return this.node.update({ public_ip: public_ip, last_ping: moment() });
+    return this.node.update({ public_ip: public_ip, last_seen: moment() });
   }
   /*
    * Called by the swarm manager to list the running nodes of the same cluster.
@@ -60,24 +67,23 @@ class AgentManager {
     if (this.isSlave) { return Promise.reject(new errors.NotMasterError()); }
 
     return this.node.getCluster().then(cluster => {
-      return cluster.notify({ last_ping: moment() });
+      return cluster.notify({ last_seen: moment() });
     }).then(cluster => {
       return cluster.getNodes({ scope: ['defaultScope', 'runningIPs'] });
     }).then(nodes => {
       return _.map(nodes, node => {
-        return `${node.public_ip}:${config.dockerPort}`;
+        return `${node.public_ip}:${config.agent.ports.docker}`;
       });
     });
   }
   get isSlave() {
     return !this.node.master;
   }
-  get config() {
-    return _(config)
-    .pick(CONFIG_INFOS)
-    .mapKeys((value, key) => {
-      return _.snakeCase(key);
-    }).value();
+  get _notifyAttributes() {
+    if (this.node.state === 'deploying') {
+      return _.merge({ deployed_at: moment() }, RUNNING_STATE);
+    }
+    return RUNNING_STATE;
   }
 }
 

@@ -12,7 +12,7 @@ error.MismatchError = class extends sequelize.ValidationError {
 
     let message = `${key} doesn't match`;
 
-    this.message = `${MISMATCH_TYPE}: ${message}`;
+    this.message = `${MISMATCH_TYPE}: ${message}.`;
     this.errors = [{
       message: message,
       type: MISMATCH_TYPE,
@@ -22,14 +22,15 @@ error.MismatchError = class extends sequelize.ValidationError {
   }
 };
 
-const PAGINATION_MSG = 'Please provide a positive integer > 0.';
-
 error.PaginationError = class extends Error {
-  constructor(attribute, value) {
+  constructor({ attribute, value, range }) {
     super();
 
+    let messageEnd = !!range.end ? ` and < ${range.end}.` : '.';
+
     this.name = 'PaginationError';
-    this.message = `Invalid ${attribute} '${value}' provided. ${PAGINATION_MSG}`;
+    this.message = `Invalid ${attribute} '${value}' provided`;
+    this.message = `${this.message}: must be > ${range.start}${messageEnd}`;
   }
 };
 

@@ -36,7 +36,7 @@ module.exports = function(sequelize, DataTypes) {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: null,
-        validate: _.merge(
+        validate: _.merge({ len: [1, 64] },
           is.subdomainable,
           is.unique({ attribute: 'name', scope: 'cluster' })
         )
@@ -59,11 +59,11 @@ module.exports = function(sequelize, DataTypes) {
         defaultValue: false,
         validate: {
           followOrigin: function(byon) {
-            if (byon && (this.region || this.node_size)) {
-              throw new Error("A byon node canno't have a region and size!");
+            if (byon && (this.region || this.size)) {
+              throw new Error("A byon node canno't have a region and size.");
             }
-            if (!byon && !(this.region && this.node_size)) {
-              throw new Error("A provided node must have a region and size!");
+            if (!byon && !(this.region && this.size)) {
+              throw new Error("A provided node must have a region and size.");
             }
           }
         }
@@ -73,7 +73,7 @@ module.exports = function(sequelize, DataTypes) {
         allowNull: true,
         defaultValue: null,
       },
-      node_size: {
+      size: {
         type: DataTypes.STRING,
         allowNull: true,
         defaultValue: null,
@@ -83,7 +83,9 @@ module.exports = function(sequelize, DataTypes) {
         allowNull: true,
         defaultValue: null,
         unique: true,
-        validate: { isIP: true }
+        validate: _.merge({ isIP: true },
+          is.unique({ attribute: 'public_ip' })
+        )
       },
       machine_id: {
         type: DataTypes.TEXT,
@@ -114,9 +116,9 @@ module.exports = function(sequelize, DataTypes) {
         allowNull: false,
         defaultValue: {},
         validate: {
-          isKeyValue: function(labels) {
+          isPlainObject: function(labels) {
             if (!_.isPlainObject(labels)) {
-              throw new Error('Labels must only contain key/value pairs!');
+              throw new Error('Labels must be a json object.');
             }
           }
         }
@@ -131,6 +133,11 @@ module.exports = function(sequelize, DataTypes) {
         allowNull: true,
         defaultValue: null,
       },
+      deployed_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: null
+      }
     },
     options: {
       defaultScope: {
@@ -142,7 +149,7 @@ module.exports = function(sequelize, DataTypes) {
         },
         filtered: function(filters) {
           let criterias = _.pick(filters, [
-            'byon', 'master', 'name', 'region', 'node_size', 'labels'
+            'byon', 'master', 'name', 'region', 'size', 'labels'
           ]);
           return { where: criterias };
         },
@@ -174,16 +181,17 @@ module.exports = function(sequelize, DataTypes) {
           }
         },
         agent_cmd: function() {
-          return `${config.agentCmd} ${this.get('token')}`;
+          return `${config.agent.cmd} ${this.get('token')}`;
         },
         fqdn: function() {
           let clusterId = this.get('cluster_id');
 
           if (!clusterId) { return null; }
 
-          let clusterShortId = clusterId.slice(0, 8);
+          let name = this.get('name'),
+            clusterShortId = clusterId.slice(0, 8);
 
-          return `${this.get('name')}-${clusterShortId}.${config.nodeDomain}`;
+          return `${name}-${clusterShortId}.node.${config.domain}`;
         }
       },
       hooks: {

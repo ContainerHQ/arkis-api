@@ -8,19 +8,19 @@ describe('POST /agent/clusters/:token/', () => {
   let node, ip, addr;
 
   beforeEach(() => {
-    node = factory.buildSync('node', { last_ping: null });
+    node = factory.buildSync('node', { last_seen: null });
     ip = random.ip();
     addr = `${ip}:2375`;
     return node.save();
   });
 
   context('when address is valid', () => {
-    it('updates the node public_ip and last_ping', done => {
+    it('updates the node public_ip and last_seen', done => {
       api.agent(node).register(addr).expect(204, (err, res) => {
         if (err) { return done(err); }
 
         node.reload().then(() => {
-          expect(moment(node.last_ping).fromNow())
+          expect(moment(node.last_seen).fromNow())
             .to.equal('a few seconds ago');
           expect(node.public_ip).to.equal(ip);
           done();

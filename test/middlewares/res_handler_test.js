@@ -30,8 +30,8 @@ describe('Response Handler Middleware', () => {
           expect(res.status).to.have.been.calledWith(statusCode);
         });
 
-        it('sends an empty body', () => {
-          expect(res.json).to.have.been.calledWith();
+        it('sends a response', () => {
+          expect(res.json).to.have.been.called;
         });
       });
     });

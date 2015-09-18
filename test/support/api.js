@@ -34,7 +34,7 @@ module.exports.regions = function(user={}) {
 };
 
 module.exports.nodeSizes = function(user={}) {
-  let resource = `${API_ROUTE}/nodesizes`;
+  let resource = `${API_ROUTE}/sizes`;
 
   return {
     getAll: function() {

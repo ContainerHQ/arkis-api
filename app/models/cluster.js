@@ -27,7 +27,7 @@ module.exports = function(sequelize, DataTypes) {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: null,
-        validate: _.merge(
+        validate: _.merge({ len: [1, 64] },
           is.subdomainable,
           is.unique({ attribute: 'name', scope: 'user' })
         )
@@ -117,7 +117,7 @@ module.exports = function(sequelize, DataTypes) {
          * changes, sequelize won't try to update them again.
          */
         notify: function(changes={}) {
-          changes = _.pick(changes, ['last_state', 'last_ping']);
+          changes = _.pick(changes, ['last_state', 'last_seen']);
 
           switch (changes.last_state) {
             case 'destroyed':

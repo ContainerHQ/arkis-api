@@ -18,7 +18,7 @@ describe('POST /clusters/:cluster_id/upgrade', () => {
 
   context('when cluster is running', () => {
     beforeEach(() => {
-      return cluster.update({ last_state: 'running', last_ping: Date.now() });
+      return cluster.update({ last_state: 'running', last_seen: Date.now() });
     });
 
     context('when cluster already has the latest version', () => {
@@ -133,8 +133,8 @@ describe('POST /clusters/:cluster_id/upgrade', () => {
   });
 
   context('when cluster is not running', () => {
-    it("doesn't upgrade the cluster and returns an error", done => {
-      api.clusters(user).upgrade(cluster.id).expect(409, done);
+    it("returns an error", done => {
+      api.clusters(user).upgrade(cluster.id).expect(422, done);
     });
   });
 

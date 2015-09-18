@@ -47,7 +47,7 @@ describe('GET /clusters/:cluster_id/nodes/:node_id', () => {
 
     it('returns a 404 not found', done => {
       api.clusters(user).nodes(otherCluster).get(node.id)
-      .expect(404, {}, done);
+      .expect(404, done);
     });
   });
 

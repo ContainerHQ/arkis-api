@@ -20,7 +20,7 @@ describe('Pagination Middleware', () => {
     });
   });
 
-  [0, null].forEach(value => {
+  [0, null, undefined].forEach(value => {
     context(`with a limit of ${value}`, () => {
       let req = { query: { limit: value, offset: 12 } };
 
@@ -53,18 +53,26 @@ describe('Pagination Middleware', () => {
   });
 
   ['limit', 'offset'].forEach(key => {
-    [-1, -6, -25].forEach(value => {
+    [-1, -6, -25, 26, 32, 38, 150].forEach(value => {
       context(`whith a ${key} of ${value}`, () => {
         let req = { query: {} };
 
         req.query[key] = value;
 
-        it('throws a pagination error', () => {
-          expect(() => {
-            pagination(req, {})
-          }).to.throw(Error)
-            .that.deep.equals(new errors.PaginationError(key, value));
-        });
+        if (value > 0 && key === 'offset') {
+          it("doesn't throw an error", done => {
+            pagination(req, {}, done);
+          });
+        } else {
+          it('throws a pagination error', () => {
+            expect(() => { pagination(req, {}) })
+            .to.throw(Error).that.deep.equals(new errors.PaginationError({
+                attribute: key,
+                value: value,
+                range: key === 'offset' ? { start: 0 } : { start: 0, end: 25 }
+              }));
+          });
+        }
       });
     });
   });
@@ -82,7 +90,7 @@ describe('Pagination Middleware', () => {
     });
 
     describe('#paginate()', () => {
-      it('returns a function to send the paginated models', () => {
+      it('returns a function to send the paginated model(s)', () => {
         let entity = random.string(),
           send = res.paginate(entity),
           result = {

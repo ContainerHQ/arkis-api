@@ -40,7 +40,7 @@ class MachineManager {
     return _.pick(this.node, 'last_state');
   }
   get destroyChanges() {
-    let changes = this.node.master ? { last_ping: null } : {};
+    let changes = this.node.master ? { last_seen: null } : {};
 
     return _.merge(changes, { last_state: 'destroyed' });
   }
@@ -48,7 +48,7 @@ class MachineManager {
     return this.node.byon ? Promise.resolve() : this.machine.create({
       name:   this.node.id,
       region: this.node.region,
-      size:   this.node.node_size
+      size:   this.node.size
     });
   }
   _deleteMachine()  {

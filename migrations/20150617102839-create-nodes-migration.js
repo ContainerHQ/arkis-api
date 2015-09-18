@@ -44,7 +44,7 @@ module.exports = {
         allowNull: true,
         defaultValue: null,
       },
-      node_size: {
+      size: {
         type: DataTypes.STRING,
         allowNull: true,
         defaultValue: null,
@@ -103,7 +103,12 @@ module.exports = {
           isIn: [['empty', 'deploying', 'upgrading', 'updating', 'running']]
         }
       },
-      last_ping: {
+      last_seen: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: null
+      },
+      deployed_at: {
         type: DataTypes.DATE,
         allowNull: true,
         defaultValue: null
