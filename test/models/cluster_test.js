@@ -36,6 +36,12 @@ describe('Cluster Model', () => {
       uniqueness: { scope: 'user', type: 'string' },
       subdomainable: true
     },
+    docker_version: {
+      presence: true
+    },
+    swarm_version: {
+      presence: true
+    }
   });
 
   describe('#create', () => {

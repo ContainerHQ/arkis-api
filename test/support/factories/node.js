@@ -27,7 +27,7 @@ module.exports = function(factory) {
     memory: 128,
     disk: 1.0,
     public_ip: random.ip,
-    machine_id: random.string,
+    provider_id: random.string,
     labels: {
       environment: 'production',
       storage: 'ssd',
@@ -93,7 +93,7 @@ module.exports = function(factory) {
     },
     docker_version: '1.6.0',
     swarm_version: '0.3.0',
-    machine_id: 1,
+    provider_id: 1,
     deployed_at: moment()
   });
 };

@@ -50,13 +50,13 @@ module.exports = function(sequelize, DataTypes) {
       },
       docker_version: {
         type: DataTypes.STRING,
-        allowNull: true,
-        defaultValue: null,
+        allowNull: false,
+        defaultValue: config.latestVersions.docker,
       },
       swarm_version: {
         type: DataTypes.STRING,
-        allowNull: true,
-        defaultValue: null,
+        allowNull: false,
+        defaultValue: config.latestVersions.swarm,
       },
     },
     options: {
@@ -93,10 +93,6 @@ module.exports = function(sequelize, DataTypes) {
       },
       hooks: {
         beforeCreate: function(cluster) {
-          _.merge(cluster, {
-            docker_version: config.latestVersions.docker,
-            swarm_version:  config.latestVersions.swarm
-          });
           return cert.generate().then(cert => {
             cluster.cert = cert;
             return cluster;

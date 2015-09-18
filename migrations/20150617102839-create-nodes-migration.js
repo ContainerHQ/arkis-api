@@ -55,7 +55,7 @@ module.exports = {
         unique: true,
         validate: { isIP: true }
       },
-      machine_id: {
+      provider_id: {
         type: DataTypes.TEXT,
         allowNull: true,
         defaultValue: null,

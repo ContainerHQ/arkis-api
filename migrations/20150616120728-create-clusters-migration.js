@@ -26,7 +26,7 @@ module.exports = {
       },
       cert: {
         type: DataTypes.JSONB,
-        allowNull: true,
+        allowNull: false,
         defaultValue: null
       },
       strategy: {
@@ -37,12 +37,12 @@ module.exports = {
       },
       docker_version: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: false,
         defaultValue: null,
       },
       swarm_version: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: false,
         defaultValue: null,
       },
       last_state: {

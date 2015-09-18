@@ -9,7 +9,7 @@ let _ = require('lodash'),
 
 const CONCERNS = {
   serializable: {
-    omit:  ['token', 'machine_id', 'last_state'],
+    omit:  ['token', 'provider_id', 'last_state'],
     links: ['actions'],
     specifics: { byon: { merge: { agent_cmd: null } } }
   },
@@ -87,7 +87,7 @@ module.exports = function(sequelize, DataTypes) {
           is.unique({ attribute: 'public_ip' })
         )
       },
-      machine_id: {
+      provider_id: {
         type: DataTypes.TEXT,
         allowNull: true,
         defaultValue: null,
