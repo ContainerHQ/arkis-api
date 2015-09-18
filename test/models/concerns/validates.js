@@ -83,16 +83,18 @@ class Validator {
     opts[this.attribute] = value;
 
     if (!!scope) {
+      beforeEach(() => {
+        return factory.buildSync(scope).save().then(modelScope => {
+          opts[`${scope}_id`] = modelScope.id;
+          return factory.buildSync(this.factoryName, opts).save();
+        });
+      });
+
       context(
         `when ${this.factoryName} already exist with the same ${this.attribute} and the same ${scope}`
       , () => {
         beforeEach(() => {
-          return factory.buildSync(scope).save().then(modelScope => {
-            opts[`${scope}_id`] = modelScope.id;
-            return factory.buildSync(this.factoryName, opts).save();
-          }).then(() => {
-            this._model = factory.buildSync(this.factoryName, opts);
-          });
+          this._model = factory.buildSync(this.factoryName, opts);
         });
 
         this.expectFailure();
@@ -102,13 +104,8 @@ class Validator {
         `when ${this.factoryName} already exist with the same ${this.attribute} but for a different ${scope}`
       , () => {
         beforeEach(() => {
-          return factory.buildSync(scope).save().then(modelScope => {
-            opts[`${scope}_id`] = modelScope.id;
-            return factory.buildSync(this.factoryName, opts).save();
-          }).then(() => {
-            opts[`${scope}_id`] = null;
-            this._model = factory.buildSync(this.factoryName, opts);
-          });
+          opts[`${scope}_id`] = null;
+          this._model = factory.buildSync(this.factoryName, opts);
         });
 
         this.expectSuccess();
