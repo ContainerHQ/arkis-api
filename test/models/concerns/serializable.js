@@ -5,7 +5,7 @@ let _ = require('lodash');
 module.exports = function(factoryName) {
   return function(opts={}) {
     describe('#serialize', () => {
-      context(`with ${factoryName} factory`, () => {
+      context(`with ${factoryName}`, () => {
         let params, model, serialized;
 
         beforeEach(() => {
@@ -28,7 +28,7 @@ module.exports = function(factoryName) {
 
         if (!!opts.links) {
           opts.links.forEach(link => {
-            it(`add link to ${link}`, () => {
+            it(`add a link to ${link}`, () => {
               let expected = {};
 
               expected[link] = `${params.baseUrl}/${model.id}/${link}`;
