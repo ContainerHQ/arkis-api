@@ -23,22 +23,10 @@ class DigitalOcean {
     });
   }
   getRegions() {
-    return new Promise((resolve, reject) => {
-      this._client.regionsGetAll({}, (err, res, body) => {
-        if (err) { return reject(err); }
-
-        resolve(this._formatRegions(body.regions));
-      });
-    });
+    return this._get('regions');
   }
   getSizes() {
-    return new Promise((resolve, reject) => {
-      this._client.sizesGetAll({}, (err, res, body) => {
-        if (err) { return reject(err); }
-
-        resolve(this._formatSizes(body.sizes));
-      });
-    });
+    return this._get('sizes');
   }
   create(options) {
     return new Promise((resolve, reject) => {
@@ -92,6 +80,17 @@ class DigitalOcean {
       default:
         return new Error(res);
     }
+  }
+  _get(resource) {
+    return new Promise((resolve, reject) => {
+      this._client[`${resource}GetAll`]({}, (err, res, body) => {
+        if (err) { return reject(err); }
+
+        let method = `_format${_.capitalize(resource)}`;
+
+        resolve(this[method](body[resource]));
+      });
+    });
   }
 }
 
