@@ -16,7 +16,7 @@ class MachineManager {
 
       return this._createMachine();
     }).then(id => {
-      this.node.machine_id = id;
+      this.node.provider_id = id;
 
       return this.cluster.addNode(this.node);
     }).then(() => {
@@ -53,7 +53,7 @@ class MachineManager {
   }
   _deleteMachine()  {
     return this.node.byon ? Promise.resolve() : this.machine.delete(
-      this.node.machine_id
+      this.node.provider_id
     );
   }
 }

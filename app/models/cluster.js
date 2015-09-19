@@ -11,7 +11,21 @@ const CONCERNS = {
     omit:  ['cert', 'last_state', 'user_id'],
     links: ['nodes']
   },
-  state: { defaultState: 'empty' }
+  state: {
+    attribute: {
+      name: 'last_state',
+      default: 'empty',
+      values: ['empty', 'deploying', 'upgrading', 'updating', 'running']
+    },
+    expiration: {
+      when: 'running',
+      mustBe: 'unreachable',
+      constraint: {
+        name: 'last_seen'
+      },
+      after: config.agent.heartbeat,
+    }
+  }
 };
 
 module.exports = function(sequelize, DataTypes) {
@@ -50,13 +64,13 @@ module.exports = function(sequelize, DataTypes) {
       },
       docker_version: {
         type: DataTypes.STRING,
-        allowNull: true,
-        defaultValue: null,
+        allowNull: false,
+        defaultValue: config.latestVersions.docker,
       },
       swarm_version: {
         type: DataTypes.STRING,
-        allowNull: true,
-        defaultValue: null,
+        allowNull: false,
+        defaultValue: config.latestVersions.swarm,
       },
     },
     options: {
@@ -93,10 +107,6 @@ module.exports = function(sequelize, DataTypes) {
       },
       hooks: {
         beforeCreate: function(cluster) {
-          _.merge(cluster, {
-            docker_version: config.latestVersions.docker,
-            swarm_version:  config.latestVersions.swarm
-          });
           return cert.generate().then(cert => {
             cluster.cert = cert;
             return cluster;
@@ -132,9 +142,7 @@ module.exports = function(sequelize, DataTypes) {
       },
       classMethods: {
         associate: function(models) {
-          this.hasMany(models.Node, { onDelete: 'cascade', hooks: true,
-            counterCache: { as: 'nodes_count' }
-          });
+          this.hasMany(models.Node, { counterCache: { as: 'nodes_count' } });
         }
       }
     }

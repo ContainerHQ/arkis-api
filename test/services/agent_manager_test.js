@@ -11,9 +11,10 @@ describe('AgentManager Service', () => {
 
   beforeEach(() => {
     cluster = factory.buildSync('cluster');
+    node    = factory.buildSync('node');
+
     return cluster.save().then(cluster => {
-      node = factory.buildSync('node', { cluster_id: cluster.id });
-      return node.save();
+      return cluster.addNode(node);
     }).then(node => {
       manager = new AgentManager(node);
     });

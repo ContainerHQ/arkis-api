@@ -16,8 +16,7 @@ describe('DaemonManager Service', () => {
         node    = factory.buildSync('runningNode');
 
     return cluster.save().then(() => {
-      node.cluster_id = cluster.id;
-      return node.save();
+      return cluster.addNode(node);
     }).then(() => {
       manager = new DaemonManager(cluster, node);
     });

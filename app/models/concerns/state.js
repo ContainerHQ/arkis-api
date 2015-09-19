@@ -2,64 +2,59 @@
 
 let moment = require('moment');
 
-/*
- * Ping expiration time (in minutes).
- */
-const EXPIRATION_TIME = 5;
+module.exports = function({ attribute, expiration, DataTypes }) {
+  let { when, mustBe, after, constraint } = expiration;
 
-module.exports = function({ defaultState, DataTypes }) {
-  return {
-    attributes: {
-      last_state: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        defaultValue: defaultState || 'empty',
-        validate: {
-          isIn: [['empty', 'deploying', 'upgrading', 'updating', 'running']]
-        }
-      },
-      last_seen: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        defaultValue: null
-      },
-    },
+  let expiredAt = moment().subtract(after.amount, after.key).toDate();
+
+  let stateMachine = {
+    attributes: {},
     options: {
       scopes: {
         state: function(state) {
-          let expired = moment().subtract(EXPIRATION_TIME, 'minutes').toDate(),
-            opts;
+          let opts = {};
 
           switch (state) {
-            case 'running':
-              opts = {
-                last_state: 'running', last_seen: { $gte: expired }
-              };
+            case when:
+              opts[attribute.name]  = when;
+              opts[constraint.name] = { $gte: expiredAt };
               break;
-            case 'unreachable':
-              opts = {
-                last_state: 'running', last_seen: { $lt: expired }
-              };
+            case mustBe:
+              opts[attribute.name]  = when;
+              opts[constraint.name] = { $lt: expiredAt };
               break;
             default:
-              opts = { last_state: { $like: state || '%' } };
+              opts[attribute.name] = { $like: state || '%' };
           }
           return { where: opts };
         }
       },
       getterMethods: {
         state: function() {
-          let lastSeen  = this.getDataValue('last_seen'),
-              lastState = this.getDataValue('last_state'),
-              expirationTime = moment().subtract(EXPIRATION_TIME, 'minutes');
+          let previousState  = this.getDataValue(attribute.name),
+              changedAt      = this.getDataValue(constraint.name);
 
-          if (lastState === 'running' &&
-             (lastSeen  === null || lastSeen < expirationTime)) {
-            return 'unreachable';
+          if (previousState === when &&
+             (changedAt  === null || changedAt < expiredAt)) {
+            return mustBe;
           }
-          return lastState;
+          return previousState;
         }
       }
     }
   };
+  stateMachine.attributes[attribute.name] = {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: attribute.default,
+    validate: {
+      isIn: [attribute.values]
+    }
+  };
+  stateMachine.attributes[constraint.name] = {
+    type: DataTypes.DATE,
+    allowNull: true,
+    defaultValue: DataTypes[constraint.default] || null
+  };
+  return stateMachine;
 };

@@ -88,8 +88,8 @@ module.exports = function(sequelize, DataTypes) {
     },
     classMethods: {
       associate: function(models) {
-        this.hasOne(models.Profile,  { onDelete: 'cascade', hooks: true });
-        this.hasMany(models.Cluster, { onDelete: 'cascade', hooks: true });
+        this.hasOne(models.Profile);
+        this.hasMany(models.Cluster);
       }
     },
     hooks: {

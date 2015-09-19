@@ -9,16 +9,28 @@ let _ = require('lodash'),
   models = require('../../app/models');
 
 const SERIALIZATION = {
-  omit: ['token', 'machine_id', 'last_state'],
+  omit:  ['token', 'provider_id', 'last_state'],
   links: ['actions']
 };
 
 describe('Node Model', () => {
   db.sync();
 
-  concerns('node').behavesAsAStateMachine({ default: 'deploying' });
-
-  concerns('node').hasSubdomainable('name');
+  concerns('node').behavesAsAStateMachine({
+    attribute: {
+      name: 'last_state',
+      default: 'deploying',
+      values: ['deploying', 'upgrading', 'updating', 'running']
+    },
+    expiration: {
+      when: 'running',
+      mustBe: 'unreachable',
+      constraint: {
+        name: 'last_seen'
+      },
+      after: config.agent.heartbeat
+    }
+  });
 
   concerns('node').serializable(SERIALIZATION);
 
@@ -26,158 +38,54 @@ describe('Node Model', () => {
     _.merge({ merge: { agent_cmd: null } }, SERIALIZATION)
   );
 
-  describe('validations', () => {
-    /*
-     * For this test we need to use a node with most of
-     * the existing fields. Therefore, we are using a
-     * registered node with a proper fqdn and public_ip.
-     */
-    it('succeeds with valid attributes', done => {
-      factory.create('registeredNode', done);
-    });
-
-    it('succeeds with minimal attributes', done => {
-      factory.create('node', done);
-    });
-
-    it('succeeds to create multiple slave nodes for the same cluster', done => {
-      factory.create('cluster', (err, cluster) => {
-        let opts = { master: false, cluster_id: cluster.id };
-
-        factory.createMany('node', opts, 3, done);
-      });
-    });
-
-    it('succeeds with the same name on different clusters', () => {
-      let cluster1 = factory.buildSync('cluster'),
-        cluster2 = factory.buildSync('cluster');
-
-      return expect(cluster1.save().then(() => {
-        return factory.buildSync('node', { cluster_id: cluster1.id }).save();
-      }).then(() => {
-        return cluster2.save();
-      }).then(() => {
-        return factory.buildSync('node', { cluster_id: cluster2.id }).save();
-      })).to.be.fulfilled;
-    });
-
-    it('fails with null labels', () => {
-      let node = factory.buildSync('node', { labels: null });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    it('fails with a string of labels', () => {
-      let node = factory.buildSync('node', { labels: 'lol' });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    it('fails with an integer label', () => {
-      let node = factory.buildSync('node', { labels: 2 });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    it('fails with an array of labels', () => {
-      let node = factory.buildSync('node', { labels: [] });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    context('when in the same cluster', () => {
-      let cluster;
-
-      beforeEach(() => {
-        cluster = factory.buildSync('cluster');
-        return cluster.save();
-      });
-
-      it('fails with multiple node with the same name', () => {
-        let opts = { name: 'test', cluster_id: cluster.id };
-
-        return expect(factory.buildSync('node', opts).save()
-        .then(() => {
-          return factory.buildSync('node', opts).validate();
-        })).to.eventually.exist;
-      });
-    });
-
-    it('fails with an invalid public_ip', () => {
-      let node = factory.buildSync('node', { public_ip: _.repeat('*', 10) });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    it('fails with multiple nodes with the same ip', () => {
-      let opts = { public_ip: random.ip() };
-
-      return expect(factory.buildSync('node', opts).save()
-      .then(() => {
-        return factory.buildSync('node', opts).validate();
-      })).to.eventually.exist
-    });
-
-    it('fails with an invalid master choice', () => {
-      let node = factory.buildSync('node', { master: '' });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    it('fails with a null region and byon false', () => {
-      let node = factory.buildSync('node', { byon: false, region: null });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    it('fails with a null size and byon false', () => {
-      let node = factory.buildSync('node', { byon: false, size: null });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    it('fails with a region and byon true', () => {
-      let node = factory.buildSync('node', { byon: true, size: null });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    it('fails with a size and byon true', () => {
-      let node = factory.buildSync('node', { byon: true, region: null });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    it('fails with min cpu', () => {
-      let node = factory.buildSync('node', { cpu: 0 });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    it('fails with min memory', () => {
-      let node = factory.buildSync('node', { memory: 127 });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    it('fails with min disk', () => {
-      let node = factory.buildSync('node', { disk: 0.9999 });
-
-      return expect(node.save()).to.be.rejected;
-    });
-
-    it('fails when master is not unique for the same cluster', () => {
-      let cluster = factory.buildSync('cluster'),
-        opts = { master: true };
-
-      return expect(cluster.save().then(() => {
-        _.merge(opts, { cluster_id: cluster.id });
-        return factory.buildSync('node', opts).save();
-      }).then(() => {
-        return factory.buildSync('node', opts).validate();
-      })).to.eventually.exist;
-    });
+  concerns('node').has({
+    default: {
+      master:      false,
+      byon:        false,
+      deployed_at: null,
+      labels:      {}
+    }
   });
+
+  concerns('node').validates({
+    name: {
+      uniqueness: { scope: 'cluster', type: 'string' },
+      subdomainable: true
+    },
+    master: {
+      presence: true,
+      uniqueness: { scope: 'cluster', value: true }
+    },
+    byon: {
+      presence: true,
+      incompatible: ['region', 'size']
+    },
+    labels: {
+      presence: true,
+      exclusion: ['lol', 2, []]
+    },
+    public_ip: {
+      is: 'ip',
+      uniqueness: { type: 'ip' }
+    },
+    cpu: {
+      length: { min: 1,   max: 4000000 }
+    },
+    memory: {
+      length: { min: 128, max: 4000000 }
+    },
+    disk: {
+      length: { min: 1.0, max: 4000000.0 }
+    },
+    region: {
+      presence: true
+    },
+    size: {
+      presence: true
+    }
+  });
+
+  concerns('registeredNode').validates();
 
   describe('#create', () => {
     let node, cluster;
@@ -185,8 +93,8 @@ describe('Node Model', () => {
     beforeEach(() => {
       cluster = factory.buildSync('cluster');
       return cluster.save().then(() => {
-        node = factory.buildSync('node', { cluster_id: cluster.id });
-        return node.save();
+        node = factory.buildSync('node');
+        return cluster.addNode(node);
       });
     });
 
@@ -199,22 +107,6 @@ describe('Node Model', () => {
 
     it('initializes its jwt token', () => {
       expect(node).to.satisfy(has.validJWT);
-    });
-
-    it('initialized its state to deploying', () => {
-      expect(node.state).to.equal('deploying');
-    });
-
-    it('is not a master node by default', () => {
-      expect(node.master).to.be.false;
-    });
-
-    it('has empty json labels by default', () => {
-      expect(node.labels).to.deep.equal({});
-    });
-
-    it('initializes deployed_at to null', () => {
-      expect(node.deployed_at).to.be.null;
     });
 
     it('has a command to get the agent', () => {

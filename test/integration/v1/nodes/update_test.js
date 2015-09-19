@@ -9,13 +9,14 @@ describe('PATCH /clusters/:cluster_id/nodes/:node_id', () => {
   let user, cluster, node;
 
   beforeEach(() => {
-    user = factory.buildSync('user');
+    user    = factory.buildSync('user');
+    cluster = factory.buildSync('cluster');
+    node    = factory.buildSync('runningNode');
+
     return user.save().then(() => {
-      cluster = factory.buildSync('cluster', { user_id: user.id });
-      return cluster.save();
+      return user.addCluster(cluster);
     }).then(() => {
-      node = factory.buildSync('runningNode', { cluster_id: cluster.id });
-      return node.save();
+      return cluster.addNode(node);
     });
   });
 

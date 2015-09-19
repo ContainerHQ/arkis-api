@@ -79,7 +79,7 @@ describe('MachineManager Service', () => {
       });
 
       it('adds the machine id to the node', () => {
-        expect(manager.node.machine_id).to.equal(machineId);
+        expect(manager.node.provider_id).to.equal(machineId);
       });
 
       it('adds the node to the cluster', () => {
@@ -220,7 +220,7 @@ describe('MachineManager Service', () => {
           return manager.cluster.update({ last_seen: Date.now() })
           .then(() => {
             return manager.node.update({
-              master: true, machine_id: machineId
+              master: true, provider_id: machineId
             });
           }).then(() => {
             return manager.destroy();
@@ -254,7 +254,7 @@ describe('MachineManager Service', () => {
           return manager.cluster.update({ last_seen: Date.now() })
           .then(() => {
             return manager.node.update({
-              master: false, machine_id: machineId
+              master: false, provider_id: machineId
             });
           }).then(() => {
             return manager.destroy();

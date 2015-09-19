@@ -9,11 +9,25 @@ let _ = require('lodash'),
 
 const CONCERNS = {
   serializable: {
-    omit:  ['token', 'machine_id', 'last_state'],
+    omit:  ['token', 'provider_id', 'last_state'],
     links: ['actions'],
     specifics: { byon: { merge: { agent_cmd: null } } }
   },
-  state: { defaultState: 'deploying' }
+  state: {
+    attribute: {
+      name: 'last_state',
+      default: 'deploying',
+      values: ['deploying', 'upgrading', 'updating', 'running']
+    },
+    expiration: {
+      when: 'running',
+      mustBe: 'unreachable',
+      constraint: {
+        name: 'last_seen'
+      },
+      after: config.agent.heartbeat,
+    }
+  }
 };
 
 module.exports = function(sequelize, DataTypes) {
@@ -87,7 +101,7 @@ module.exports = function(sequelize, DataTypes) {
           is.unique({ attribute: 'public_ip' })
         )
       },
-      machine_id: {
+      provider_id: {
         type: DataTypes.TEXT,
         allowNull: true,
         defaultValue: null,
@@ -97,19 +111,19 @@ module.exports = function(sequelize, DataTypes) {
         type: DataTypes.INTEGER.UNSIGNED,
         defaultValue: null,
         allowNull: true,
-        validate: { min: 1 }
+        validate: { min: 1, max: 4000000 }
       },
       memory: {
         type: DataTypes.INTEGER.UNSIGNED,
         defaultValue: null,
         allowNull: true,
-        validate: { min: 128 }
+        validate: { min: 128, max: 4000000 }
       },
       disk: {
         type: DataTypes.REAL.UNSIGNED,
         defaultValue: null,
         allowNull: true,
-        validate: { min: 1.0 }
+        validate: { min: 1.0, max: 4000000.0 }
       },
       labels: {
         type: DataTypes.JSONB,

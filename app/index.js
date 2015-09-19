@@ -20,6 +20,7 @@ app
 .use('/', routes.docker)
 .use('/v:version', routes.docker)
 .use('/api', routes.api)
+.use(middlewares.errorHandler)
 .listen(config.port, () => {
   if (config.logging) {
     console.log('Listenning on port: %s', config.port);

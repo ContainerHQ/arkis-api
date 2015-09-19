@@ -2,6 +2,7 @@
 
 let moment = require('moment'),
   random = require('../random'),
+  config = require('../../../config'),
   Cluster = require('../../../app/models').Cluster;
 
 module.exports = function(factory) {
@@ -37,7 +38,11 @@ module.exports = function(factory) {
   factory.define('unreachableCluster', Cluster, {
     name: random.string,
     last_state: 'running',
-    last_seen: moment().subtract(6, 'minutes')
+    last_seen: function() {
+      let { amount, key } = config.agent.heartbeat;
+
+      return moment().subtract(amount + 1, key);
+    }
   });
 
   /*
