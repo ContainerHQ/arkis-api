@@ -11,7 +11,21 @@ const CONCERNS = {
     omit:  ['cert', 'last_state', 'user_id'],
     links: ['nodes']
   },
-  state: { defaultState: 'empty' }
+  state: {
+    attribute: {
+      name: 'last_state',
+      default: 'empty',
+      values: ['empty', 'deploying', 'upgrading', 'updating', 'running']
+    },
+    expiration: {
+      when: 'running',
+      mustBe: 'unreachable',
+      constraint: {
+        name: 'last_seen'
+      },
+      after: config.agent.heartbeat,
+    }
+  }
 };
 
 module.exports = function(sequelize, DataTypes) {

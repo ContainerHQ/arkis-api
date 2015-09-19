@@ -16,7 +16,21 @@ const SERIALIZATION = {
 describe('Node Model', () => {
   db.sync();
 
-  concerns('node').behavesAsAStateMachine({ default: 'deploying' });
+  concerns('node').behavesAsAStateMachine({
+    attribute: {
+      name: 'last_state',
+      default: 'deploying',
+      values: ['deploying', 'upgrading', 'updating', 'running']
+    },
+    expiration: {
+      when: 'running',
+      mustBe: 'unreachable',
+      constraint: {
+        name: 'last_seen'
+      },
+      after: config.agent.heartbeat
+    }
+  });
 
   concerns('node').serializable(SERIALIZATION);
 
@@ -29,7 +43,6 @@ describe('Node Model', () => {
       master:      false,
       byon:        false,
       deployed_at: null,
-      state:       'deploying',
       labels:      {}
     }
   });

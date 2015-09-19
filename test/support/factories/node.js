@@ -2,6 +2,7 @@
 
 let moment = require('moment'),
   random = require('../random'),
+  config = require('../../../config'),
   Node = require('../../../app/models').Node;
 
 module.exports = function(factory) {
@@ -68,7 +69,11 @@ module.exports = function(factory) {
     region: 'london',
     size: 'deathstar',
     last_state: 'running',
-    last_seen: moment().subtract(6, 'minutes')
+    last_seen: function() {
+      let { amount, key } = config.agent.heartbeat;
+
+      return moment().subtract(amount + 1, key);
+    }
   });
 
   /*
@@ -83,7 +88,7 @@ module.exports = function(factory) {
     size: 'whatever',
     public_ip: random.ip,
     last_state: 'running',
-    last_seen: moment().subtract(3, 'minutes'),
+    last_seen: moment,
     cpu: 2,
     memory: 256,
     disk: 2.0,
@@ -94,6 +99,6 @@ module.exports = function(factory) {
     docker_version: '1.6.0',
     swarm_version: '0.3.0',
     provider_id: 1,
-    deployed_at: moment()
+    deployed_at: moment
   });
 };

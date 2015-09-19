@@ -11,7 +11,21 @@ let _ = require('lodash'),
 describe('Cluster Model', () => {
   db.sync();
 
-  concerns('cluster').behavesAsAStateMachine();
+  concerns('cluster').behavesAsAStateMachine({
+    attribute: {
+      name: 'last_state',
+      default: 'empty',
+      values: ['empty', 'deploying', 'upgrading', 'updating', 'running']
+    },
+    expiration: {
+      when: 'running',
+      mustBe: 'unreachable',
+      constraint: {
+        name: 'last_seen'
+      },
+      after: config.agent.heartbeat
+    }
+  });
 
   concerns('cluster').serializable({
     omit:  ['user_id', 'cert', 'last_state'],

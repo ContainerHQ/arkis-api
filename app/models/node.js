@@ -13,7 +13,21 @@ const CONCERNS = {
     links: ['actions'],
     specifics: { byon: { merge: { agent_cmd: null } } }
   },
-  state: { defaultState: 'deploying' }
+  state: {
+    attribute: {
+      name: 'last_state',
+      default: 'deploying',
+      values: ['deploying', 'upgrading', 'updating', 'running']
+    },
+    expiration: {
+      when: 'running',
+      mustBe: 'unreachable',
+      constraint: {
+        name: 'last_seen'
+      },
+      after: config.agent.heartbeat,
+    }
+  }
 };
 
 module.exports = function(sequelize, DataTypes) {

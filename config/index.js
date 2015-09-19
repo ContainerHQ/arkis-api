@@ -8,7 +8,7 @@ let config = {
   latestVersions: _.first(versions),
   oldestVersions: _.last(versions),
   env: process.env.NODE_ENV || 'development',
-  port: process.env.PORT || 4000,
+  port: process.env.PORT    || 4000,
   auth: {
     github: {
       clientID:     process.env.GITHUB_CLIENT_ID  || '*',
@@ -25,8 +25,9 @@ let config = {
       api:    2374,
       docker: 2375,
       swarm:  2376
-    }
-  }
+    },
+    heartbeat: { amount: 5, key: 'minutes' }
+  },
 };
 
 config.db = require('./database')[config.env];

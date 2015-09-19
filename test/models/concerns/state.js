@@ -5,103 +5,98 @@ let _ = require('lodash'),
   models = require('../../../app/models');
 
 module.exports = function(factoryName) {
-  return function(opts={}) {
-    let defaultState = opts.default || 'empty',
-      validStates = ['empty', 'deploying', 'upgrading', 'updating', 'running'];
-
-    if (defaultState !== 'empty') {
-      validStates = _.pull(validStates, 'empty');
-    }
+  return function({ attribute, expiration }) {
     let modelName = factory.buildSync(factoryName).__options.name.singular;
 
     describe('behaves as a state machine:', () => {
-      describe('validations', () => {
-        it('fails with an empty last state', () => {
-          let model = factory.buildSync(factoryName, { last_state: null });
+      let has = require('./has')(factoryName),
+        validates = require('./validates')(factoryName);
 
-          return expect(model.save()).to.be.rejected;
-        });
+      has({
+        default: {
+          state: attribute.default
+        }
+      });
 
-        it('fails with an invalid last state', () => {
-          let model = factory.buildSync(factoryName, { last_state: 'whatever' });
+      validates({
+        last_state: {
+          presence: true,
+          inclusion: attribute.values
+        }
+      });
 
-          return expect(model.save()).to.be.rejected;
-        });
+      let { constraint, when, mustBe, after, ignoreNull } = expiration;
 
-        validStates.forEach(state => {
-          it(`succeeds with a last state equal to ${state}`, () => {
-            let model = factory.buildSync(factoryName, { last_state: state });
+      attribute.values.forEach(state => {
+        context(`when ${attribute.name} is equal to ${state}`, () => {
+          context(`when ${constraint.name} is recent`, () => {
+            let model;
 
-            return expect(model.save()).to.be.fulfilled;
+            beforeEach(() => {
+              model = factory.buildSync(factoryName)
+
+              model[attribute.name] = state;
+              model[constraint.name] = moment();
+              return model.save();
+            });
+
+            it(`has a state equals to ${state}`, () => {
+              expect(model.state).to.equal(state);
+            });
           });
 
-          context(`when last state is equal to ${state}`, () => {
-            context('when last seen is recent', () => {
+          if (!ignoreNull) {
+            context(`when ${constraint.name} is null` ,() => {
               let model;
 
-              beforeEach(() => {
-                model = factory.buildSync(factoryName, {
-                  last_state: state,
-                  last_seen: moment()
-                });
+               beforeEach(() => {
+                model = factory.buildSync(factoryName)
+
+                model[attribute.name] = state;
+                model[constraint.name] = null;
                 return model.save();
               });
 
+              if (state === when) {
+                it(`is ${mustBe}`, () => {
+                  expect(model.state).to.equal(mustBe);
+                });
+              } else {
+                it(`has a state equals to ${state}`, () => {
+                  expect(model.state).to.equal(state);
+                });
+              }
+            });
+          }
+
+          context(`when ${constraint.name} has expired`, () => {
+            let model;
+
+            beforeEach(() => {
+              model = factory.buildSync(factoryName)
+
+              model[attribute.name] = state;
+              model[constraint.name] = moment().subtract(after.amount + 1, after.key);
+
+              return model.save();
+            });
+
+            if (state === when) {
+              it(`is ${mustBe}`, () => {
+                expect(model.state).to.equal(mustBe);
+              });
+            } else {
               it(`has a state equals to ${state}`, () => {
                 expect(model.state).to.equal(state);
               });
-            });
-
-            context('when last seen is null' ,() => {
-              let model;
-
-               beforeEach(() => {
-                model = factory.buildSync(factoryName, {
-                  last_state: state,
-                  last_seen: null
-                });
-                return model.save();
-              });
-
-              if (state === 'running') {
-                it('is unreachable', () => {
-                  expect(model.state).to.equal('unreachable');
-                });
-              } else {
-                it(`has a state equals to ${state}`, () => {
-                  expect(model.state).to.equal(state);
-                });
-              }
-            });
-
-            context('when last seen has expired', () => {
-              let model;
-
-               beforeEach(() => {
-                model = factory.buildSync(factoryName, {
-                  last_state: state,
-                  last_seen: moment().subtract(6, 'minutes')
-                });
-                return model.save();
-              });
-
-              if (state === 'running') {
-                it('is unreachable', () => {
-                  expect(model.state).to.equal('unreachable');
-                });
-              } else {
-                it(`has a state equals to ${state}`, () => {
-                  expect(model.state).to.equal(state);
-                });
-              }
-            });
+            }
           });
         });
       });
 
       describe('scopes', () => {
         describe('state', () => {
-          const STATES = ['unreachable'].concat(validStates);
+          const STATES = [mustBe].concat(attribute.values);
 
           STATES.forEach(state => {
             beforeEach(done => {
@@ -124,13 +119,6 @@ module.exports = function(factoryName) {
             });
           });
         });
-      });
-
-      it(`is by default in ${defaultState} state`, () => {
-        let model = factory.buildSync(factoryName);
-
-        return expect(model.save())
-          .to.eventually.have.property('state', defaultState);
       });
     });
   };

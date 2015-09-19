@@ -2,6 +2,7 @@
 
 let moment = require('moment'),
   random = require('../random'),
+  config = require('../../../config'),
   Action = require('../../../app/models').Action;
 
 module.exports = function(factory) {
@@ -32,6 +33,10 @@ module.exports = function(factory) {
     resource: 'node',
     resource_id: random.uuid,
     last_state: 'in-progress',
-    started_at: moment().subtract(10, 'minutes')
+    started_at: function() {
+      let { amount, key } = config.agent.heartbeat;
+
+      return moment().subtract(amount + 1, key);
+    }
   });
 };
