@@ -12,11 +12,11 @@ describe('GET /clusters/:cluster_id/nodes', () => {
   let user, cluster;
 
   beforeEach(done => {
-    user = factory.buildSync('user');
+    user    = factory.buildSync('user');
+    cluster = factory.buildSync('cluster');
 
     user.save().then(() => {
-      cluster = factory.buildSync('cluster', { user_id: user.id });
-      return cluster.save();
+      return user.addCluster(cluster);
     }).then(() => {
       factory.createMany('node', { cluster_id: cluster.id }, NODES_COUNT, done);
     }).catch(done);

@@ -131,97 +131,96 @@ describe('Cluster Model', () => {
       });
     });
 
-    context('with a last state equal to running', () => {
-      BUSY_STATES.forEach(state => {
-        context(`when cluster has at least one node in state ${state}`, () => {
-          beforeEach(() => {
-            return addNodeTo(cluster, 'node', { last_state: state })
-            .then(() => {
-              return addNodeTo(cluster, 'runningNode');
-            }).then(() => {
-              return cluster.notify({ last_state: 'running' })
+    ['running', 'destroyed'].forEach(lastState => {
+      context(`with a last state equal to ${lastState}`, () => {
+        BUSY_STATES.forEach(state => {
+          context(
+            `when cluster has at least one node in state ${state}`
+          , () => {
+            beforeEach(() => {
+              return cluster.addNode(factory.buildSync('node', {
+                last_state: state
+              }))
+              .then(() => {
+                return cluster.addNode(factory.buildSync('runningNode'))
+              }).then(() => {
+                return cluster.reload();
+              }).then(() => {
+                return cluster.notify({ last_state: lastState })
+              });
+            });
+
+            it(`is in ${state} state`, () => {
+              expect(cluster.state).to.equal(state);
+            });
+          });
+        });
+
+        if (lastState === 'running') {
+          context('when cluster has only nodes in running state', () => {
+            beforeEach(() => {
+              return cluster.addNode(factory.buildSync('runningNode'))
+              .then(() => {
+                return cluster.update({ last_state: 'upgrading' })
+              }).then(() => {
+                return cluster.reload();
+              }).then(() => {
+                return cluster.notify({ last_state: lastState })
+              });
+            });
+
+            it(`is in running state`, () => {
+              expect(cluster.state).to.equal('running');
+            });
+          });
+        }
+
+        if (lastState === 'destroyed') {
+          context('when cluster has only nodes in running state', () => {
+            beforeEach(() => {
+              return cluster.addNode(factory.buildSync('runningNode'))
+              .then(() => {
+                return cluster.reload();
+              }).then(() => {
+                return cluster.update({ last_state: 'upgrading' })
+              });
+            });
+
+            context('when master is destroyed', () => {
+              beforeEach(() => {
+                return cluster.notify(
+                  { last_state: lastState, last_seen: null }
+                );
+              });
+
+              it(`is in unreachable state`, () => {
+                expect(cluster.state).to.equal('unreachable');
+              });
+            });
+
+            context('when a slave is destroyed', () => {
+              beforeEach(() => {
+                return cluster.notify({ last_state: lastState });
+              });
+
+              it(`is in running state`, () => {
+                expect(cluster.state).to.equal('running');
+              });
             });
           });
 
-          it(`is in ${state} state`, () => {
-            expect(cluster.state).to.equal(state);
-          });
-        });
-      });
+          context('when cluster has no longer any node', () => {
+            beforeEach(() => {
+              return cluster.update({ last_state: 'upgrading' }).then(() => {
+                return cluster.notify({ last_state: lastState });
+              });
+            });
 
-      context('when cluster has only nodes in running state', () => {
-        beforeEach(() => {
-          return addNodeTo(cluster, 'runningNode').then(() => {
-            return cluster.update({ last_state: 'upgrading' })
-          }).then(() => {
-            return cluster.notify({ last_state: 'running' })
-          });
-        });
-
-        it(`is in running state`, () => {
-          expect(cluster.state).to.equal('running');
-        });
-      });
-    });
-
-    context('with destroyed', () => {
-      BUSY_STATES.forEach(state => {
-        context(`when cluster has at least one node in state ${state}`, () => {
-          beforeEach(() => {
-            return addNodeTo(cluster, 'node', { last_state: state })
-            .then(() => {
-              return addNodeTo(cluster, 'runningNode');
-            }).then(() => {
-              return cluster.notify({ last_state: 'destroyed' })
+            it(`is in empty state`, () => {
+              expect(cluster.state).to.equal('empty');
             });
           });
-
-          it(`is in ${state} state`, () => {
-            expect(cluster.state).to.equal(state);
-          });
-        });
-      });
-
-      context('when cluster has only nodes in running state', () => {
-        beforeEach(() => {
-          return addNodeTo(cluster, 'runningNode').then(() => {
-            return cluster.update({ last_state: 'upgrading' })
-          });
-        });
-
-        context('when master is destroyed', () => {
-          beforeEach(() => {
-            return cluster.notify(
-              { last_state: 'destroyed', last_seen: null }
-            );
-          });
-
-          it(`is in unreachable state`, () => {
-            expect(cluster.state).to.equal('unreachable');
-          });
-        });
-
-        context('when a slave is destroyed', () => {
-          beforeEach(() => {
-            return cluster.notify({ last_state: 'destroyed' });
-          });
-
-          it(`is in running state`, () => {
-            expect(cluster.state).to.equal('running');
-          });
-        });
-      });
-
-      context('when cluster has no longer any node', () => {
-        beforeEach(() => {
-          return cluster.update({ last_state: 'upgrading' }).then(() => {
-            return cluster.notify({ last_state: 'destroyed' });
-          });
-        });
-
-        it(`is in empty state`, () => {
-          expect(cluster.state).to.equal('empty');
-        });
+        }
       });
     });
 
@@ -229,7 +228,7 @@ describe('Cluster Model', () => {
       let lastSeen, lastState;
 
       beforeEach(() => {
-        lastSeen = moment();
+        lastSeen  = moment();
         lastState = cluster.state;
         return cluster.notify({ last_seen: lastSeen });
       });
@@ -242,15 +241,5 @@ describe('Cluster Model', () => {
         expect(cluster.state).to.equal(lastState);
       });
     });
-
-    function addNodeTo(cluster, factoryName, opts={}) {
-      _.merge(opts, { cluster_id: cluster.id });
-
-      let node = factory.buildSync(factoryName, opts);
-
-      return cluster.addNode(node).then(() => {
-        return cluster.reload();
-      });
-    }
   });
 });

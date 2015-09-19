@@ -5,16 +5,21 @@ let moment = require('moment');
 describe('POST /agent/clusters/:token/', () => {
   db.sync();
 
-  let node, ip, addr;
+  let node;
 
   beforeEach(() => {
-    node = factory.buildSync('node', { last_seen: null });
-    ip = random.ip();
-    addr = `${ip}:2375`;
+    node = factory.buildSync('node');
     return node.save();
   });
 
   context('when address is valid', () => {
+    let ip, addr;
+
+    beforeEach(() => {
+      ip   = random.ip();
+      addr = `${ip}:2375`;
+    });
+
     it('updates the node public_ip and last_seen', done => {
       api.agent(node).register(addr).expect(204, (err, res) => {
         if (err) { return done(err); }
@@ -47,13 +52,13 @@ describe('POST /agent/clusters/:token/', () => {
     });
 
     it('returns a not found error', done => {
-      api.agent(node).register(addr).expect(404, done);
+      api.agent(node).register().expect(404, done);
     })
   });
 
   context('when token is invalid', () => {
     it('returns a 401 unauthorized', done => {
-      api.agent().register(addr).expect(401, done);
+      api.agent().register().expect(401, done);
     });
   });
 });

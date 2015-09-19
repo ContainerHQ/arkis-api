@@ -51,7 +51,7 @@ describe('User Model', () => {
      * during saving.
      */
     beforeEach(() => {
-      user = factory.buildSync('user');
+      user     = factory.buildSync('user');
       password = user.password;
       return user.save();
     });
@@ -82,7 +82,7 @@ describe('User Model', () => {
     let user, password;
 
     beforeEach(() => {
-      user = factory.buildSync('user');
+      user     = factory.buildSync('user');
       password = user.password;
       return user.save();
     });
