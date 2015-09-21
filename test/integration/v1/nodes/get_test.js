@@ -24,37 +24,35 @@ describe('GET /clusters/:cluster_id/nodes/:node_id', () => {
     });
   });
 
-  context('when the targeted node belongs to the cluster', () => {
-    it('retrieves the user informations', done => {
-      api.clusters(user).nodes(cluster).get(node.id)
-      .expect(200, (err, res) => {
-        if (err) { return done(err); }
+  ['id', 'name'].forEach(attribute => {
+    context(`when user specifies the ${attribute}`, () => {
+      context('when the targeted node belongs to the cluster', () => {
+        it('retrieves the user informations', done => {
+          api.clusters(user).nodes(cluster).get(node[attribute])
+          .expect(200, (err, res) => {
+            if (err) { return done(err); }
 
-        let nodeInfos = format.response(res.body.node);
+            let nodeInfos = format.response(res.body.node);
 
-        expect(nodeInfos).to.deep.equal(format.serialize(node));
-        done();
+            expect(nodeInfos).to.deep.equal(format.serialize(node));
+            done();
+          });
+        });
       });
-    });
-  });
 
-  context("when the targeted node doesn't belong to the cluster", () => {
-    let otherCluster;
+      context("when the targeted node doesn't belongs to the cluster", () => {
+        let otherCluster;
 
-    beforeEach(() => {
-      otherCluster = factory.buildSync('cluster', { user_id: user.id });
-      return otherCluster.save();
-    });
+        beforeEach(() => {
+          otherCluster = factory.buildSync('cluster');
+          return user.addCluster(otherCluster);
+        });
 
-    it('returns a 404 not found', done => {
-      api.clusters(user).nodes(otherCluster).get(node.id)
-      .expect(404, done);
-    });
-  });
-
-  context('when the user specify an invalid node id', () => {
-    it('returns a 404 not found', done => {
-      api.clusters(user).nodes(cluster).get(0).expect(404, done);
+        it('returns a 404 not found', done => {
+          api.clusters(user).nodes(otherCluster).get(node[attribute])
+          .expect(404, done);
+        });
+      });
     });
   });
 

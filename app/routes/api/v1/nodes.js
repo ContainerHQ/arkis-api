@@ -2,7 +2,6 @@
 
 let _ = require('lodash'),
   express = require('express'),
-  validator = require('validator'),
   middlewares = require('../../../middlewares'),
   services = require('../../../services'),
   Node = require('../../../models').Node;
@@ -29,22 +28,11 @@ router
     res.status(202).serialize({ node: node, action: action });
   }).catch(next);
 })
-.param('node_id', (req, res, next, id) => {
-  /*
-   * Sequelize is throwing a standard error instead of a validation error when
-   * the specified id is not a uuid, therefore we need to check it manually
-   * before using sequelize queries.
-   */
-  if (!validator.isUUID(id)) { return res.notFound(); }
+.param('node_id', middlewares.modelFinder('node', {
+  belongsTo: 'cluster',
+  findBy: { id: 'UUID', name: 'Ascii' }
+}))
 
-  req.cluster.getNodes({ where: { id: id } })
-  .then(nodes => {
-    if (_.isEmpty(nodes)) { return res.notFound(); }
-
-    req.node = _.first(nodes);
-    next();
-  }).catch(next);
-})
 .post('/:node_id/upgrade', (req, res, next) => {
   let daemon = new services.DaemonManager(req.cluster, req.node);
 

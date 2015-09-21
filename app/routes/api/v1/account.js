@@ -1,13 +1,10 @@
 'use strict';
 
-let _ = require('lodash'),
-  express = require('express'),
+let express = require('express'),
   handler = require('../../shared/handler'),
   errors = require('../../../support').errors;
 
 let router = express.Router();
-
-const PROFILE_PARAMS = ['fullname', 'location', 'company'];
 
 router
 .get('/new_token', (req, res, next) => {
@@ -47,18 +44,6 @@ router
 })
 .get('/request_password', handler.notYetImplemented)
 
-.route('/profile')
-.get((req, res, next) => {
-  req.user.getProfile().then(profile => {
-    res.serialize({ profile: profile });
-  }).catch(next);
-})
-.patch((req, res, next) => {
-  req.user.getProfile().then(profile => {
-    return profile.update(_.pick(req.body, PROFILE_PARAMS));
-  }).then(profile => {
-    res.serialize({ profile: profile });
-  }).catch(next);
-});
+.use('/profile', require('./profile'));
 
 module.exports = router;

@@ -11,13 +11,13 @@ function scopes(order=[[], []]) {
   return [attributes || ['id'], sorts || ['asc']];
 }
 
-module.exports = function(owner, modelName, opts, done) {
+module.exports = function(belongsTo, modelName, opts, done) {
   return function(err, res) {
     if (err) { return done(err); }
 
     let models = format.response(res.body[modelName]);
 
-    owner[`get${_.capitalize(modelName)}`]()
+    belongsTo[`get${_.capitalize(modelName)}`]()
     .then(format.serialize)
     .then(ownerModels => {
       expect(res.body.meta).to.deep.equal({

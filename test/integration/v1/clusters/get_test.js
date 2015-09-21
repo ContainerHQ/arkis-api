@@ -16,35 +16,33 @@ describe('GET /clusters/:id', () => {
     });
   });
 
-  context('when the targeted cluster belong to the user', () => {
-    it('retrieves the cluster informations', done => {
-      api.clusters(user).get(cluster.id).expect(200, (err, res) => {
-        if (err) { return done(err); }
+  ['id', 'name'].forEach(attribute => {
+    context(`when user specifies the ${attribute}`, () => {
+      context('when the targeted cluster belongs to the user', () => {
+        it('retrieves the cluster informations', done => {
+          api.clusters(user).get(cluster[attribute]).expect(200, (err, res) => {
+            if (err) { return done(err); }
 
-        let clusterInfos = format.response(res.body.cluster);
+            let clusterInfos = format.response(res.body.cluster);
 
-        expect(clusterInfos).to.deep.equal(format.serialize(cluster));
-        done();
+            expect(clusterInfos).to.deep.equal(format.serialize(cluster));
+            done();
+          });
+        });
       });
-    });
-  });
 
-  context("when the targeted cluster doesn't belong to the user", () => {
-    let otherUser;
+      context("when the targeted cluster doesn't belongs to the user", () => {
+        let otherUser;
 
-    beforeEach(() => {
-      otherUser = factory.buildSync('user');
-      return otherUser.save();
-    });
+        beforeEach(() => {
+          otherUser = factory.buildSync('user');
+          return otherUser.save();
+        });
 
-    it('returns a 404 not found', done => {
-      api.clusters(otherUser).get(cluster.id).expect(404, done);
-    });
-  });
-
-  context('when the user specify an invalid cluster id', () => {
-    it('returns a 404 not found', done => {
-      api.clusters(user).get(0).expect(404, done);
+        it('returns a 404 not found', done => {
+          api.clusters(otherUser).get(cluster[attribute]).expect(404, done);
+        });
+      });
     });
   });
 
