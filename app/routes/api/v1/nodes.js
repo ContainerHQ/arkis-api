@@ -28,7 +28,10 @@ router
     res.status(202).serialize({ node: node, action: action });
   }).catch(next);
 })
-.param('node_id', middlewares.modelFinder('node', { belongsTo: 'cluster' }))
+.param('node_id', middlewares.modelFinder('node', {
+  belongsTo: 'cluster',
+  findBy: { id: 'UUID', name: 'Ascii' }
+}))
 
 .post('/:node_id/upgrade', (req, res, next) => {
   let daemon = new services.DaemonManager(req.cluster, req.node);

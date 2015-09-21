@@ -5,9 +5,9 @@ let _ = require('lodash'),
 
 describe('ModelFinder Middleware', () => {
   [
-    { name: 'cluster',  belongsTo: 'user', findBy: { id: 'UUID', name: true } },
-    { name: 'node',  belongsTo: 'cluster', findBy: { id: 'UUID', name: true } },
-    { name: 'action', belongsTo: 'node', findBy: { id: 'UUID' } }
+    { name: 'cluster',  belongsTo: 'user', findBy: { id: 'UUID', name: 'Ascii' } },
+    { name: 'node',  belongsTo: 'cluster', findBy: { id: 'UUID', name: 'Ascii' } },
+    { name: 'action',   belongsTo: 'node', findBy: { id: 'UUID' } }
 
   ].forEach(({ name, belongsTo, findBy }) => {
     context(`when initialized for ${name}`, () => {

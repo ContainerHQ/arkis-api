@@ -26,7 +26,7 @@ module.exports = function(modelName, { belongsTo, findBy }) {
     let finder = new Finder(req[belongsTo], modelName);
 
     let promises = _.mapValues(findBy, (type, attribute) => {
-      if (type === 'UUID' && !validator.isUUID(identifier)) {
+      if (!validator[`is${type}`](identifier)) {
         return Promise.resolve([]);
       }
       let opts = {};

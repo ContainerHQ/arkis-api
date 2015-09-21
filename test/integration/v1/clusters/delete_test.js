@@ -16,42 +16,40 @@ describe('DELETE /clusters/:id', () => {
     });
   });
 
-  context('when the targeted cluster belongs to the user', () => {
-    it('removes the cluster', done => {
-      api.clusters(user).delete(cluster.id)
-      .expect(204, (err, res) => {
-        if (err) { return done(err); }
+  ['id', 'name'].forEach(attribute => {
+    context(`when user specifies the ${attribute}`, () => {
+      context('when the targeted cluster belongs to the user', () => {
+        it('removes the cluster', done => {
+          api.clusters(user).delete(cluster[attribute])
+          .expect(204, (err, res) => {
+            if (err) { return done(err); }
 
-        expect(models.Cluster.findById(cluster.id))
-          .to.eventually.not.exist
-          .notify(done);
+            expect(models.Cluster.findById(cluster.id))
+              .to.eventually.not.exist
+              .notify(done);
+          });
+        });
       });
-    });
-  });
 
-  context("when the targeted cluster doesn't belongs to the user", () => {
-    let otherUser;
+      context("when the targeted cluster doesn't belongs to the user", () => {
+        let otherUser;
 
-    beforeEach(() => {
-      otherUser = factory.buildSync('user');
-      return otherUser.save();
-    });
+        beforeEach(() => {
+          otherUser = factory.buildSync('user');
+          return otherUser.save();
+        });
 
-    it("doesn't delete the cluster and returns a 404 not found", done => {
-      api.clusters(otherUser).delete(cluster.id)
-      .expect(404, (err, res) => {
-        if (err) { return done(err); }
+        it("doesn't delete the cluster and returns a 404 not found", done => {
+          api.clusters(otherUser).delete(cluster[attribute])
+          .expect(404, (err, res) => {
+            if (err) { return done(err); }
 
-        expect(models.Cluster.findById(cluster.id))
-          .to.eventually.exist
-          .notify(done);
+            expect(models.Cluster.findById(cluster.id))
+              .to.eventually.exist
+              .notify(done);
+          });
+        });
       });
-    });
-  });
-
-  context('when cluster id is invalid', () => {
-    it('returns a 404 not found ', done => {
-      api.clusters(user).delete('whatever').expect(404, done);
     });
   });
 

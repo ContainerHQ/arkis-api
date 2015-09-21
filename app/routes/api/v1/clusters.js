@@ -25,7 +25,9 @@ router
     res.status(201).serialize({ cluster: cluster });
   }).catch(next);
 })
-.param('cluster_id', middlewares.modelFinder('cluster', { belongsTo: 'user' }))
+.param('cluster_id', middlewares.modelFinder('cluster', {
+  belongsTo: 'user', findBy: { id: 'UUID', name: 'Ascii' }
+}))
 
 .post('/:cluster_id/upgrade', (req, res, next) => {
   let clusterManager = new services.ClusterManager(req.cluster);
