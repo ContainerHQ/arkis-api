@@ -16,7 +16,7 @@ describe('DELETE /clusters/:id', () => {
     });
   });
 
-  context('when the targeted cluster belong to the user', () => {
+  context('when the targeted cluster belongs to the user', () => {
     it('removes the cluster', done => {
       api.clusters(user).delete(cluster.id)
       .expect(204, (err, res) => {
@@ -29,7 +29,7 @@ describe('DELETE /clusters/:id', () => {
     });
   });
 
-  context("when the targeted cluster doesn't belong to the user", () => {
+  context("when the targeted cluster doesn't belongs to the user", () => {
     let otherUser;
 
     beforeEach(() => {

@@ -2,7 +2,6 @@
 
 let _ = require('lodash'),
   express = require('express'),
-  validator = require('validator'),
   middlewares = require('../../../middlewares'),
   services = require('../../../services'),
   Cluster = require('../../../models').Cluster;
@@ -26,21 +25,8 @@ router
     res.status(201).serialize({ cluster: cluster });
   }).catch(next);
 })
-.param('cluster_id', (req, res, next, id) => {
-  /*
-   * Sequelize is throwing a standard error instead of a validation error when
-   * the specified id is not a uuid, therefore we need to check it manually
-   * before using sequelize queries.
-   */
-  if (!validator.isUUID(id)) { return res.notFound(); }
+.param('cluster_id', middlewares.modelFinder('cluster', { belongsTo: 'user' }))
 
-  req.user.getClusters({ where: { id: id } }).then(clusters => {
-    if (_.isEmpty(clusters)) { return res.notFound(); }
-
-    req.cluster = _.first(clusters);
-    next();
-  }).catch(next);
-})
 .post('/:cluster_id/upgrade', (req, res, next) => {
   let clusterManager = new services.ClusterManager(req.cluster);
 

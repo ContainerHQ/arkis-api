@@ -7,5 +7,6 @@ module.exports = {
   parseQuery: require('./parse_query'),
   resHandler: require('./res_handler'),
   errorHandler: require('./error_handler'),
-  tokenDecoder: require('./token_decoder')
+  tokenDecoder: require('./token_decoder'),
+  modelFinder: require('./model_finder')
 };

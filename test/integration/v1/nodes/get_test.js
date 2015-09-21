@@ -38,7 +38,7 @@ describe('GET /clusters/:cluster_id/nodes/:node_id', () => {
     });
   });
 
-  context("when the targeted node doesn't belong to the cluster", () => {
+  context("when the targeted node doesn't belongs to the cluster", () => {
     let otherCluster;
 
     beforeEach(() => {

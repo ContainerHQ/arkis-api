@@ -35,7 +35,7 @@ describe('GET /clusters/:cluster_id/nodes/:node_id/actions/:action_id', () => {
     });
   });
 
-  context('when action belong to another resource type', () => {
+  context('when action belongs to another resource type', () => {
     let otherAction;
 
     beforeEach(() => {
@@ -51,7 +51,7 @@ describe('GET /clusters/:cluster_id/nodes/:node_id/actions/:action_id', () => {
     });
   });
 
-  context('when action belong to another node', () => {
+  context('when action belongs to another node', () => {
     let otherAction;
 
     beforeEach(() => {
