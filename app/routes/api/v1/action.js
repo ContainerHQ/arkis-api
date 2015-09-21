@@ -16,9 +16,10 @@ module.exports = function({ resource }) {
       { method: ['state',    req.query.state] }
     ).findAndCount(req.pagination).then(res.paginate('actions')).catch(next);
   })
-  .param('action_id',
-    middlewares.modelFinder('action', { belongsTo: resource })
-  )
+  .param('action_id', middlewares.modelFinder('action', {
+    belongsTo: resource,
+    findBy: { id: 'UUID' }
+  }))
   .get('/:action_id', (req, res) => {
     res.serialize({ action: req.action });
   });
