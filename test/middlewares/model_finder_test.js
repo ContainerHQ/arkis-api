@@ -5,9 +5,11 @@ let _ = require('lodash'),
 
 describe('ModelFinder Middleware', () => {
   [
-    { name: 'cluster',  belongsTo: 'user' },
-    { name: 'node',     belongsTo: 'cluster' }
-  ].forEach(({ name, belongsTo }) => {
+    { name: 'cluster',  belongsTo: 'user', findBy: { id: 'UUID', name: true } },
+    { name: 'node',  belongsTo: 'cluster', findBy: { id: 'UUID', name: true } },
+    { name: 'action', belongsTo: 'node', findBy: { id: 'UUID' } }
+
+  ].forEach(({ name, belongsTo, findBy }) => {
     context(`when initialized for ${name}`, () => {
       let req, res, resource, find;
 
@@ -23,45 +25,49 @@ describe('ModelFinder Middleware', () => {
 
           return req[belongsTo][`add${modelName}`](resource);
         }).then(() => {
-          find = modelFinder(name, { belongsTo: belongsTo });
+          find = modelFinder(name, { belongsTo: belongsTo, findBy: findBy });
         });
       });
 
-      context('when id is not a uuid', () => {
-        it('sends resource not found', done => {
-          res.notFound = done;
+      _.mapValues(findBy, (type, attribute) => {
+        if (type === 'UUID') {
+          context(`when ${attribute} is not a uuid`, () => {
+            it('sends resource not found', done => {
+              res.notFound = done;
 
-          find(req, res, null, '.');
-        });
-      });
+              find(req, res, null, '.');
+            });
+          });
+        }
 
-      context(
-        `when resource matching this id belongs to the ${belongsTo}`
-      , () => {
-        beforeEach(done => {
-          find(req, res, done, resource.id);
-        });
+        context(
+          `when resource matching this ${attribute} belongs to the ${belongsTo}`
+        , () => {
+          beforeEach(done => {
+            find(req, res, done, resource[attribute]);
+          });
 
-        it('binds the resource found to the request', () => {
-          expect(req[name].dataValues).to.deep.equal(resource.dataValues);
-        });
-      });
-
-      context(
-        `when resource matching this id doesn't belongs to the ${belongsTo}`
-      , () => {
-        let id;
-
-        beforeEach(() => {
-          return factory.buildSync(name).save().then(model => {
-            id = model.id;
+          it('binds the resource found to the request', () => {
+            expect(req[name].dataValues).to.deep.equal(resource.dataValues);
           });
         });
 
-        it('sends resource not found', done => {
-          res.notFound = done;
+        context(
+          `when resource matching this ${attribute} doesn't belongs to the ${belongsTo}`
+        , () => {
+          let identifier;
 
-          find(req, res, null, id);
+          beforeEach(() => {
+            return factory.buildSync(name).save().then(model => {
+              identifier = model[attribute];
+            });
+          });
+
+          it('sends resource not found', done => {
+            res.notFound = done;
+
+            find(req, res, null, identifier);
+          });
         });
       });
     });

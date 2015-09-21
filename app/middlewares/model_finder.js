@@ -3,19 +3,41 @@
 let _ = require('lodash'),
   validator = require('validator');
 
-module.exports = function(modelName, { belongsTo }) {
-  /*
-   * Sequelize is throwing a standard error instead of a validation error when
-   * the specified id is not a uuid, therefore we need to check it manually
-   * before using sequelize queries.
-   */
-  return function(req, res, next, id) {
-    if (!validator.isUUID(id)) { return res.notFound(); }
+class Finder {
+  constructor(owner, modelName) {
+    this.owner     = owner;
+    this.modelName = modelName;
+  }
+  search(query) {
+    return this.owner[`get${this.column}`](query);
+  }
+  get column() {
+    return _.capitalize(this.modelName) + 's';
+  }
+}
 
-    let column = _.capitalize(modelName) + 's';
+/*
+ * Sequelize is throwing a standard error when querying uuids if the identifier
+ * is not a uuid, therefore we need to skip this case and directly query the
+ * next attribute.
+ */
+module.exports = function(modelName, { belongsTo, findBy }) {
+  return function(req, res, next, identifier) {
+    let finder = new Finder(req[belongsTo], modelName);
 
-    req[belongsTo][`get${column}`]({ where: { id: id } })
-    .then(models => {
+    let promises = _.mapValues(findBy, (type, attribute) => {
+      if (type === 'UUID' && !validator.isUUID(identifier)) {
+        return Promise.resolve([]);
+      }
+      let opts = {};
+
+      opts[attribute] = identifier;
+
+      return finder.search({ where: opts });
+    });
+
+    Promise.all(_.values(promises))
+    .then(_.flatten).then(models => {
       if (_.isEmpty(models)) { return res.notFound(); }
 
       req[modelName] = _.first(models);
