@@ -47,6 +47,8 @@ describe('ClusterManager Service', () => {
   });
 
   describe('#upgrade', () => {
+    let actualErr, result, previousVersions;
+
     beforeEach(done => {
       let opts = { cluster_id: manager.cluster.id };
 
@@ -54,17 +56,11 @@ describe('ClusterManager Service', () => {
     });
 
     context('when cluster is not running', () => {
-      let actualErr, previousVersions;
-
-      beforeEach(done => {
-        manager.cluster.update({ last_state: 'updating' }).then(() => {
-          previousVersions = _.pick(manager.cluster, VERSIONS);
-          return manager.upgrade();
-        }).then(done).catch(err => {
-          actualErr = err;
-          done();
-        });
+      beforeEach(() => {
+        return manager.cluster.update({ last_state: 'updating' });
       });
+
+      managerUpgrade({ mustFail: true });
 
       it('returns a state error', () => {
         let expected = new errors.StateError('upgrade', manager.cluster.state);
@@ -72,45 +68,19 @@ describe('ClusterManager Service', () => {
         expect(actualErr).to.deep.equal(expected);
       });
 
-      it('has the same versions than before', () => {
-        expect(manager.cluster).to.include(previousVersions);
-      });
-
-      it("doesnt' upgrade its nodes", () => {
-        return manager.cluster.getNodes().then(nodes => {
-          return expect(_.all(nodes, node => {
-            return node.state !== 'upgrading';
-          }));
-        });
-      });
+      itHasSameVersionsThanBefore();
+      itDoesntUpgradeItsNodes()
     });
 
     context('when cluster already has the latest versions', () => {
-      let actualErr, previousVersions;
-
-      beforeEach(done => {
-        previousVersions = _.pick(manager.cluster, VERSIONS);
-        manager.upgrade().then(done).catch(err => {
-          actualErr = err;
-          done();
-        });
-      });
+      managerUpgrade({ mustFail: true });
 
       it('returns an already updraded error', () => {
         expect(actualErr).to.deep.equal(new errors.AlreadyUpgradedError());
       });
 
-      it('has the same versions than before', () => {
-        expect(manager.cluster).to.include(previousVersions);
-      });
-
-      it("doesnt' upgrade its nodes", () => {
-        return manager.cluster.getNodes().then(nodes => {
-          return expect(_.all(nodes, node => {
-            return node.state === 'upgrading';
-          })).to.be.false;
-        });
-      });
+      itHasSameVersionsThanBefore();
+      itDoesntUpgradeItsNodes()
     });
 
     context('when cluster has older versions', () => {
@@ -124,20 +94,10 @@ describe('ClusterManager Service', () => {
       });
 
       context('when its nodes are upgradable', () => {
-        let result;
+        managerUpgrade({ mustFail: false });
 
-        beforeEach(() => {
-          return manager.upgrade().then(res => {
-            result = res;
-          });
-        });
-
-        it('updates its versions to the latest versions available', () => {
-          return expect(manager.cluster.reload()).to.eventually.include({
-            docker_version: config.latestVersions.docker,
-            swarm_version:  config.latestVersions.swarm
-          });
-        });
+        itUpdatesItsVersionToLatestVersions();
+        itReturnsAnActionForUpgradedNodes();
 
         it('returns no error', () => {
           expect(result.errors).to.be.empty;
@@ -150,43 +110,19 @@ describe('ClusterManager Service', () => {
             })).to.be.true;
           });
         });
-
-        it('returns an upgrade action for each of its node', () => {
-          return manager.cluster.getNodes().then(nodes => {
-            return expect(_.map(nodes, node => {
-              return _.findWhere(result.actions, {
-                type: 'upgrade',
-                completed_at: null,
-                last_state: 'in-progress',
-                resource: 'node',
-                resource_id: node.id
-              });
-            })).to.not.include(undefined);
-          });
-        });
       });
 
       context('when some node upgrades has issues', () => {
-        let result;
-
         beforeEach(done => {
           let opts = { cluster_id: manager.cluster.id };
 
           factory.createMany('node', opts, 4, done);
         });
 
-        beforeEach(() => {
-          return manager.upgrade().then(res => {
-            result = res;
-          });
-        });
+        managerUpgrade({ mustFail: false });
 
-        it('updates its versions to the latest versions available', () => {
-          return expect(manager.cluster.reload()).to.eventually.include({
-            docker_version: config.latestVersions.docker,
-            swarm_version:  config.latestVersions.swarm
-          });
-        });
+        itUpdatesItsVersionToLatestVersions();
+        itReturnsAnActionForUpgradedNodes();
 
         it("returns an error for each node not upgrading", () => {
           return manager.cluster.getNodes().then(nodes => {
@@ -204,8 +140,19 @@ describe('ClusterManager Service', () => {
             })).to.not.be.empty.and.not.include(undefined);
           });
         });
+      });
 
-        it('returns an action for each upgrading node', () => {
+      function itUpdatesItsVersionToLatestVersions() {
+        it('updates its versions to the latest versions available', () => {
+          return expect(manager.cluster.reload()).to.eventually.include({
+            docker_version: config.latestVersions.docker,
+            swarm_version:  config.latestVersions.swarm
+          });
+        });
+      }
+
+      function itReturnsAnActionForUpgradedNodes() {
+        it('returns an action for each upgraded node', () => {
           return manager.cluster.getNodes().then(nodes => {
             return expect(_.map(nodes, node => {
               if (node.state !== 'upgrading') { return null; }
@@ -220,8 +167,41 @@ describe('ClusterManager Service', () => {
             })).to.not.be.empty.and.not.include(undefined);
           });
         });
-      });
-
+      }
     });
+
+    function managerUpgrade({ mustFail }) {
+      beforeEach(done => {
+        previousVersions = _.pick(manager.cluster, VERSIONS);
+
+        return manager.upgrade().then(res => {
+          if (mustFail) { return done('Upgrade must fail!'); }
+
+          result = res;
+          done();
+        }).catch(err => {
+          if (!mustFail) { return done('Upgrade must not fail!'); }
+
+          actualErr = err;
+          done();
+        });
+      });
+    }
+
+    function itHasSameVersionsThanBefore() {
+      it('has the same versions than before', () => {
+        expect(manager.cluster).to.include(previousVersions);
+      });
+    }
+
+    function itDoesntUpgradeItsNodes() {
+      it("doesnt' upgrade its nodes", () => {
+        return manager.cluster.getNodes().then(nodes => {
+          return expect(_.all(nodes, node => {
+            return node.state === 'upgrading';
+          })).to.be.false;
+        });
+      });
+    }
   });
 });

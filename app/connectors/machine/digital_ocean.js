@@ -61,10 +61,7 @@ class DigitalOcean {
   }
   _formatSizes(sizes) {
     return _.map(sizes || [], size => {
-      let formated = _.omit(size, 'vcpus');
-
-      _.merge(formated, { cpu: size.vcpus });
-      return formated;
+      return _(size).omit('vcpus').merge({ cpu: size.vcpus }).value();
     });
   }
   _formatError(res) {
