@@ -4,6 +4,7 @@ let moment = require('moment');
 
 describe('POST /agent/clusters/:token/', () => {
   db.sync();
+  db.create(['cluster', 'node']);  
 
   let node;
 

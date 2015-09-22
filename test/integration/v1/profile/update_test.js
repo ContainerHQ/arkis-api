@@ -6,6 +6,7 @@ const WHITELIST = ['fullname', 'location', 'company'];
 
 describe('PATCH /account/profile', () => {
   db.sync();
+  db.create(['user']);
 
   let user;
 

@@ -2,6 +2,7 @@
 
 describe('GET /account/new_token', () => {
   db.sync();
+  db.create(['user']);
 
   let user;
 

@@ -7,6 +7,7 @@ const NEW_EMAIL = 'new.email@arkis.io';
 
 describe('PATCH /account/change_email', () => {
   db.sync();
+  db.create(['user']);
 
   let user, oldEmail, password;
 

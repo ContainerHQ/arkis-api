@@ -5,6 +5,7 @@ let _ = require('lodash'),
 
 describe('POST /agent/:token/notify', () => {
   db.sync();
+  db.create(['cluster', 'node']);
 
   let node, cluster;
 

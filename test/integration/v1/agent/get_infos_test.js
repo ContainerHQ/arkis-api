@@ -4,6 +4,7 @@ let AgentManager = require('../../../../app/services').AgentManager;
 
 describe('GET /agent/:token/infos', () => {
   db.sync();
+  db.create(['cluster', 'node']);
 
   let manager, node;
 

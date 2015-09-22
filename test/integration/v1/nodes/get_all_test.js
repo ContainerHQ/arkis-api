@@ -8,6 +8,7 @@ const DEFAULT_LIMIT  = 25,
 
 describe('GET /clusters/:cluster_id/nodes', () => {
   db.sync();
+  db.create(['cluster', 'node']);
 
   let user, cluster;
 

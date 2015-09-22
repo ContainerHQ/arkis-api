@@ -2,6 +2,7 @@
 
 describe('GET /account/profile', () => {
   db.sync();
+  db.create(['user']);
 
   let user;
 

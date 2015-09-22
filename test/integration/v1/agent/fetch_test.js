@@ -6,6 +6,7 @@ let _ = require('lodash'),
 
 describe('GET /agent/clusters/:token', () => {
   db.sync();
+  db.create(['cluster', 'node']);
 
   let cluster, node, manager;
 

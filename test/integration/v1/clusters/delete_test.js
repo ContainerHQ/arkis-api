@@ -4,6 +4,7 @@ let models = require('../../../../app/models');
 
 describe('DELETE /clusters/:id', () => {
   db.sync();
+  db.create(['cluster', 'node']);
 
   let user, cluster;
 

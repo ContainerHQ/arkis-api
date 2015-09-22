@@ -5,6 +5,7 @@ let _ = require('lodash'),
 
 describe('POST /auth/login', () => {
   db.sync();
+  db.create(['user']);
 
   let user;
 

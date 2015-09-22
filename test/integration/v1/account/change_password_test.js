@@ -7,6 +7,7 @@ const NEW_PASSWORD = 'asOPJkl,';
 
 describe('PATCH /account/change_password', () => {
   db.sync();
+  db.create(['user']);
 
   let user, oldPassword;
 

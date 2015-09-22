@@ -1,6 +1,9 @@
+/* globals factory: true */
+
 'use strict';
 
-let models = require('../../app/models');
+let _ = require('lodash'),
+  models = require('../../app/models');
 
 const ENTITIES_TO_DESTROY = ['Profile', 'Action', 'Node', 'Cluster', 'User'];
 
@@ -29,5 +32,20 @@ module.exports.deleteAllAndRetry = function(modelsName) {
 module.exports.sync = function() {
   beforeEach(() => {
     return this.deleteAllAndRetry(ENTITIES_TO_DESTROY);
+  });
+};
+
+/*
+ * Helper to fill the database with factories before each test for a context.
+ */
+module.exports.create = function(factoryNames) {
+  beforeEach(() => {
+    let promises = _(factoryNames).map(factoryName => {
+      return _.map(new Array(5), () => {
+        return factory.buildSync(factoryName).save();
+      });
+    }).flatten().value();
+
+    return Promise.all(promises);
   });
 };
