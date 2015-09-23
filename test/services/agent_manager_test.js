@@ -64,14 +64,8 @@ describe('AgentManager Service', () => {
         expect(node).to.include(ATTRIBUTES);
       });
 
-      it('sets the node last_state to running', () => {
-        expect(node.last_state).to.equal('running');
-      });
-
-      it('notifies the cluster with last_state', () => {
-        expect(clusterNotify)
-          .to.have.been.calledWith({ last_state: 'running' });
-      });
+      itSetsTheNodeLastStateToRunnning();
+      itNotifiesTheClusterWithLastState();
     });
 
     context('with empty attributes', () => {
@@ -81,14 +75,8 @@ describe('AgentManager Service', () => {
         });
       });
 
-      it('sets the node last_state to running', () => {
-        expect(node.last_state).to.equal('running');
-      });
-
-      it('notifies the cluster with last_state', () => {
-        expect(clusterNotify)
-          .to.have.been.calledWith({ last_state: 'running' });
-      });
+      itSetsTheNodeLastStateToRunnning();
+      itNotifiesTheClusterWithLastState();
     });
 
     context('when node is in deploying state', () => {
@@ -217,6 +205,19 @@ describe('AgentManager Service', () => {
         expect(clusterNotify).to.not.have.been.called;
       });
     });
+
+    function itSetsTheNodeLastStateToRunnning() {
+      it('sets the node last_state to running', () => {
+        expect(node.last_state).to.equal('running');
+      });
+    }
+
+    function itNotifiesTheClusterWithLastState() {
+      it('notifies the cluster with last_state', () => {
+        expect(clusterNotify)
+          .to.have.been.calledWith({ last_state: 'running' });
+      });
+    }
   });
 
   describe('#register', () => {
@@ -330,23 +331,27 @@ describe('AgentManager Service', () => {
       });
 
       it('returns running nodes existing addresses', done => {
-        cluster.getNodes().then(nodes => {
-          return _.filter(nodes, 'state', 'running');
-        }).then(nodes => {
-          return _.map(nodes, 'public_ip');
-        }).then(nodes => {
-          return _.remove(nodes, null);
-        }).then(nodesIPs => {
-          return _.map(nodesIPs, ip => {
-            return `${ip}:${config.agent.ports.docker || '0000'}`;
-          });
-        }).then(nodesAddresses => {
+        getNodeAddresses().then(nodesAddresses => {
           expect(actualAddresses).to.deep.equal(nodesAddresses)
             .and.not.to.be.empty;
           done();
         }).catch(done);
       });
     });
+
+    function getNodeAddresses() {
+      return cluster.getNodes().then(nodes => {
+        return _.filter(nodes, 'state', 'running');
+      }).then(nodes => {
+        return _.map(nodes, 'public_ip');
+      }).then(nodes => {
+        return _.remove(nodes, null);
+      }).then(nodesIPs => {
+        return _.map(nodesIPs, ip => {
+          return `${ip}:${config.agent.ports.docker || '0000'}`;
+        });
+      });
+    }
 
     function prepareNodesFor(cluster) {
       return new Promise((resolve, reject) => {

@@ -2,6 +2,7 @@
 
 describe('GET /clusters/:cluster_id/nodes/:node_id/actions/:action_id', () => {
   db.sync();
+  db.create(['cluster', 'node', 'action']);
 
   let user, cluster, node, action;
 

@@ -5,6 +5,7 @@ let _ = require('lodash'),
 
 describe('DELETE /clusters/:cluster_id/nodes/:node_id', () => {
   db.sync();
+  db.create(['cluster', 'node', 'action']);
 
   let user, cluster, node;
 

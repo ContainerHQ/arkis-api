@@ -3,6 +3,7 @@
 var _ = require('lodash'),
   config = require('../../config'),
   models = require('../../app/models'),
+  errors = require('../../app/support/errors'),
   Node = require('../../app/models').Node,
   MachineManager = require('../../app/services').MachineManager;
 
@@ -27,6 +28,8 @@ describe('MachineManager Service', () => {
   });
 
   describe('#deploy', () => {
+    let action;
+
     context('when node validations failed', () => {
       let actualError;
 
@@ -46,17 +49,13 @@ describe('MachineManager Service', () => {
         });
       });
 
-      it("doesn't create a machine behind", () => {
-        expect(manager.machine.create).to.not.have.been.called;
-      });
-
-      it("doesn't notify the cluster", () => {
-        expect(manager.cluster.state).to.equal('empty');
-      });
+      itDoesntCreateAMachineBehind();
+      itDoesntNotifyTheCluster();
+      itDoesntCreateAnAction();
     });
 
     context('when machine creation succeeded', () => {
-      let action, machineId;
+      let machineId;
 
       beforeEach(() => {
         machineId = random.string();
@@ -66,9 +65,10 @@ describe('MachineManager Service', () => {
         });
       });
 
-      it('creates the node', () => {
-        expect(manager.node.isNewRecord).to.be.false;
-      });
+      itCreatesTheNode();
+      itAddsTheNodeToTheCluster();
+      itNotifiesTheCluster();
+      itCreatesADeployActionForTheNode();
 
       it('creates the machine behind with specified options', () => {
         expect(manager.machine.create).to.have.been.calledWith({
@@ -80,25 +80,6 @@ describe('MachineManager Service', () => {
 
       it('adds the machine id to the node', () => {
         expect(manager.node.provider_id).to.equal(machineId);
-      });
-
-      it('adds the node to the cluster', () => {
-        expect(manager.node.cluster_id).to.equal(manager.cluster.id);
-      });
-
-      it('notifies the cluster', () => {
-        expect(manager.cluster.state).to.equal('deploying');
-      });
-
-      it('creates and returns a deploy action for the node', () => {
-        expect(action).to.include({
-          type: 'deploy',
-          state: 'in-progress',
-          completed_at: null,
-          resource: 'node',
-          resource_id: manager.node.id,
-          isNewRecord: false
-        });
       });
     });
 
@@ -123,18 +104,11 @@ describe('MachineManager Service', () => {
         expect(manager.node.isNewRecord).to.be.true;
       });
 
-      it("doesn't notify the cluster", () => {
-        expect(manager.cluster.state).to.equal('empty');
-      });
-
-      it("doesn't create an action", () => {
-        return expect(manager.node.getActions()).to.eventually.be.empty;
-      });
+      itDoesntNotifyTheCluster();
+      itDoesntCreateAnAction();
     });
 
     context('when byon node', () => {
-      let action;
-
       beforeEach(() => {
         _.merge(manager.node, BYON_OPTS);
 
@@ -144,22 +118,50 @@ describe('MachineManager Service', () => {
         });
       });
 
+      itCreatesTheNode();
+      itAddsTheNodeToTheCluster();
+      itDoesntCreateAMachineBehind();
+      itNotifiesTheCluster();
+      itCreatesADeployActionForTheNode();
+    });
+
+    function itCreatesTheNode() {
       it('creates the node', () => {
         expect(manager.node.isNewRecord).to.be.false;
       });
+    }
 
-      it('adds the node to the cluster', () => {
-        expect(manager.node.cluster_id).to.equal(manager.cluster.id);
+    function itDoesntNotifyTheCluster() {
+      it("doesn't notify the cluster", () => {
+        expect(manager.cluster.state).to.equal('empty');
       });
+    }
 
+    function itDoesntCreateAMachineBehind() {
       it("doesn't create a machine behind", () => {
         expect(manager.machine.create).to.not.have.been.called;
       });
+    }
 
-      it('creates the node', () => {
-        expect(manager.node.isNewRecord).to.be.false;
+    function itDoesntCreateAnAction() {
+      it("doesn't create an action", () => {
+        return expect(manager.node.getActions()).to.eventually.be.empty;
       });
+    }
 
+    function itAddsTheNodeToTheCluster() {
+      it('adds the node to the cluster', () => {
+        expect(manager.node.cluster_id).to.equal(manager.cluster.id);
+      });
+    }
+
+    function itNotifiesTheCluster() {
+      it('notifies the cluster', () => {
+        expect(manager.cluster.state).to.equal('deploying');
+      });
+    }
+
+    function itCreatesADeployActionForTheNode() {
       it('creates and returns a deploy action for the node', () => {
         expect(action).to.include({
           type: 'deploy',
@@ -170,7 +172,7 @@ describe('MachineManager Service', () => {
           isNewRecord: false
         });
       });
-    });
+    }
   });
 
   describe('#destroy', () => {
@@ -190,20 +192,12 @@ describe('MachineManager Service', () => {
         });
       });
 
-      it('removes the node', () => {
-        return expect(Node.findById(manager.node.id)).to.eventually.not.exist;
-      });
+      itRemovesTheNode();
+      itNotifiesTheClusterWithLastState();
+      itRemovesNodeActions();
 
       it("doesn't delete the machine behind", () => {
         expect(manager.machine.delete).to.not.have.been.called;
-      });
-
-      it('notifies the cluster', () => {
-        expect(manager.cluster.state).to.equal('empty');
-      });
-
-      it('removes its actions', () => {
-        return expect(models.Action.findById(action.id)).to.eventually.be.null;
       });
     });
 
@@ -227,25 +221,16 @@ describe('MachineManager Service', () => {
           });
         });
 
-        it('removes the node', () => {
-          return expect(Node.findById(manager.node.id))
-            .to.eventually.not.exist;
-        });
+        itRemovesTheNode();
+        itNotifiesTheClusterWithLastState();
+        itRemovesNodeActions();
 
         it('removes the machine behind', () => {
           expect(manager.machine.delete).to.have.been.calledWith(machineId);
         });
 
-        it('notifies the cluster', () => {
-          expect(manager.cluster.state).to.equal('empty');
-        });
-
         it('notifies the cluster with last_seen', () => {
           expect(manager.cluster.last_seen).to.be.null;
-        });
-
-        it('removes its actions', () => {
-          return expect(models.Action.findById(action.id)).to.eventually.be.null;
         });
       });
 
@@ -261,55 +246,86 @@ describe('MachineManager Service', () => {
           });
         });
 
-        it('removes the node', () => {
-          return expect(Node.findById(manager.node.id))
-            .to.eventually.not.exist;
-        });
+        itRemovesTheNode();
+        itNotifiesTheClusterWithLastState();
+        itRemovesNodeActions();
 
         it('removes the machine behind', () => {
           expect(manager.machine.delete).to.have.been.calledWith(machineId);
         });
 
-        it('notifies the cluster', () => {
-          expect(manager.cluster.state).to.equal('empty');
-        });
-
         it("doens't notify the cluster with last_seen", () => {
           expect(manager.cluster.last_seen).to.not.be.null;
-        });
-
-        it('removes its actions', () => {
-          return expect(models.Action.findById(action.id)).to.eventually.be.null;
         });
       });
     });
 
     context('when machine removal failed', () => {
-      const ERROR = random.error();
-
       let actualError;
 
-      beforeEach(done => {
-        manager.machine.delete = sinon.stub().returns(Promise.reject(ERROR));
-        manager.destroy().then(done).catch(err => {
-          actualError = err;
-          done();
+      context('with MachineNotFoundError', () => {
+        beforeEach(() => {
+          manager.machine.delete = sinon.stub().returns(
+            Promise.reject(new errors.MachineNotFoundError())
+          );
+        });
+
+        it('ignores the error', () => {
+          return expect(manager.destroy()).to.be.fulfilled;
         });
       });
 
-      it('returns the error', () => {
-        expect(actualError).to.equal(ERROR);
-      });
+      [
+        'MachineCredentialsError',
+        'MachineUnprocessableError'
+      ].forEach(type => {
+        context(`with ${type}`, () => {
+          let expectedError = new errors[type](random.string());
 
-      it("doesn't remove the node", () => {
-        return expect(Node.findById(manager.node.id))
-          .to.eventually.exist;
-      });
+          beforeEach(done => {
+            manager.machine.delete = sinon.stub().returns(
+              Promise.reject(expectedError)
+            );
+            manager.destroy().then(done).catch(err => {
+              actualError = err;
+              done();
+            });
+          });
 
-      it("doesn't notify the cluster", () => {
-        expect(manager.cluster.state).to.equal('deploying');
+          it('returns the error', () => {
+            expect(actualError).to.equal(expectedError);
+          });
+
+          it("doesn't remove the node", () => {
+            return expect(Node.findById(manager.node.id))
+              .to.eventually.exist;
+          });
+
+          it("doesn't notify the cluster", () => {
+            expect(manager.cluster.state).to.equal('deploying');
+          });
+        });
       });
     });
+
+    function itRemovesTheNode() {
+      it('removes the node', () => {
+        return expect(Node.findById(manager.node.id))
+          .to.eventually.not.exist;
+      });
+    }
+
+    function itNotifiesTheClusterWithLastState() {
+      it('notifies the cluster with last_state', () => {
+        expect(manager.cluster.state).to.equal('empty');
+      });
+    }
+
+    function itRemovesNodeActions() {
+      it('removes its actions', () => {
+        return expect(models.Action.findById(action.id)).to.eventually.be.null;
+      });
+    }
   });
 
 });

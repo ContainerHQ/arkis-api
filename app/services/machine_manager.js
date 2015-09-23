@@ -52,9 +52,17 @@ class MachineManager {
     });
   }
   _deleteMachine()  {
-    return this.node.byon ? Promise.resolve() : this.machine.delete(
+    let deletion = this.node.byon ? Promise.resolve() : this.machine.delete(
       this.node.provider_id
     );
+    /*
+     * If the machine behind has been manually deleted on the provider API,
+     * we still want the node to be deleted as this node is dead anyway.
+     * Therefore we can safely ignore this error.
+     */
+    return deletion.catch(err => {
+      if (err.name !== 'MachineNotFoundError') { throw err; }
+    });
   }
 }
 

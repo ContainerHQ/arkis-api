@@ -9,7 +9,7 @@ var _ = require('lodash'),
 const RUNNING_OPTS = { last_state: 'running', last_seen: Date.now() };
 
 describe('DaemonManager Service', () => {
-  let manager;
+  let manager, actualErr, expectedError;
 
   beforeEach(() => {
     let cluster = factory.buildSync('cluster'),
@@ -29,15 +29,15 @@ describe('DaemonManager Service', () => {
   });
 
   describe('#update', () => {
+    let changes;
+
     context('when node is not running', () => {
-      const CHANGES = { name: random.string() };
-
-      let actualErr;
-
       beforeEach(done => {
+        changes = { name: random.string() };
+
         manager.node.update({ last_state: 'deploying' }).then(() => {
           manager.daemon.update = sinon.stub();
-          return manager.update(CHANGES);
+          return manager.update(changes);
         }).then(done).catch(err => {
           actualErr = err;
           done();
@@ -49,30 +49,16 @@ describe('DaemonManager Service', () => {
       });
 
       it('returns a state error', () => {
-        let expectedError = new errors.StateError('update', manager.node.state);
+        expectedError = new errors.StateError('update', manager.node.state);
 
         expect(actualErr).to.deep.equal(expectedError);
       });
 
-      it('node is not updating', () => {
-        expect(manager.node.state).to.not.equal('updating');
-      });
-
-      it("doesn't update the node", () => {
-        expect(manager.node).to.not.include(CHANGES);
-      });
-
-      it("doesn't update the daemon", () => {
-        expect(manager.daemon.update).to.not.have.been.called;
-      });
-
-      it("doesn't notify the cluster", () => {
-        expect(manager.cluster.state).to.not.equal('updating');
-      });
-
-      it("doesn't create an action", () => {
-        return expect(manager.node.getActions()).to.eventually.be.empty;
-      });
+      itsNodeIsNot('updating');
+      itDoesntCallDaemon('update');
+      itsClusterIsNotNotifiedWith('updating');
+      itDoesntCreateAnAction();
+      itDoesntUpdateNodeAttributes();
     });
 
     context('when changes are empty', () => {
@@ -86,35 +72,22 @@ describe('DaemonManager Service', () => {
         });
       });
 
-      it('node is not updating', () => {
-        expect(manager.node.state).to.not.equal('updating');
-      });
-
-      it("doesn't update the daemon", () => {
-        expect(manager.daemon.update).to.not.have.been.called;
-      });
-
-      it("doesn't notify the cluster", () => {
-        expect(manager.cluster.state).to.not.equal('updating');
-      });
+      itsNodeIsNot('updating');
+      itDoesntCallDaemon('update');
+      itsClusterIsNotNotifiedWith('updating');
+      itDoesntCreateAnAction();
 
       it('returns a null action', () => {
         expect(action).to.be.null;
       });
-
-      it("doesn't create an action", () => {
-        return expect(manager.node.getActions()).to.eventually.be.empty;
-      });
     });
 
     context('when validations failed', () => {
-      const CHANGES = { name: null };
-
-      let actualErr;
-
       beforeEach(done => {
+        changes = { name: null };
+
         manager.daemon.update = sinon.stub();
-        return manager.update(CHANGES).then(done).catch(err => {
+        return manager.update(changes).then(done).catch(err => {
           actualErr = err;
           done();
         });
@@ -125,31 +98,17 @@ describe('DaemonManager Service', () => {
       });
 
       it('returns validation errors', done => {
-        manager.node.update(CHANGES).then(done).catch(err => {
+        manager.node.update(changes).then(done).catch(err => {
           expect(actualErr).to.deep.equal(err);
           done();
         });
       });
 
-      it('node is not updating', () => {
-        expect(manager.node.state).to.not.equal('updating');
-      });
-
-      it("doesn't update the node", () => {
-        expect(manager.node).to.not.include(CHANGES);
-      });
-
-      it("doesn't update the daemon", () => {
-        expect(manager.daemon.update).to.not.have.been.called;
-      });
-
-      it("doesn't notify the cluster", () => {
-        expect(manager.cluster.state).to.not.equal('updating');
-      });
-
-      it("doesn't create an action", () => {
-        return expect(manager.node.getActions()).to.eventually.be.empty;
-      });
+      itsNodeIsNot('updating');
+      itDoesntUpdateNodeAttributes();
+      itDoesntCallDaemon('update');
+      itsClusterIsNotNotifiedWith('updating');
+      itDoesntCreateAnAction();
     });
 
     context('when daemon update succeeded', () => {
@@ -158,14 +117,14 @@ describe('DaemonManager Service', () => {
       });
 
       context('when changes are not empty', () => {
-        const CHANGES = { name: random.string() },
-              PING    = Date.now();
-
-        let action;
+        let now, action;
 
         beforeEach(() => {
-          return manager.cluster.update({ last_seen: PING }).then(() => {
-            return manager.update(CHANGES);
+          changes = { name: random.string() };
+          now     = Date.now();
+
+          return manager.cluster.update({ last_seen: now }).then(() => {
+            return manager.update(changes);
           }).then(nodeAction => {
             action = nodeAction;
             return manager.node.reload();
@@ -188,20 +147,20 @@ describe('DaemonManager Service', () => {
         });
 
         it('updates the node', () => {
-          expect(manager.node).to.include(CHANGES);
+          expect(manager.node).to.include(changes);
         });
 
         it('updates the daemon', () => {
-          expect(manager.daemon.update).to.have.been.calledWith(CHANGES);
+          expect(manager.daemon.update).to.have.been.calledWith(changes);
         });
 
         it('notifies the cluster', () => {
           expect(manager.cluster.state).to.equal('updating');
         });
 
-        it("doesn't notify the cluster with the ping", () => {
+        it("doesn't notify the cluster with last_seeen", () => {
           let clusterPing = moment(manager.cluster.last_seen).toDate(),
-            expectedPing  = moment(PING).toDate();
+            expectedPing  = moment(now).toDate();
 
           expect(clusterPing).to.deep.equal(expectedPing);
         });
@@ -209,8 +168,9 @@ describe('DaemonManager Service', () => {
 
       context('node is promoted to master', () => {
         beforeEach(() => {
-          return manager.node.update({ last_seen: Date.now() }).then(() => {
-            return manager.node.update({ master: false });
+          return manager.node.update({
+            last_seen: Date.now(),
+            master: false
           }).then(() => {
             return manager.update({ master: true });
           }).then(() => {
@@ -218,7 +178,7 @@ describe('DaemonManager Service', () => {
           });
         });
 
-        it('notifies the cluster with the ping', () => {
+        it('notifies the cluster with last_seen value', () => {
           expect(manager.cluster.last_seen)
             .to.deep.equal(manager.node.last_seen);
         });
@@ -226,8 +186,9 @@ describe('DaemonManager Service', () => {
 
       context('node is downgraded to slave', () => {
         beforeEach(() => {
-          return manager.cluster.update({ last_seen: Date.now() }).then(() => {
-            return manager.node.update({ master: true });
+          return manager.node.update({
+            last_seen: Date.now(),
+            master: true
           }).then(() => {
             return manager.update({ master: false });
           }).then(() => {
@@ -235,21 +196,19 @@ describe('DaemonManager Service', () => {
           });
         });
 
-        it('notifies the cluster', () => {
+        it('notifies the cluster with null last_seen', () => {
           expect(manager.cluster.last_seen).to.be.null;
         });
       });
     });
 
     context('when daemon update failed', () => {
-      const ERROR = random.error(),
-          CHANGES = { master: true };
-
-      let actualErr;
-
       beforeEach(done => {
-        manager.daemon.update = sinon.stub().returns(Promise.reject(ERROR));
-        return manager.update(CHANGES).then(done).catch(err => {
+        changes       = { master: true };
+        expectedError = random.error();
+
+        manager.daemon.update = sinon.stub().returns(Promise.reject(expectedError));
+        return manager.update(changes).then(done).catch(err => {
           actualErr = err;
           done();
         });
@@ -259,26 +218,18 @@ describe('DaemonManager Service', () => {
         return manager.node.reload();
       });
 
-      it('returns the error', () => {
-        expect(actualErr).to.deep.equal(ERROR);
-      });
-
-      it('node is not updating', () => {
-        expect(manager.node.state).to.not.equal('updating');
-      });
-
-      it("doesn't update the node", () => {
-        expect(manager.node).to.not.include(CHANGES);
-      });
-
-      it("doesn't notify the cluster", () => {
-        expect(manager.cluster.state).to.not.equal('updating');
-      });
-
-      it("doesn't create an action", () => {
-        return expect(manager.node.getActions()).to.eventually.be.empty;
-      });
+      itReturnsTheError();
+      itsNodeIsNot('updating');
+      itsClusterIsNotNotifiedWith('updating');
+      itDoesntCreateAnAction();
+      itDoesntUpdateNodeAttributes();
     });
+
+    function itDoesntUpdateNodeAttributes() {
+      it("doesn't update the node attributes", () => {
+        expect(manager.node).to.not.include(changes);
+      });
+    }
   });
 
   describe('#upgrade', () => {
@@ -296,31 +247,18 @@ describe('DaemonManager Service', () => {
       });
 
       it('returns a state error', () => {
-        let expectedError = new errors.StateError('upgrade', manager.node.state);
+        expectedError = new errors.StateError('upgrade', manager.node.state);
 
         expect(actualErr).to.deep.equal(expectedError);
       });
 
-      it('node is not upgrading', () => {
-        expect(manager.node.state).to.not.equal('upgrading');
-      });
-
-      it("doesn't upgrade the daemon", () => {
-        expect(manager.daemon.upgrade).to.not.have.been.called;
-      });
-
-      it("doesn't notify the cluster", () => {
-        expect(manager.cluster.state).to.not.equal('upgrading');
-      });
-
-      it("doesn't create an action", () => {
-        return expect(manager.node.getActions()).to.eventually.be.empty;
-      });
+      itsNodeIsNot('upgrading');
+      itsClusterIsNotNotifiedWith('upgrading');
+      itDoesntCallDaemon('upgrade');
+      itDoesntCreateAnAction();
     });
 
     context('when node has the same versions than cluster', () => {
-      let actualErr;
-
       beforeEach(done => {
         manager.daemon.upgrade = sinon.stub();
         manager.node.update(
@@ -337,21 +275,10 @@ describe('DaemonManager Service', () => {
         expect(actualErr).to.deep.equal(new errors.AlreadyUpgradedError());
       });
 
-      it('node is not upgrading', () => {
-        expect(manager.node.state).to.not.equal('upgrading');
-      });
-
-      it("doesn't upgrade the daemon", () => {
-        expect(manager.daemon.upgrade).to.not.have.been.called;
-      });
-
-      it("doesn't notify the cluster", () => {
-        expect(manager.cluster.state).to.not.equal('upgrading');
-      });
-
-      it("doesn't create an action", () => {
-        return expect(manager.node.getActions()).to.eventually.be.empty;
-      });
+      itsNodeIsNot('upgrading');
+      itsClusterIsNotNotifiedWith('upgrading');
+      itDoesntCallDaemon('upgrade');
+      itDoesntCreateAnAction();
     });
 
     context('when node has different versions than cluster', () => {
@@ -377,13 +304,8 @@ describe('DaemonManager Service', () => {
           expect(manager.daemon.upgrade).to.have.been.calledWithMatch(expected);
         });
 
-        it('node is upgrading', () => {
-          expect(manager.node.state).to.equal('upgrading');
-        });
-
-        it('notifies the cluster', () => {
-          expect(manager.cluster.state).to.equal('upgrading');
-        });
+        itsNodeIs('upgrading');
+        itsClusterIsNotifiedWith('upgrading');
 
         it('returns a upgrade node action', () => {
           expect(action).to.include({
@@ -398,34 +320,69 @@ describe('DaemonManager Service', () => {
       });
 
       context('when daemon upgrade failed', () => {
-        const ERROR = random.error();
-
-        let actualErr;
-
         beforeEach(done => {
-          manager.daemon.upgrade = sinon.stub().returns(Promise.reject(ERROR));
+          expectedError = random.error();
+
+          manager.daemon.upgrade = sinon.stub().returns(Promise.reject(expectedError));
           manager.upgrade().then(done).catch(err => {
             actualErr = err;
             done();
           });
         });
 
-        it('returns the error', () => {
-          expect(actualErr).to.equal(ERROR);
-        });
-
-        it('node is not upgrading', () => {
-          expect(manager.node.state).to.not.equal('upgrading');
-        });
-
-        it("doesn't notify the cluster", () => {
-          expect(manager.cluster.state).to.not.equal('upgrading');
-        });
-
-        it("doesn't create an action", () => {
-          return expect(manager.node.getActions()).to.eventually.be.empty;
-        });
+        itReturnsTheError();
+        itsNodeIsNot('upgrading');
+        itsClusterIsNotNotifiedWith('upgrading');
+        itDoesntCreateAnAction();
       });
     });
   });
+
+  function itReturnsTheError() {
+    it('returns the error', () => {
+      expect(actualErr).to.equal(expectedError);
+    });
+  }
+
+  function itsNodeIs(state) {
+    it(`node is ${state}`, () => {
+      expect(manager.node.state).to.equal(state);
+    });
+  }
+
+  function itsClusterIsNotifiedWith(state) {
+    it(`notifies the cluster with ${state}`, () => {
+      expect(manager.cluster.state).to.equal(state);
+    });
+  }
+
+  function itsClusterIsNotNotifiedWith(state) {
+    it(`doesn't notify the cluster with ${state}`, () => {
+      expect(manager.cluster.state).to.not.equal(state);
+    });
+  }
+
+  function itsNodeIsNot(state) {
+    it(`node is not ${state}`, () => {
+      expect(manager.node.state).to.not.equal(state);
+    });
+  }
+
+  function itsClusterIsNotNotifiedWith(state) {
+    it(`doesn't notify the cluster with ${state}`, () => {
+      expect(manager.cluster.state).to.not.equal(state);
+    });
+  }
+
+  function itDoesntCallDaemon(method) {
+    it(`doesn't ${method} the daemon`, () => {
+      expect(manager.daemon[method]).to.not.have.been.called;
+    });
+  }
+
+  function itDoesntCreateAnAction() {
+    it("doesn't create an action", () => {
+      return expect(manager.node.getActions()).to.eventually.be.empty;
+    });
+  }
 });

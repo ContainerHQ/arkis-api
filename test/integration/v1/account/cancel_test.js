@@ -4,6 +4,7 @@ let User = require('../../../../app/models').User;
 
 describe('DELETE /account/', () => {
   db.sync();
+  db.create(['user']);
 
   let user, password;
 

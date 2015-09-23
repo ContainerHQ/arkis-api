@@ -4,6 +4,7 @@ let models = require('../../../../app/models');
 
 describe('GET /clusters/:cluster_id/nodes/:node_id', () => {
   db.sync();
+  db.create(['cluster', 'node']);
 
   let user, cluster, node;
 
