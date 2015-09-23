@@ -55,7 +55,9 @@ class MachineManager {
     let deletion = this.node.byon ? Promise.resolve() : this.machine.delete(
       this.node.provider_id
     );
-    return deletion;
+    return deletion.catch(err => {
+      if (err.name !== 'MachineNotFoundError') { throw err; }
+    });
   }
 }
 

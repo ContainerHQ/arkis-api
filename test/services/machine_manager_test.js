@@ -3,6 +3,7 @@
 var _ = require('lodash'),
   config = require('../../config'),
   models = require('../../app/models'),
+  errors = require('../../app/support/errors'),
   Node = require('../../app/models').Node,
   MachineManager = require('../../app/services').MachineManager;
 
@@ -260,29 +261,50 @@ describe('MachineManager Service', () => {
     });
 
     context('when machine removal failed', () => {
-      const ERROR = random.error();
-
       let actualError;
 
-      beforeEach(done => {
-        manager.machine.delete = sinon.stub().returns(Promise.reject(ERROR));
-        manager.destroy().then(done).catch(err => {
-          actualError = err;
-          done();
+      context('with MachineNotFoundError', () => {
+        beforeEach(() => {
+          manager.machine.delete = sinon.stub().returns(
+            Promise.reject(new errors.MachineNotFoundError())
+          );
+        });
+
+        it('ignores the error', () => {
+          return expect(manager.destroy()).to.be.fulfilled;
         });
       });
 
-      it('returns the error', () => {
-        expect(actualError).to.equal(ERROR);
-      });
+      [
+        'MachineCredentialsError',
+        'MachineUnprocessableError'
+      ].forEach(type => {
+        context(`with ${type}`, () => {
+          let expectedError = new errors[type](random.string());
 
-      it("doesn't remove the node", () => {
-        return expect(Node.findById(manager.node.id))
-          .to.eventually.exist;
-      });
+          beforeEach(done => {
+            manager.machine.delete = sinon.stub().returns(
+              Promise.reject(expectedError)
+            );
+            manager.destroy().then(done).catch(err => {
+              actualError = err;
+              done();
+            });
+          });
 
-      it("doesn't notify the cluster", () => {
-        expect(manager.cluster.state).to.equal('deploying');
+          it('returns the error', () => {
+            expect(actualError).to.equal(expectedError);
+          });
+
+          it("doesn't remove the node", () => {
+            return expect(Node.findById(manager.node.id))
+              .to.eventually.exist;
+          });
+
+          it("doesn't notify the cluster", () => {
+            expect(manager.cluster.state).to.equal('deploying');
+          });
+        });
       });
     });
 
