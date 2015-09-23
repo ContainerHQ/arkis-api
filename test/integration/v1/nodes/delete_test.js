@@ -12,8 +12,7 @@ describe('DELETE /clusters/:cluster_id/nodes/:node_id', () => {
   beforeEach(() => {
     user    = factory.buildSync('user');
     cluster = factory.buildSync('cluster');
-    // Remove provider_id, this should delete the node even if invalid;
-    node    = factory.buildSync('node', { provider_id: random.string() });
+    node    = factory.buildSync('node');
 
     return user.save().then(() => {
       return user.addCluster(cluster);
