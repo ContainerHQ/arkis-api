@@ -52,9 +52,10 @@ class MachineManager {
     });
   }
   _deleteMachine()  {
-    return this.node.byon ? Promise.resolve() : this.machine.delete(
+    let deletion = this.node.byon ? Promise.resolve() : this.machine.delete(
       this.node.provider_id
     );
+    return deletion;
   }
 }
 
