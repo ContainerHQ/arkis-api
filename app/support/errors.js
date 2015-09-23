@@ -48,7 +48,7 @@ error.AlreadyUpgradedError = class extends Error {
     super();
 
     this.name = 'AlreadyUpgradedError';
-    this.message = `Node already has these docker and swarm versions.`;
+    this.message = `The resource already has the latest available versions.`;
   }
 };
 
@@ -57,7 +57,17 @@ error.NotMasterError = class extends Error {
     super();
 
     this.name = 'NotMasterError';
-    this.message = 'Action forbidden for slave nodes.';
+    this.message = 'Action not allowed for slave nodes.';
+  }
+};
+
+error.DeletionError = class extends Error {
+  constructor(errors) {
+    super();
+
+    this.name = 'DeletionError';
+    this.message = "Deleting this resource conflicts with other resources.";
+    this.errors = errors;
   }
 };
 

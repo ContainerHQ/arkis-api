@@ -3,7 +3,7 @@
 var _ = require('lodash'),
   config = require('../../config'),
   models = require('../../app/models'),
-  errors = require('../../app/support/errors'),
+  errors = require('../../app/support').errors,
   Node = require('../../app/models').Node,
   MachineManager = require('../../app/services').MachineManager;
 

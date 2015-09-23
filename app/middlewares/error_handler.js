@@ -18,7 +18,8 @@ function serializeError(error) {
         return _.snakeCase(value.replace('Sequelize', ''));
       case 'errors':
         return _.map(value, err => {
-          err.type = _.snakeCase(err.type);
+          err.name = _.snakeCase(err.name || err.type);
+          delete err.type;
           return err;
         });
       default:
@@ -38,6 +39,7 @@ module.exports = function(err, req, res, next) {
       statusCode = 400;
       break;
     case 'AlreadyUpgradedError':
+    case 'DeletionError':
       statusCode = 409;
       break;
     case 'NotMasterError':

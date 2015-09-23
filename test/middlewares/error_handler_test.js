@@ -36,10 +36,7 @@ describe('ErrorHandler Middleware', () => {
           expect(res.json).to.have.been.calledWith({
             name: 'validation_error',
             message: err.message,
-            errors: _.map(err.errors, err => {
-              err.type = _.snakeCase(err.type);
-              return err;
-            })
+            errors: serializedErrors(err.errors, { key: 'type' })
           });
           done();
         });
@@ -75,6 +72,7 @@ describe('ErrorHandler Middleware', () => {
   [
     ['StateError', 422],
     ['AlreadyUpgradedError', 409],
+    ['DeletionError', 409, [new errors.StateError()]],
     ['NotMasterError', 403],
     ['MachineCredentialsError', 401],
     ['MachineNotFoundError', 404],
@@ -92,15 +90,29 @@ describe('ErrorHandler Middleware', () => {
 
       it('sends the error message back', done => {
         errorHandler(err, {}, res, () => {
-          expect(res.json).to.have.been.calledWith({
-            name: _.snakeCase(errorName),
+          let expected = {
+            name: _.snakeCase(err.name),
             message: err.message
-          });
+          };
+          if (_.has(err, 'errors')) {
+            _.merge(expected, {
+              errors: serializedErrors(err.errors, { key: 'name' })
+            });
+          }
+          expect(res.json).to.have.been.calledWith(expected);
           done();
         });
       });
     });
   });
+
+  function serializedErrors(errors, { key }) {
+    return _.map(errors, err => {
+      err.name = _.snakeCase(err[key]);
+      delete err[key];
+      return err;
+    });
+  }
 
   context('with any other error', () => {
     let err = new Error('whatever');

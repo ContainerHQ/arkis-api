@@ -2,9 +2,9 @@
 
 var _ = require('lodash'),
   config = require('../../config'),
+  models = require('../../app/models'),
   errors = require('../../app/support').errors,
-  DaemonManager = require('../../app/services').DaemonManager,
-  ClusterManager = require('../../app/services').ClusterManager;
+  services = require('../../app/services');
 
 const VERSIONS = ['docker_version', 'swarm_version'];
 
@@ -13,37 +13,140 @@ describe('ClusterManager Service', () => {
 
   beforeEach(() => {
     return factory.buildSync('runningCluster').save().then(cluster => {
-      manager = new ClusterManager(cluster);
+      manager = new services.ClusterManager(cluster);
     });
   });
 
-  describe('#getNodeDaemons', () => {
-    context('when cluster has nodes', () => {
-      beforeEach(done => {
-        factory.createMany('node', { cluster_id: manager.cluster.id }, 7, done);
-      });
+  describe(`#getNodes`, () => {
+    ['DaemonManager', 'MachineManager'].forEach(service => {
+      context('when cluster has nodes', () => {
+        beforeEach(done => {
+          let opts = { cluster_id: manager.cluster.id };
 
-      it('returns all cluster nodes daemons manager', () => {
-        let expected;
+          factory.createMany('node', opts, 7, done);
+        });
 
-        return manager.cluster.getNodes().then(nodes => {
-          expected = _.map(nodes, node => {
-            return new DaemonManager(manager.cluster, node);
+        it(`returns all cluster's node ${service}`, () => {
+          let expected;
+
+          return manager.cluster.getNodes().then(nodes => {
+            expected = _.map(nodes, node => {
+              return new services[service](manager.cluster, node);
+            });
+            return manager.getNodes(service);
+          }).then(managers => {
+            return expect(managers).to.deep.equal(expected);
           });
-          return manager.getNodeDaemons();
-        }).then(daemons => {
-          return expect(daemons).to.deep.equal(expected);
+        });
+      });
+
+      context('when cluster is empty', () => {
+        it('returns an empty list', () => {
+          return manager.getNodes(service).then(managers => {
+            return expect(managers).to.be.empty;
+          });
+        });
+      });
+    });
+  });
+
+  describe('#destroy', () => {
+    let clusterId;
+
+    beforeEach(() => {
+      clusterId = manager.cluster.id;
+    });
+
+    context('when cluster has no nodes', () => {
+      beforeEach(() => {
+        return manager.destroy();
+      });
+
+      itDeletesTheCluster();
+    });
+
+    context('when cluster has nodes', () => {
+      const NODES_COUNT = 5;
+
+      let nodes;
+
+      beforeEach(done => {
+        let opts = { cluster_id: manager.cluster.id };
+
+        factory.createMany('node', opts, NODES_COUNT, (err, clusterNodes) => {
+          nodes = clusterNodes;
+          done(err);
+        });
+      });
+
+      context('when every cluster nodes can be delete', () => {
+        beforeEach(() => {
+          return manager.destroy();
+        });
+
+        itDeletesTheCluster();
+
+        it("deletes cluster's nodes", () => {
+          return expect(models.Node.findAll({
+            where: { id: _.pluck(nodes, 'id') } }
+          )).to.eventually.be.empty;
+        });
+      });
+
+      context("when one cluster node can't be deleted", () => {
+        let actualErr, undeletableNode, nodeErr;
+
+        beforeEach(done => {
+          undeletableNode = nodes[
+            random.integer({ min: 0, max: NODES_COUNT - 1 })
+          ];
+          nodeErr = random.error();
+          undeletableNode.destroy = () => {
+            return Promise.reject(nodeErr);
+          };
+          manager.getNodes = sinon.stub().returns(
+            Promise.resolve(_.map(nodes, node => {
+              return new services.MachineManager(manager.cluster, node);
+            }))
+          );
+          manager.destroy().then(done).catch(err => {
+            actualErr = err;
+            done();
+          });
+        });
+
+        it("doesn't delete the cluster", () => {
+          return expect(models.Cluster.findById(clusterId))
+            .to.eventually.exist;
+        });
+
+        it('removes every deletable cluster nodes', () => {
+          _.pull(nodes, undeletableNode);
+
+          return expect(models.Node.findAll({
+            where: { id: _.pluck(nodes, 'id') } }
+          )).to.eventually.be.empty;
+        });
+
+        it('returns an error with the cluster node deletion errors', () => {
+          let expected = new errors.DeletionError([{
+            name: nodeErr.name,
+            message: nodeErr.message,
+            resource: 'node',
+            resource_id: undeletableNode.id
+          }]);
+
+          expect(actualErr).to.deep.equal(expected);
         });
       });
     });
 
-    context('when cluster is empty', () => {
-      it('returns an empty list', () => {
-        return manager.getNodeDaemons().then(daemons => {
-          return expect(daemons).to.be.empty;
-        });
+    function itDeletesTheCluster() {
+      it('deletes the cluster', () => {
+        return expect(models.Cluster.findById(clusterId))
+          .to.eventually.not.exist;
       });
-    });
+    }
   });
 
   describe('#upgrade', () => {
@@ -132,7 +235,7 @@ describe('ClusterManager Service', () => {
               let err = new errors.StateError('upgrade', 'deploying');
 
               return _.findWhere(result.errors, {
-                name: _.snakeCase(err.name),
+                name: err.name,
                 message: err.message,
                 resource: 'node',
                 resource_id: node.id
