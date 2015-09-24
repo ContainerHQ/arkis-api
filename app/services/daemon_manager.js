@@ -15,6 +15,9 @@ class DaemonManager extends StateManager {
     this.node    = node;
     this.daemon  = new Daemon(node);
   }
+  get nodeId() {
+    return this.node.id;
+  }
   /*
    * Update commits to the machine some changes and update the node
    * accordingly and also ensures to put the node in updating state, until

@@ -45,7 +45,7 @@ class ClusterManager extends StateManager {
             name: err.name,
             message: err.message,
             resource: 'node',
-            resource_id: daemon.node.id
+            resource_id: daemon.nodeId
           });
         });
       }));
@@ -61,7 +61,7 @@ class ClusterManager extends StateManager {
             name: err.name,
             message: err.message,
             resource: 'node',
-            resource_id: machine.node.id
+            resource_id: machine.nodeId
           });
         });
       }));
@@ -83,6 +83,9 @@ class ClusterManager extends StateManager {
         }
       });
     });
+  }
+  get clusterId() {
+    return this.cluster.id;
   }
 }
 
