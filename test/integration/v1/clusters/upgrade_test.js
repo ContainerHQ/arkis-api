@@ -9,11 +9,10 @@ describe('POST /clusters/:cluster_id/upgrade', () => {
   let user, cluster;
 
   beforeEach(() => {
-    user    = factory.buildSync('user');
-    cluster = factory.buildSync('cluster');
-
+    user = factory.buildSync('user');
     return user.save().then(() => {
-      return user.addCluster(cluster);
+      cluster = factory.buildSync('cluster', { user_id: user.id });
+      return cluster.save();
     });
   });
 

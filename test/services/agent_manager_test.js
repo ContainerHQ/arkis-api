@@ -7,14 +7,13 @@ let _ = require('lodash'),
   AgentManager = require('../../app/services').AgentManager;
 
 describe('AgentManager Service', () => {
-  let cluster, node, manager;
+  let manager, cluster;
 
   beforeEach(() => {
     cluster = factory.buildSync('cluster');
-    node    = factory.buildSync('node');
 
     return cluster.save().then(cluster => {
-      return cluster.addNode(node);
+      return cluster.createNode(factory.buildSync('node').dataValues);
     }).then(node => {
       manager = new AgentManager(node);
     });
@@ -26,15 +25,15 @@ describe('AgentManager Service', () => {
         docker: {
           port:    config.agent.ports.docker,
           version: config.latestVersions.docker,
-          name:    node.name,
-          labels:  node.labels,
+          name:    manager.node.name,
+          labels:  manager.node.labels,
           cert:    cluster.cert
         },
         swarm: {
           port:     config.agent.ports.swarm,
           version:  config.latestVersions.swarm,
           strategy: cluster.strategy,
-          master:   node.master
+          master:   manager.node.master
         },
       };
       return expect(manager.infos()).to.eventually.deep.equal(expected);
@@ -46,7 +45,7 @@ describe('AgentManager Service', () => {
 
     beforeEach(() => {
       clusterNotify   = sinon.stub().returns(Promise.resolve());
-      node.getCluster = sinon.stub().returns(
+      manager.node.getCluster = sinon.stub().returns(
         Promise.resolve({ notify: clusterNotify })
       );
     });
@@ -56,12 +55,12 @@ describe('AgentManager Service', () => {
 
       beforeEach(() => {
         return manager.notify(ATTRIBUTES).then(() => {
-          return node.reload();
+          return manager.node.reload();
         });
       });
 
       it('updates the node with attributes', () => {
-        expect(node).to.include(ATTRIBUTES);
+        expect(manager.node).to.include(ATTRIBUTES);
       });
 
       itSetsTheNodeLastStateToRunnning();
@@ -71,7 +70,7 @@ describe('AgentManager Service', () => {
     context('with empty attributes', () => {
       beforeEach(() => {
         return manager.notify().then(() => {
-          return node.reload();
+          return manager.node.reload();
         });
       });
 
@@ -83,11 +82,11 @@ describe('AgentManager Service', () => {
       let clock;
 
       beforeEach(() => {
-        return node.update({ last_state: 'deploying' }).then(() => {
+        return manager.node.update({ last_state: 'deploying' }).then(() => {
           clock = sinon.useFakeTimers();
           return manager.notify();
         }).then(() => {
-          return node.reload();
+          return manager.node.reload();
         });
       });
 
@@ -96,7 +95,7 @@ describe('AgentManager Service', () => {
       });
 
       it('updates node deployed_at to current datetime', () => {
-        expect(node.deployed_at).to.deep.equal(moment().toDate());
+        expect(manager.node.deployed_at).to.deep.equal(moment().toDate());
       });
     });
 
@@ -105,15 +104,15 @@ describe('AgentManager Service', () => {
 
       beforeEach(() => {
         deployedAt = manager.node.deployed_at;
-        return node.update({ last_state: 'updating' }).then(() => {
+        return manager.node.update({ last_state: 'updating' }).then(() => {
           return manager.notify();
         }).then(() => {
-          return node.reload();
+          return manager.node.reload();
         });
       });
 
       it("doesn't change node deployed_at", () => {
-        expect(node.deployed_at).to.deep.equal(deployedAt);
+        expect(manager.node.deployed_at).to.deep.equal(deployedAt);
       });
     });
 
@@ -121,12 +120,13 @@ describe('AgentManager Service', () => {
       let action, result;
 
       beforeEach(() => {
-        return node.createAction({ type: 'deploy' }).then(nodeAction => {
+        return manager.node.createAction({ type: 'deploy' })
+        .then(nodeAction => {
           action = nodeAction;
           return manager.notify();
         }).then(notifyResult => {
           result = notifyResult;
-          return node.reload();
+          return manager.node.reload();
         }).then(() => {
           return action.reload();
         });
@@ -150,13 +150,14 @@ describe('AgentManager Service', () => {
       let action, result;
 
       beforeEach(() => {
-        return node.createAction({ type: 'deploy', last_state: 'completed' })
-        .then(nodeAction => {
+        return manager.node.createAction(
+          { type: 'deploy', last_state: 'completed' }
+        ).then(nodeAction => {
           action = nodeAction;
           return manager.notify();
         }).then(notifyResult => {
           result = notifyResult;
-          return node.reload();
+          return manager.node.reload();
         });
       });
 
@@ -186,18 +187,19 @@ describe('AgentManager Service', () => {
       });
 
       it('returns a validation error', done => {
-        node.update(ATTRIBUTES).then(done).catch(err => {
+        manager.node.update(ATTRIBUTES).then(done).catch(err => {
           expect(actualErr).to.deep.equal(err);
           done();
         });
       });
 
       it("doesn't update the node with attributes", () => {
-        return expect(node.reload()).to.eventually.not.include(ATTRIBUTES);
+        return expect(manager.node.reload())
+          .to.eventually.not.include(ATTRIBUTES);
       });
 
       it("doesn't set the node last_state to running", () => {
-        return expect(node.reload())
+        return expect(manager.node.reload())
           .to.eventually.not.have.property('last_state', 'running');
       });
 
@@ -208,7 +210,7 @@ describe('AgentManager Service', () => {
 
     function itSetsTheNodeLastStateToRunnning() {
       it('sets the node last_state to running', () => {
-        expect(node.last_state).to.equal('running');
+        expect(manager.node.last_state).to.equal('running');
       });
     }
 
@@ -241,7 +243,7 @@ describe('AgentManager Service', () => {
         let actualErr, previousLastSeen;
 
         beforeEach(done => {
-          previousLastSeen = node.last_seen;
+          previousLastSeen = manager.node.last_seen;
           manager.register(addr).then(done).catch(err => {
             actualErr = err;
             done();
@@ -249,14 +251,15 @@ describe('AgentManager Service', () => {
         });
 
         it('returns a validation error', done => {
-          node.update({ public_ip: addr || 'null' }).then(done).catch(err => {
+          manager.node.update({ public_ip: addr || 'null' })
+          .then(done).catch(err => {
             expect(actualErr).to.deep.equal(err);
             done();
           });
         });
 
         it("doesn't update node last_seen", () => {
-          return expect(node.reload())
+          return expect(manager.node.reload())
             .to.eventually.have.property('last_seen', previousLastSeen);
         });
       });
@@ -268,16 +271,16 @@ describe('AgentManager Service', () => {
       beforeEach(() => {
         ip = random.ip() ;
         return manager.register(ip+':2375').then(() => {
-          return node.reload();
+          return manager.node.reload();
         });
       });
 
       it('updates node public_ip with this address ip', () => {
-        expect(node.public_ip).to.equal(ip);
+        expect(manager.node.public_ip).to.equal(ip);
       });
 
       it('updates node last_seen to current datetime', () => {
-        expect(node.last_seen).to.deep.equal(moment().toDate());
+        expect(manager.node.last_seen).to.deep.equal(moment().toDate());
       });
     });
 
@@ -289,7 +292,7 @@ describe('AgentManager Service', () => {
 
       beforeEach(done => {
         previousLastSeen = cluster.last_seen;
-        node.update({ master: false }).then(() => {
+        manager.node.update({ master: false }).then(() => {
           return manager.fetch();
         }).catch(err => {
           actualErr = err;
@@ -311,7 +314,7 @@ describe('AgentManager Service', () => {
       let clock, actualAddresses;
 
       beforeEach(() => {
-        return node.update({ master: true }).then(() => {
+        return manager.node.update({ master: true }).then(() => {
           return prepareNodesFor(cluster);
         }).then(() => {
           clock = sinon.useFakeTimers();

@@ -20,8 +20,8 @@ class MachineManager {
       return this._createMachine();
     }).then(id => {
       this.node.provider_id = id;
-
-      return this.cluster.addNode(this.node);
+      this.node.cluster_id  = this.cluster.id;
+      return this.node.save();
     }).then(() => {
       return this.cluster.notify(this.deployChanges);
     }).then(() => {

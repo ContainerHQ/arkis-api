@@ -62,19 +62,19 @@ module.exports = {
         unique: true
       },
       cpu: {
-        type: DataTypes.INTEGER.UNSIGNED,
+        type: DataTypes.INTEGER,
         defaultValue: null,
         allowNull: true,
         validate: { min: 1 }
       },
       memory: {
-        type: DataTypes.INTEGER.UNSIGNED,
+        type: DataTypes.INTEGER,
         defaultValue: null,
         allowNull: true,
         validate: { min: 128 }
       },
       disk: {
-        type: DataTypes.REAL.UNSIGNED,
+        type: DataTypes.REAL,
         defaultValue: null,
         allowNull: true,
         validate: { min: 1.0 }

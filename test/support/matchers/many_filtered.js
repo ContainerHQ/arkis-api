@@ -6,7 +6,7 @@ let _ = require('lodash');
 
 module.exports = function (entity, filterName, filterValue, done) {
   return function(err, res) {
-    if (err) { return done(err); }
+    if (err) {   console.log(res.body); return done(err); }
 
     let models = res.body[entity];
 

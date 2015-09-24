@@ -152,11 +152,13 @@ describe('Cluster Model', () => {
             `when cluster has at least one node in state ${state}`
           , () => {
             beforeEach(() => {
-              return cluster.addNode(factory.buildSync('node', {
+              return cluster.createNode(factory.buildSync('node', {
                 last_state: state
-              }))
+              }).dataValues)
               .then(() => {
-                return cluster.addNode(factory.buildSync('runningNode'))
+                return cluster.createNode(
+                  factory.buildSync('runningNode').dataValues
+                );
               }).then(() => {
                 return cluster.reload();
               }).then(() => {
@@ -173,8 +175,9 @@ describe('Cluster Model', () => {
         if (lastState === 'running') {
           context('when cluster has only nodes in running state', () => {
             beforeEach(() => {
-              return cluster.addNode(factory.buildSync('runningNode'))
-              .then(() => {
+              return cluster.createNode(
+                factory.buildSync('runningNode').dataValues
+              ).then(() => {
                 return cluster.update({ last_state: 'upgrading' })
               }).then(() => {
                 return cluster.reload();
@@ -192,7 +195,9 @@ describe('Cluster Model', () => {
         if (lastState === 'destroyed') {
           context('when cluster has only nodes in running state', () => {
             beforeEach(() => {
-              return cluster.addNode(factory.buildSync('runningNode'))
+              return cluster.createNode(
+                factory.buildSync('runningNode').dataValues
+              )
               .then(() => {
                 return cluster.reload();
               }).then(() => {

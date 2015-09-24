@@ -11,9 +11,10 @@ describe('POST /agent/:token/notify', () => {
 
   beforeEach(() => {
     cluster = factory.buildSync('cluster');
+
     return cluster.save().then(() => {
-      node = factory.buildSync('node');
-      return cluster.addNode(node);
+      node = factory.buildSync('node', { cluster_id: cluster.id });
+      return node.save();
     });
   });
 

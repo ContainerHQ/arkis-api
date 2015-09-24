@@ -8,7 +8,7 @@ let _ = require('lodash'),
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('User', {
     id: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
     },

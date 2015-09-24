@@ -12,12 +12,11 @@ describe('DaemonManager Service', () => {
   let manager, actualErr, expectedError;
 
   beforeEach(() => {
-    let cluster = factory.buildSync('cluster'),
-        node    = factory.buildSync('runningNode');
+    let cluster = factory.buildSync('cluster');
 
     return cluster.save().then(() => {
-      return cluster.addNode(node);
-    }).then(() => {
+      return cluster.createNode(factory.buildSync('runningNode').dataValues);
+    }).then(node => {
       manager = new DaemonManager(cluster, node);
     });
   });

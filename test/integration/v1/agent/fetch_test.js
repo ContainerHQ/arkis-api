@@ -12,10 +12,10 @@ describe('GET /agent/clusters/:token', () => {
 
   beforeEach(() => {
     cluster = factory.buildSync('cluster');
-    node    = factory.buildSync('runningNode');
 
     return cluster.save().then(() => {
-      return cluster.addNode(node);
+      node = factory.buildSync('runningNode', { cluster_id: cluster.id });
+      return node.save();
     }).then(() => {
       manager = new AgentManager(node);
     });

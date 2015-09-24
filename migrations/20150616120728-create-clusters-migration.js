@@ -12,7 +12,7 @@ module.exports = {
         unique: true
       },
       user_id: {
-        type: DataTypes.INTEGER.UNSIGNED,
+        type: DataTypes.INTEGER,
         references: {
           model: 'Users',
           key: 'id'
