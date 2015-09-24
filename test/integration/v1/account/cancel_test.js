@@ -55,7 +55,7 @@ describe('DELETE /account/', () => {
       });
     });
 
-    it('destroys the user profile', done => {
+    it('destroys these nodes', done => {
       api.account(user).cancel()
       .field('password', password)
       .expect(204, (err, res) => {

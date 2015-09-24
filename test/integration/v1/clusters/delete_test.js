@@ -1,6 +1,7 @@
 'use strict';
 
-let models = require('../../../../app/models');
+let _ = require('lodash'),
+  models = require('../../../../app/models');
 
 describe('DELETE /clusters/:id', () => {
   db.sync();
@@ -28,6 +29,32 @@ describe('DELETE /clusters/:id', () => {
             expect(models.Cluster.findById(cluster.id))
               .to.eventually.not.exist
               .notify(done);
+          });
+        });
+
+        context('when cluster has some nodes', () => {
+          let nodeIds;
+
+          beforeEach(done => {
+            let opts = { cluster_id: cluster.id };
+
+            factory.createMany('node', opts, 5, (err, nodes) => {
+              nodeIds = _.pluck(nodes, 'id');
+              done(err);
+            });
+          });
+
+          it('destroys these nodes', done => {
+            api.clusters(user).delete(cluster[attribute])
+            .expect(204, (err, res) => {
+              if (err) { return done(err); }
+
+              let criterias = { where: { id: nodeIds } };
+
+              expect(models.Node.findAll(criterias))
+                .to.eventually.be.empty
+                .notify(done);
+            });
           });
         });
       });
