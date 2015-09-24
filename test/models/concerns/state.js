@@ -35,7 +35,7 @@ module.exports = function(factoryName) {
             beforeEach(() => {
               model = factory.buildSync(factoryName)
 
-              model[attribute.name] = state;
+              model[attribute.name]  = state;
               model[constraint.name] = moment();
               return model.save();
             });
@@ -52,7 +52,7 @@ module.exports = function(factoryName) {
                beforeEach(() => {
                 model = factory.buildSync(factoryName)
 
-                model[attribute.name] = state;
+                model[attribute.name]  = state;
                 model[constraint.name] = null;
                 return model.save();
               });
@@ -75,7 +75,7 @@ module.exports = function(factoryName) {
             beforeEach(() => {
               model = factory.buildSync(factoryName)
 
-              model[attribute.name] = state;
+              model[attribute.name]  = state;
               model[constraint.name] = moment().subtract(after.amount + 1, after.key);
 
               return model.save();

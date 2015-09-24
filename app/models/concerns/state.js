@@ -5,7 +5,9 @@ let moment = require('moment');
 module.exports = function({ attribute, expiration, DataTypes }) {
   let { when, mustBe, after, constraint } = expiration;
 
-  let expiredAt = moment().subtract(after.amount, after.key).toDate();
+  let expiredAt = function() {
+    return moment().subtract(after.amount, after.key).toDate();
+  };
 
   let stateMachine = {
     attributes: {},
@@ -17,11 +19,11 @@ module.exports = function({ attribute, expiration, DataTypes }) {
           switch (state) {
             case when:
               opts[attribute.name]  = when;
-              opts[constraint.name] = { $gte: expiredAt };
+              opts[constraint.name] = { $gte: expiredAt() };
               break;
             case mustBe:
               opts[attribute.name]  = when;
-              opts[constraint.name] = { $lt: expiredAt };
+              opts[constraint.name] = { $lt: expiredAt() };
               break;
             default:
               opts[attribute.name] = { $like: state || '%' };
@@ -35,7 +37,7 @@ module.exports = function({ attribute, expiration, DataTypes }) {
               changedAt      = this.getDataValue(constraint.name);
 
           if (previousState === when &&
-             (changedAt  === null || changedAt < expiredAt)) {
+             (changedAt === null || changedAt < expiredAt())) {
             return mustBe;
           }
           return previousState;

@@ -1,8 +1,10 @@
 'use strict';
 
 let _ = require('lodash'), config = require('../../config'),
+  errors = require('../support').errors,
   StateManager = require('./state_manager'),
-  DaemonManager = require('./daemon_manager');
+  DaemonManager = require('./daemon_manager'),
+  MachineManager = require('./machine_manager');
 
 const LATEST_VERSIONS = {
   docker_version: config.latestVersions.docker,
@@ -30,34 +32,60 @@ class ClusterManager extends StateManager {
     if (this.isConflicted)      { return this.conflict('upgrade'); }
     if (this.isAlreadyUpgraded) { return this.alreadyUpgraded(); }
 
+    let result = { actions: [], errors: [] };
+
     return this.cluster.update(LATEST_VERSIONS).then(() => {
-      return this.getNodeDaemons();
+      return this.getNodes('DaemonManager');
     }).then(daemons => {
       return Promise.all(_.map(daemons, daemon => {
-        return daemon.upgrade().then(
-          action => { return { actions: action }; },
-          error  => {
-            return { errors: {
-              name: _.snakeCase(error.name),
-              message: error.message,
-              resource: 'node',
-              resource_id: daemon.node.id
-            }};
-          }
-        );
+        return daemon.upgrade().then(action => {
+          result.actions.push(action);
+        }).catch(err => {
+          result.errors.push({
+            name: err.name,
+            message: err.message,
+            resource: 'node',
+            resource_id: daemon.nodeId
+          });
+        });
       }));
-    }).then(results => {
-      return _.mapValues({ actions: [], errors: [] }, (value, key) => {
-        return _(results).pluck(key).pull(undefined).value();
+    }).then(() => { return result; });
+  }
+  destroy() {
+    let deletionErrors = [];
+
+    return this.getNodes('MachineManager').then(machines => {
+      return Promise.all(_.map(machines, machine => {
+        return machine.destroy().catch(err => {
+          deletionErrors.push({
+            name: err.name,
+            message: err.message,
+            resource: 'node',
+            resource_id: machine.nodeId
+          });
+        });
+      }));
+    }).then(() => {
+      if (!_.isEmpty(deletionErrors)) {
+        return Promise.reject(new errors.DeletionError(deletionErrors));
+      }
+      return this.cluster.destroy();
+    });
+  }
+  getNodes(service) {
+    return this.cluster.getNodes().then(nodes => {
+      return _.map(nodes, node => {
+        switch (service) {
+          case 'DaemonManager':
+            return new DaemonManager(this.cluster, node);
+          case 'MachineManager':
+            return new MachineManager(this.cluster, node);
+        }
       });
     });
   }
-  getNodeDaemons() {
-    return this.cluster.getNodes().then(nodes => {
-      return _.map(nodes, node => {
-        return new DaemonManager(this.cluster, node);
-      });
-    });
+  get clusterId() {
+    return this.cluster.id;
   }
 }
 

@@ -1,17 +1,22 @@
 'use strict';
 
-let User = require('../../../../app/models').User;
+let _ = require('lodash'),
+  models = require('../../../../app/models');
 
 describe('DELETE /account/', () => {
   db.sync();
-  db.create(['user']);
+  db.create(['user', 'profile']);
 
-  let user, password;
+  let user, profileId, password;
 
   beforeEach(() => {
-    user = factory.buildSync('user');
+    user     = factory.buildSync('user');
     password = user.password;
-    return user.save();
+    return user.save().then(() => {
+      return user.getProfile();
+    }).then(profile => {
+      profileId = profile.id;
+    });
   });
 
   it('destroys the user account', done => {
@@ -20,9 +25,48 @@ describe('DELETE /account/', () => {
     .expect(204, (err, res) => {
       if (err) { return done(err); }
 
-      expect(User.findOne({ where: { email: user.email } }))
+      expect(models.User.findOne({ where: { email: user.email } }))
         .to.eventually.not.exist
         .notify(done);
+    });
+  });
+
+  it('destroys the user profile', done => {
+    api.account(user).cancel()
+    .field('password', password)
+    .expect(204, (err, res) => {
+      if (err) { return done(err); }
+
+      expect(models.Profile.findById(profileId))
+        .to.eventually.not.exist
+        .notify(done);
+    });
+  });
+
+  context('when user has some clusters', () => {
+    let clusterIds;
+
+    beforeEach(done => {
+      let opts = { user_id: user.id };
+
+      factory.createMany('cluster', opts, 5, (err, clusters) => {
+        clusterIds = _.pluck(clusters, 'id');
+        done(err);
+      });
+    });
+
+    it('destroys these nodes', done => {
+      api.account(user).cancel()
+      .field('password', password)
+      .expect(204, (err, res) => {
+        if (err) { return done(err); }
+
+        let criterias = { where: { id: clusterIds } };
+
+        expect(models.Cluster.findAll(criterias))
+          .to.eventually.be.empty
+          .notify(done);
+      });
     });
   });
 
@@ -33,7 +77,7 @@ describe('DELETE /account/', () => {
       .expect(403, (err, res) => {
         if (err) { return done(err); }
 
-        expect(User.findOne({ where: { email: user.email } }))
+        expect(models.User.findOne({ where: { email: user.email } }))
           .to.eventually.exist
           .notify(done);
       });

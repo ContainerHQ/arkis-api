@@ -10,6 +10,9 @@ class MachineManager {
     this.node    = node;
     this.machine = new Machine(config.auth.machine);
   }
+  get nodeId() {
+    return this.node.id;
+  }
   deploy() {
     return this.node.validate().then(err => {
       if (err) { return Promise.reject(err); }

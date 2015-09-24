@@ -51,7 +51,9 @@ router
   }).catch(next);
 })
 .delete((req, res, next) => {
-  req.cluster.destroy().then(res.noContent).catch(next);
+  let clusterManager = new services.ClusterManager(req.cluster);
+
+  clusterManager.destroy().then(res.noContent).catch(next);
 });
 
 module.exports = router;

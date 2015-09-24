@@ -78,12 +78,10 @@ class Machine {
     }
     return Promise.resolve(options.name);
   }
-  delete(id) {
+  delete() {
     if (!this.credentials) {
       return new errors.MachineCredentialsError();
     }
-    if (!id) { return Promise.reject(new errors.MachineNotFoundError()); }
-
     return Promise.resolve();
   }
 }
