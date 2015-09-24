@@ -2,6 +2,7 @@
 
 let express = require('express'),
   handler = require('../../shared/handler'),
+  services = require('../../../services'),
   errors = require('../../../support').errors;
 
 let router = express.Router();
@@ -40,7 +41,9 @@ router
   if (!req.user.verifyPassword(req.body.password)) {
     return res.forbidden();
   }
-  req.user.destroy().then(res.noContent).catch(next);
+  let account = new services.AccountManager(req.user);
+
+  account.destroy().then(res.noContent).catch(next);
 })
 .get('/request_password', handler.notYetImplemented)
 
