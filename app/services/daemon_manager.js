@@ -1,6 +1,7 @@
 'use strict';
 
 let _ = require('lodash'),
+  sequelize = require('../models').sequelize,
   StateManager = require('./state_manager'),
   Daemon = require('../support').Daemon;
 
@@ -30,35 +31,34 @@ class DaemonManager extends StateManager {
    * accordingly.
    */
   update(attributes={}) {
-    if (this.isConflicted)      { return this.conflict('update');    }
+    if (this.isConflicted)      { return this.conflict('update'); }
     if (_.isEmpty(attributes))  { return Promise.resolve(null); }
 
-    let changes = this._updateChanges(attributes);
+    let masterSwitch = this.node.master !== attributes.master;
 
-    _.merge(this.node, attributes, UPDATING_STATE);
+    return sequelize.transaction(t => {
+      let options = { transaction: t }, action;
 
-    return this.node.validate().then(err => {
-      if (err) { return Promise.reject(err); }
-
-      return this.daemon.update(attributes);
-    }).then(() => {
-      return this.node.save();
-    }).then(() => {
-      return this.cluster.notify(changes);
-    }).then(() => {
-      return this.node.createAction({ type: 'update' });
+      return this.node.createAction({ type: 'update' }, options)
+      .then(createdAction => {
+        action = createdAction;
+        return this.node.update(
+          _.merge({}, attributes, UPDATING_STATE),
+          options
+        );
+      }).then(() => {
+        return this.cluster.adaptStateTo({
+          action:  'update',
+          node:    this.node,
+          options: options,
+          masterSwitch: masterSwitch
+        });
+      }).then(() => {
+        return this.daemon.update(attributes);
+      }).then(() => {
+        return action;
+      });
     });
-  }
-  _updateChanges(attributes) {
-    let changes = {};
-
-    if (attributes.master === true && !this.node.master) {
-      _.merge(changes, { last_seen: this.node.last_seen });
-    }
-    if (attributes.master === false && this.node.master) {
-      _.merge(changes, { last_seen: null });
-    }
-    return _.merge(changes, UPDATING_STATE);
   }
   /*
    * Upgrade a node daemon to its cluster versions.
@@ -67,12 +67,23 @@ class DaemonManager extends StateManager {
     if (this.isConflicted)      { return this.conflict('upgrade'); }
     if (this.isAlreadyUpgraded) { return this.alreadyUpgraded(); }
 
-    return this.daemon.upgrade(this.cluster).then(() => {
-      return this.node.update(UPGRADING_STATE);
-    }).then(() => {
-      return this.cluster.notify(UPGRADING_STATE);
-    }).then(() => {
-      return this.node.createAction({ type: 'upgrade' });
+    return sequelize.transaction(t => {
+      let options = { transaction: t }, action;
+
+      return this.node.createAction({ type: 'upgrade' }, options)
+      .then(createdAction => {
+        action = createdAction;
+        return this.node.update(UPGRADING_STATE, options);
+      }).then(() => {
+        return this.cluster.update(UPGRADING_STATE, options);
+      }).then(() => {
+        return this.daemon.upgrade({
+          docker: this.cluster.docker_version,
+          swarm:  this.cluster.swarm_version
+        });
+      }).then(() => {
+        return action;
+      });
     });
   }
 }

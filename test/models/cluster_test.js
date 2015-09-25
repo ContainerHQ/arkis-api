@@ -116,7 +116,7 @@ describe('Cluster Model', () => {
     });
   });
 
-  describe('#notify', () => {
+  describe.skip('#notify', () => {
     const BUSY_STATES = ['deploying', 'upgrading', 'updating'];
 
     let cluster;

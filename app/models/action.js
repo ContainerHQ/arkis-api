@@ -1,7 +1,6 @@
 'use strict';
 
 let _ = require('lodash'),
-  moment = require('moment'),
   config = require('../../config'),
   concerns = require('./concerns');
 
@@ -78,12 +77,11 @@ module.exports = function(sequelize, DataTypes) {
           return { where: { resource: 'node', resource_id: id } };
         }
       },
-
       instanceMethods: {
         complete: function() {
-          return this.update({
-            last_state: 'completed', completed_at: moment()
-          });
+          return this.update(
+            { last_state: 'completed', completed_at: Date.now() }
+          );
         }
       }
     }

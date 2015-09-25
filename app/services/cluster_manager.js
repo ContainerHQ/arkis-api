@@ -17,6 +17,9 @@ class ClusterManager extends StateManager {
 
     this.cluster = cluster;
   }
+  get clusterId() {
+    return this.cluster.id;
+  }
   /*
    * Upgrade a cluster to the latest versions available and perform a
    * node upgrade on all cluster nodes.
@@ -83,9 +86,6 @@ class ClusterManager extends StateManager {
         }
       });
     });
-  }
-  get clusterId() {
-    return this.cluster.id;
   }
 }
 

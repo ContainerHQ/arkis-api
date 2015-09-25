@@ -97,8 +97,8 @@ module.exports = function(sequelize, DataTypes) {
         user.generateToken();
         return Promise.resolve(user);
       },
-      afterCreate: function(user) {
-        return user.createProfile();
+      afterCreate: function(user, options) {
+        return user.createProfile({}, { transaction: options.transaction });
       }
     }
   });
