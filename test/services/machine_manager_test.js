@@ -4,7 +4,7 @@ var _ = require('lodash'),
   config = require('../../config'),
   models = require('../../app/models'),
   errors = require('../../app/support').errors,
-  Node = require('../../app/models').Node,
+  models = require('../../app/models'),
   MachineManager = require('../../app/services').MachineManager;
 
 const BYON_OPTS = { byon: true, region: null, size: null };
@@ -72,14 +72,15 @@ describe('MachineManager Service', () => {
 
       it('creates the machine behind with specified options', () => {
         expect(manager.machine.create).to.have.been.calledWith({
-          name: manager.node.id,
-          region: manager.node.region,
-          size: manager.node.size
+          name: manager.node.id || '.',
+          region: manager.node.region || '.',
+          size: manager.node.size || '.'
         });
       });
 
       it('adds the machine id to the node', () => {
-        expect(manager.node.provider_id).to.equal(machineId);
+        return expect(manager.node.reload())
+          .to.eventually.have.property('provider_id', machineId);
       });
     });
 
@@ -101,7 +102,8 @@ describe('MachineManager Service', () => {
       });
 
       it("doesn't create the node", () => {
-        expect(manager.node.isNewRecord).to.be.true;
+        return expect(models.Node.findById(manager.node.id))
+          .to.eventually.not.exist;
       });
 
       itDoesntNotifyTheCluster();
@@ -127,13 +129,15 @@ describe('MachineManager Service', () => {
 
     function itCreatesTheNode() {
       it('creates the node', () => {
-        expect(manager.node.isNewRecord).to.be.false;
+        return expect(manager.node.reload())
+          .to.eventually.have.property('isNewRecord').to.be.false;
       });
     }
 
     function itDoesntNotifyTheCluster() {
       it("doesn't notify the cluster", () => {
-        expect(manager.cluster.state).to.equal('empty');
+        return expect(manager.cluster.reload())
+          .to.eventually.have.property('state', 'empty');
       });
     }
 
@@ -151,19 +155,21 @@ describe('MachineManager Service', () => {
 
     function itAddsTheNodeToTheCluster() {
       it('adds the node to the cluster', () => {
-        expect(manager.node.cluster_id).to.equal(manager.cluster.id);
+        return expect(manager.node.reload())
+          .to.eventually.have.property('cluster_id', manager.cluster.id);
       });
     }
 
     function itNotifiesTheCluster() {
       it('notifies the cluster', () => {
-        expect(manager.cluster.state).to.equal('deploying');
+        return expect(manager.cluster.reload())
+          .to.eventually.have.property('state', 'deploying');
       });
     }
 
     function itCreatesADeployActionForTheNode() {
       it('creates and returns a deploy action for the node', () => {
-        expect(action).to.include({
+        return expect(action.reload()).to.eventually.include({
           type: 'deploy',
           state: 'in-progress',
           completed_at: null,
@@ -230,7 +236,8 @@ describe('MachineManager Service', () => {
         });
 
         it('notifies the cluster with last_seen', () => {
-          expect(manager.cluster.last_seen).to.be.null;
+          return expect(manager.cluster.reload())
+            .to.eventually.have.property('last_seen').to.be.null;
         });
       });
 
@@ -254,8 +261,9 @@ describe('MachineManager Service', () => {
           expect(manager.machine.delete).to.have.been.calledWith(machineId);
         });
 
-        it("doens't notify the cluster with last_seen", () => {
-          expect(manager.cluster.last_seen).to.not.be.null;
+        it("doesn't notify the cluster with last_seen", () => {
+          return expect(manager.cluster.reload())
+            .to.eventually.have.property('last_seen').to.not.be.null;
         });
       });
     });
@@ -297,12 +305,13 @@ describe('MachineManager Service', () => {
           });
 
           it("doesn't remove the node", () => {
-            return expect(Node.findById(manager.node.id))
+            return expect(models.Node.findById(manager.node.id))
               .to.eventually.exist;
           });
 
           it("doesn't notify the cluster", () => {
-            expect(manager.cluster.state).to.equal('deploying');
+            return expect(manager.cluster.reload())
+              .to.eventually.have.property('state', 'deploying');
           });
         });
       });
@@ -310,14 +319,15 @@ describe('MachineManager Service', () => {
 
     function itRemovesTheNode() {
       it('removes the node', () => {
-        return expect(Node.findById(manager.node.id))
+        return expect(models.Node.findById(manager.node.id))
           .to.eventually.not.exist;
       });
     }
 
     function itNotifiesTheClusterWithLastState() {
       it('notifies the cluster with last_state', () => {
-        expect(manager.cluster.state).to.equal('empty');
+        return expect(manager.cluster.reload())
+          .to.eventually.have.property('state', 'empty');
       });
     }
 

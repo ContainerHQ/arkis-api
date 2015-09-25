@@ -225,7 +225,7 @@ describe('ClusterManager Service', () => {
     });
 
     context('when cluster has nodes', () => {
-      const NODES_COUNT = 5;
+      const NODES_COUNT = 3;
 
       let nodes;
 

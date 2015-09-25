@@ -37,7 +37,7 @@ describe('DELETE /clusters/:id', () => {
           beforeEach(done => {
             let opts = { cluster_id: cluster.id };
 
-            factory.createMany('node', opts, 5, (err, nodes) => {
+            factory.createMany('node', opts, 3, (err, nodes) => {
               nodeIds = _.pluck(nodes, 'id');
               done(err);
             });

@@ -10,7 +10,9 @@ describe('AgentManager Service', () => {
   let manager, cluster;
 
   beforeEach(() => {
-    cluster = factory.buildSync('cluster');
+    cluster = factory.buildSync('deployingCluster', {
+      last_seen: moment
+    });
 
     return cluster.save().then(cluster => {
       return cluster.createNode(factory.buildSync('node').dataValues);
@@ -41,15 +43,6 @@ describe('AgentManager Service', () => {
   });
 
   describe('#notify', () => {
-    let clusterNotify;
-
-    beforeEach(() => {
-      clusterNotify   = sinon.stub().returns(Promise.resolve());
-      manager.node.getCluster = sinon.stub().returns(
-        Promise.resolve({ notify: clusterNotify })
-      );
-    });
-
     context('with valid attributes', () => {
       const ATTRIBUTES = { docker_version: '1.2.0', disk: 2 };
 
@@ -204,7 +197,8 @@ describe('AgentManager Service', () => {
       });
 
       it("doesn't notify the cluster", () => {
-        expect(clusterNotify).to.not.have.been.called;
+        return expect(manager.node.getCluster())
+          .to.eventually.not.have.property('state', 'running');
       });
     });
 
@@ -216,8 +210,8 @@ describe('AgentManager Service', () => {
 
     function itNotifiesTheClusterWithLastState() {
       it('notifies the cluster with last_state', () => {
-        expect(clusterNotify)
-          .to.have.been.calledWith({ last_state: 'running' });
+        return expect(manager.node.getCluster())
+          .to.eventually.have.property('state', 'running');
       });
     }
   });
@@ -306,7 +300,8 @@ describe('AgentManager Service', () => {
 
       it("doesn't update the node cluster ping", () => {
         return expect(cluster.reload())
-          .to.eventually.have.property('last_seen', previousLastSeen);
+          .to.eventually.have.property('last_seen')
+          .that.deep.equals(previousLastSeen);
       });
     });
 
