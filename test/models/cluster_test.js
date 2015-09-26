@@ -116,148 +116,146 @@ describe('Cluster Model', () => {
     });
   });
 
-  describe.skip('#notify', () => {
-    const BUSY_STATES = ['deploying', 'upgrading', 'updating'];
-
-    let cluster;
+  describe('#adaptStateTo', () => {
+    let cluster, node;
 
     beforeEach(() => {
       cluster = factory.buildSync('runningCluster');
-      return cluster.save();
-    });
-
-    BUSY_STATES.forEach(state => {
-      context(`with a last state equal to ${state}`, () => {
-        let lastSeen;
-
-        beforeEach(() => {
-          lastSeen = cluster.last_seen;
-          return cluster.notify({ last_state: state });
-        });
-
-        it(`has a state set to ${state}`, () => {
-          expect(cluster.state).to.equal(state);
-        });
-
-        it('has the same last seen than before', () => {
-          expect(cluster.last_seen).to.deep.equal(lastSeen);
-        });
+      return cluster.save().then(() => {
+        node = factory.buildSync('runningNode', { cluster_id: cluster.id });
+        return node.save();
+      }).then(() => {
+        return cluster.reload();
       });
     });
 
-    ['running', 'destroyed'].forEach(lastState => {
-      context(`with a last state equal to ${lastState}`, () => {
-        BUSY_STATES.forEach(state => {
-          context(
-            `when cluster has at least one node in state ${state}`
-          , () => {
+    ['destroyed', 'notify'].forEach(action => {
+      context('with action destroyed', () => {
+        if (action === 'destroyed') {
+          context('when node sent is the last one', () => {
             beforeEach(() => {
-              return cluster.createNode(factory.buildSync('node', {
-                last_state: state
-              }).dataValues)
-              .then(() => {
-                return cluster.createNode(
-                  factory.buildSync('runningNode').dataValues
-                );
-              }).then(() => {
-                return cluster.reload();
-              }).then(() => {
-                return cluster.notify({ last_state: lastState })
-              });
+              return cluster.adaptStateTo({ action: action, node: node });
             });
 
-            it(`is in ${state} state`, () => {
-              expect(cluster.state).to.equal(state);
-            });
-          });
-        });
-
-        if (lastState === 'running') {
-          context('when cluster has only nodes in running state', () => {
-            beforeEach(() => {
-              return cluster.createNode(
-                factory.buildSync('runningNode').dataValues
-              ).then(() => {
-                return cluster.update({ last_state: 'upgrading' })
-              }).then(() => {
-                return cluster.reload();
-              }).then(() => {
-                return cluster.notify({ last_state: lastState })
-              });
+            it('is in empty state', () => {
+              return expect(cluster.reload())
+                .to.eventually.have.property('state', 'empty');
             });
 
-            it(`is in running state`, () => {
-              expect(cluster.state).to.equal('running');
+            it('has a last_seen equal to null', () => {
+              return expect(cluster.reload())
+                .to.eventually.have.property('last_seen', null);
             });
           });
         }
 
-        if (lastState === 'destroyed') {
-          context('when cluster has only nodes in running state', () => {
-            beforeEach(() => {
-              return cluster.createNode(
-                factory.buildSync('runningNode').dataValues
-              )
-              .then(() => {
-                return cluster.reload();
-              }).then(() => {
-                return cluster.update({ last_state: 'upgrading' })
-              });
-            });
+        context('when cluster has multiple nodes', () => {
+          beforeEach(done => {
+            let opts = { cluster_id: cluster.id };
 
-            context('when master is destroyed', () => {
-              beforeEach(() => {
-                return cluster.notify(
-                  { last_state: lastState, last_seen: null }
-                );
-              });
-
-              it(`is in unreachable state`, () => {
-                expect(cluster.state).to.equal('unreachable');
-              });
-            });
-
-            context('when a slave is destroyed', () => {
-              beforeEach(() => {
-                return cluster.notify({ last_state: lastState });
-              });
-
-              it(`is in running state`, () => {
-                expect(cluster.state).to.equal('running');
-              });
+            factory.createMany('runningNode', opts, 5, err => {
+              cluster.reload().then(() => { done(err); }).catch(done);
             });
           });
 
-          context('when cluster has no longer any node', () => {
-            beforeEach(() => {
-              return cluster.update({ last_state: 'upgrading' }).then(() => {
-                return cluster.notify({ last_state: lastState });
+          if (action === 'destroyed') {
+            context('when node sent is master', () => {
+              beforeEach(() => {
+                return node.update({ master: true }).then(() => {
+                  return cluster.adaptStateTo({ action: action, node: node });
+                });
+              });
+
+              it('resets its last_seen', () => {
+                return expect(cluster.reload())
+                  .to.eventually.have.property('last_seen', null);
               });
             });
+          }
 
-            it(`is in empty state`, () => {
-              expect(cluster.state).to.equal('empty');
+          context('when other nodes are in running state', () => {
+            beforeEach(() => {
+              return cluster.adaptStateTo({ action: action, node: node });
+            });
+
+            it('is in running state', () => {
+              return expect(cluster.reload())
+                .to.eventually.have.property('state', 'running');
+            });
+
+            it('keeps its last seen', () => {
+              return expect(cluster.reload())
+                .to.eventually.have.property('last_seen').to.not.be.null;
+            });
+
+            context('when one other node is not in running state', () => {
+              let otherNode;
+
+              beforeEach(() => {
+                return cluster.createNode(factory.buildSync('node').dataValues)
+                .then(node => {
+                  otherNode = node;
+                  return cluster.reload();
+                }).then(() => {
+                  return cluster.adaptStateTo({ action: action, node: node });
+                });
+              });
+
+              it('takes the other node last state', () => {
+                return expect(cluster.reload())
+                  .to.eventually.have.property('last_state', otherNode.last_state);
+              });
+
+              it('keeps its last seen', () => {
+                return expect(cluster.reload())
+                  .to.eventually.have.property('last_seen').to.not.be.null;
+              });
             });
           });
-        }
+        });
       });
     });
 
-    context('with last seen', () => {
-      let lastSeen, lastState;
+    context('with any action', () => {
+      context('with masterSwitch', () => {
+        context('when node sent is master', () => {
+          beforeEach(() => {
+            return node.update({ master: true }).then(() => {
+              return cluster.adaptStateTo(
+                { action: 'update', node: node, masterSwitch: true }
+              );
+            });
 
+            it('takes the node last_seen', () => {
+              return expect(cluster.reload())
+                .to.eventually.have.property('last_seen', node.last_seen);
+            });
+          });
+        });
+
+        context('when node sent is not master', () => {
+          beforeEach(() => {
+            return cluster.adaptStateTo(
+              { action: 'update', node: node, masterSwitch: true }
+            );
+          });
+
+          it('resets its last_seen', () => {
+            return expect(cluster.reload())
+              .to.eventually.have.property('last_seen', null);
+          });
+        });
+      });
+    });
+
+    context('with other action', () => {
       beforeEach(() => {
-        lastSeen  = moment();
-        lastState = cluster.state;
-        return cluster.notify({ last_seen: lastSeen });
+        return cluster.adaptStateTo({ action: random.string(), node: node });
       });
 
-      it('updates the cluster last seen with the provided value', () => {
-        expect(cluster.last_seen).to.deep.equal(lastSeen.toDate());
-      });
-
-      it('has the same state than before', () => {
-        expect(cluster.state).to.equal(lastState);
+      it('takes the node last_state', () => {
+        return expect(cluster.reload())
+          .to.eventually.have.property('last_state', node.last_state);
       });
     });
   });

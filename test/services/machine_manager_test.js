@@ -187,6 +187,7 @@ describe('MachineManager Service', () => {
     beforeEach(() => {
       return manager.deploy().then(nodeAction => {
         action = nodeAction;
+        return manager.cluster.reload();
       });
     });
 

@@ -115,8 +115,6 @@ module.exports = function(sequelize, DataTypes) {
       },
       instanceMethods: {
         _lastStateFromNodes: function({ ignore, options }) {
-          if (this.nodes_count <= 0) { return Promise.resolve('empty'); }
-
           let criterias = {
             scope: 'nonRunningNorUnreachable',
             where: { id: { $ne: ignore.id } }
@@ -130,10 +128,18 @@ module.exports = function(sequelize, DataTypes) {
 
           switch (action) {
             case 'destroyed':
+              if (this.nodes_count <= 1) {
+                return this.update({ last_state: 'empty', last_seen: null });
+              }
+              getLastState = this._lastStateFromNodes({
+                ignore:  node,
+                options: options,
+              });
+              break;
             case 'notify':
               getLastState = this._lastStateFromNodes({
-                ignore: node,
-                options: options
+                ignore:  node,
+                options: options,
               });
               break;
             default:
