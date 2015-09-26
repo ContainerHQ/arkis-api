@@ -244,11 +244,8 @@ describe('MachineManager Service', () => {
 
       context('when node is a slave', () => {
         beforeEach(() => {
-          return manager.cluster.update({ last_seen: Date.now() })
-          .then(() => {
-            return manager.node.update({
-              master: false, provider_id: machineId
-            });
+          return manager.node.update({
+            master: false, provider_id: machineId
           }).then(() => {
             return manager.destroy();
           });
@@ -260,11 +257,6 @@ describe('MachineManager Service', () => {
 
         it('removes the machine behind', () => {
           expect(manager.machine.delete).to.have.been.calledWith(machineId);
-        });
-
-        it("doesn't notify the cluster with last_seen", () => {
-          return expect(manager.cluster.reload())
-            .to.eventually.have.property('last_seen').to.not.be.null;
         });
       });
     });
@@ -310,8 +302,10 @@ describe('MachineManager Service', () => {
               .to.eventually.exist;
           });
 
-          it("doesn't notify the cluster", () => {
-            return expect(manager.cluster.reload())
+          it("doesn't adapt the cluster state", () => {
+            return expect(manager.cluster.reload().then(cluster => {
+              return cluster;
+            }))
               .to.eventually.have.property('state', 'deploying');
           });
         });

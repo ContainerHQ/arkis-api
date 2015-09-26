@@ -129,7 +129,9 @@ module.exports = function(sequelize, DataTypes) {
           switch (action) {
             case 'destroyed':
               if (this.nodes_count <= 1) {
-                return this.update({ last_state: 'empty', last_seen: null });
+                return this.update(
+                  { last_state: 'empty', last_seen: null }, options
+                );
               }
               getLastState = this._lastStateFromNodes({
                 ignore:  node,
