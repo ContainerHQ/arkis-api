@@ -36,7 +36,7 @@ describe('ErrorHandler Middleware', () => {
           expect(res.json).to.have.been.calledWith({
             name: 'validation_error',
             message: err.message,
-            errors: serializedErrors(err.errors, { key: 'type' })
+            errors: serializedErrors(err.errors)
           });
           done();
         });
@@ -96,7 +96,7 @@ describe('ErrorHandler Middleware', () => {
           };
           if (_.has(err, 'errors')) {
             _.merge(expected, {
-              errors: serializedErrors(err.errors, { key: 'name' })
+              errors: serializedErrors(err.errors)
             });
           }
           expect(res.json).to.have.been.calledWith(expected);
@@ -106,10 +106,15 @@ describe('ErrorHandler Middleware', () => {
     });
   });
 
-  function serializedErrors(errors, { key }) {
-    return _.map(errors, err => {
-      err.name = _.snakeCase(err[key]);
-      delete err[key];
+  /*
+   * This function is a bit dangerous, we need to cloneDeep the errors as we
+   * are faking the call to the middleware and moving the same error object
+   * in and out.
+   */
+  function serializedErrors(errors) {
+    return _.map(_.cloneDeep(errors), err => {
+      err.name = _.snakeCase(err.name || err.type);
+      delete err.type;
       return err;
     });
   }

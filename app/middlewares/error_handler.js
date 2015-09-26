@@ -8,6 +8,18 @@ const INTERNAL_SERVER_ERROR = {
   Try again later, or contact support.`
 };
 
+const HTTP_CODES = {
+  'SequelizeValidationError':  400,
+  'PaginationError':           400,
+  'AlreadyUpgradedError':      409,
+  'DeletionError':             409,
+  'NotMasterError':            403,
+  'MachineCredentialsError':   401,
+  'MachineNotFoundError':      404,
+  'StateError':                422,
+  'MachineUnprocessableError': 422
+};
+
 /*
  * Format error types/name to snake case and removes sequelize indications.
  */
@@ -29,37 +41,16 @@ function serializeError(error) {
 }
 
 module.exports = function(err, req, res, next) {
-  let statusCode;
+  let statusCode = HTTP_CODES[err.name] || 500,
+      body;
 
-  switch (err.name) {
-    case 'SequelizeValidationError':
-      statusCode = 400;
-      break;
-    case 'PaginationError':
-      statusCode = 400;
-      break;
-    case 'AlreadyUpgradedError':
-    case 'DeletionError':
-      statusCode = 409;
-      break;
-    case 'NotMasterError':
-      statusCode = 403;
-      break;
-    case 'MachineCredentialsError':
-      statusCode = 401;
-      break;
-    case 'MachineNotFoundError':
-      statusCode = 404;
-      break;
-    case 'StateError':
-    case 'MachineUnprocessableError':
-      statusCode = 422;
-      break;
-    default:
-      console.error(err);
-      res.status(500).json(INTERNAL_SERVER_ERROR);
-      return next();
+  if (statusCode === 500) {
+    console.error(err);
+
+    body = INTERNAL_SERVER_ERROR;
+  } else {
+    body = serializeError(err);
   }
-  res.status(statusCode).json(serializeError(err));
+  res.status(statusCode).json(body);
   next();
 };
