@@ -7,14 +7,13 @@ describe('GET /clusters/:cluster_id/nodes/:node_id/actions/:action_id', () => {
   let user, cluster, node, action;
 
   beforeEach(() => {
-    user    = factory.buildSync('user');
-    cluster = factory.buildSync('cluster');
-    node    = factory.buildSync('node');
-
+    user = factory.buildSync('user');
     return user.save().then(() => {
-      return user.addCluster(cluster);
+      cluster = factory.buildSync('cluster', { user_id: user.id });
+      return cluster.save();
     }).then(() => {
-      return cluster.addNode(node);
+      node = factory.buildSync('node', { cluster_id: cluster.id });
+      return node.save();
     }).then(() => {
       return node.createAction({ type: 'deploy' });
     }).then(nodeAction => {

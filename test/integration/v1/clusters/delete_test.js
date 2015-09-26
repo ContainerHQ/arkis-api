@@ -10,11 +10,10 @@ describe('DELETE /clusters/:id', () => {
   let user, cluster;
 
   beforeEach(() => {
-    user    = factory.buildSync('user');
-    cluster = factory.buildSync('cluster');
-
+    user = factory.buildSync('user');
     return user.save().then(() => {
-      return user.addCluster(cluster);
+      cluster = factory.buildSync('cluster', { user_id: user.id });
+      return cluster.save();
     });
   });
 
@@ -38,7 +37,7 @@ describe('DELETE /clusters/:id', () => {
           beforeEach(done => {
             let opts = { cluster_id: cluster.id };
 
-            factory.createMany('node', opts, 5, (err, nodes) => {
+            factory.createMany('node', opts, 3, (err, nodes) => {
               nodeIds = _.pluck(nodes, 'id');
               done(err);
             });

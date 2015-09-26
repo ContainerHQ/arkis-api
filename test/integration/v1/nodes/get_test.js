@@ -9,19 +9,13 @@ describe('GET /clusters/:cluster_id/nodes/:node_id', () => {
   let user, cluster, node;
 
   beforeEach(() => {
-    user    = factory.buildSync('user');
-    cluster = factory.buildSync('cluster');
-    node    = factory.buildSync('node');
-
+    user = factory.buildSync('user');
     return user.save().then(() => {
-      return user.addCluster(cluster);
+      cluster = factory.buildSync('cluster', { user_id: user.id });
+      return cluster.save();
     }).then(() => {
-      return cluster.addNode(node);
-    }).then(() => {
-      /*
-       * Node must be reloaded to ensure that we have its virtual attributes.
-       */
-      return node.reload();
+      node = factory.buildSync('node', { cluster_id: cluster.id });
+      return node.save();
     });
   });
 

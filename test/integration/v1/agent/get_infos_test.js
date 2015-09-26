@@ -9,10 +9,11 @@ describe('GET /agent/:token/infos', () => {
   let manager, node;
 
   beforeEach(() => {
-    node = factory.buildSync('node');
+    let cluster = factory.buildSync('cluster');
 
-    return factory.buildSync('cluster').save().then(cluster => {
-      return cluster.addNode(node);
+    return cluster.save().then(() => {
+      node = factory.buildSync('node', { cluster_id: cluster.id });
+      return node.save();
     }).then(() => {
       manager = new AgentManager(node);
     });

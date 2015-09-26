@@ -114,30 +114,53 @@ module.exports = function(sequelize, DataTypes) {
         }
       },
       instanceMethods: {
-        retrieveState: function() {
-          if (this.nodes_count <= 0) { return Promise.resolve('empty'); }
-
-          return this.getNodes({ scope: 'nonRunningNorUnreachable' })
-          .then(nodes => {
-            return _.isEmpty(nodes) ? 'running' : _.first(nodes).last_state;
+        _lastStateFromNodes: function({ ignore, options }) {
+          let criterias = {
+            scope: 'nonRunningNorUnreachable',
+            where: { id: { $ne: ignore.id } }
+          };
+          return this.getNodes(criterias, options).then(_.first).then(node => {
+            return !node ? 'running' : node.last_state;
           });
         },
-        /*
-         * If the cluster already has updated its attributes with the same
-         * changes, sequelize won't try to update them again.
-         */
-        notify: function(changes={}) {
-          changes = _.pick(changes, ['last_state', 'last_seen']);
+        adaptStateTo: function({ action, node, options, masterSwitch }) {
+          let getLastState;
 
-          switch (changes.last_state) {
+          switch (action) {
             case 'destroyed':
-            case 'running':
-              return this.retrieveState().then(state => {
-                changes.last_state = state;
-                return this.update(changes);
+              if (this.nodes_count <= 1) {
+                return this.update(
+                  { last_state: 'empty', last_seen: null }, options
+                );
+              }
+              getLastState = this._lastStateFromNodes({
+                ignore:  node,
+                options: options,
               });
+              break;
+            case 'notify':
+              getLastState = this._lastStateFromNodes({
+                ignore:  node,
+                options: options,
+              });
+              break;
+            default:
+              getLastState = Promise.resolve(node.last_state);
           }
-          return this.update(changes);
+          return getLastState.then(lastState => {
+            let changes = { last_state: lastState };
+
+            if (
+              (action === 'destroyed' && node.master) ||
+              (masterSwitch && !node.master)
+            ) {
+              changes.last_seen = null;
+            }
+            if (masterSwitch && node.master) {
+              changes.last_seen = node.last_seen;
+            }
+            return this.update(changes, options);
+          });
         }
       },
       classMethods: {

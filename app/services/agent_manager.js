@@ -2,6 +2,7 @@
 
 let _ = require('lodash'),
   moment = require('moment'),
+  sequelize = require('../models').sequelize,
   config = require('../../config'),
   errors = require('../support').errors;
 
@@ -34,15 +35,28 @@ class AgentManager {
    * Must be called whenever an agent has finished its pending work.
    */
   notify(attributes={}) {
-    return this.node.update(_.merge(this._notifyAttributes, attributes))
-    .then(() => {
-      return this.node.getCluster();
-    }).then(cluster => {
-      return cluster.notify(RUNNING_STATE);
-    }).then(() => {
-      return this.node.getActions({ scope: 'pending' });
-    }).then(_.first).then(action => {
-      return action ? action.complete() : Promise.resolve(null);
+    return sequelize.transaction(t => {
+      let options = { transaction: t }, action;
+
+      return this.node.getActions({ scope: 'pending' }, options)
+      .then(_.first).then(action => {
+        return action ? action.complete(options) : Promise.resolve(null);
+      }).then(completed => {
+        action = completed;
+        return this.node.update(_.merge(this._notifyAttributes, attributes),
+          options
+        );
+      }).then(() => {
+        return this.node.getCluster(options);
+      }).then(cluster => {
+        return cluster.adaptStateTo({
+          action:  'notify',
+          node:    this.node,
+          options: options
+        });
+      }).then(() => {
+        return action;
+      });
     });
   }
   /*
@@ -66,13 +80,19 @@ class AgentManager {
   fetch() {
     if (this.isSlave) { return Promise.reject(new errors.NotMasterError()); }
 
-    return this.node.getCluster().then(cluster => {
-      return cluster.notify({ last_seen: moment() });
-    }).then(cluster => {
-      return cluster.getNodes({ scope: ['defaultScope', 'runningIPs'] });
-    }).then(nodes => {
-      return _.map(nodes, node => {
-        return `${node.public_ip}:${config.agent.ports.docker}`;
+    return sequelize.transaction(t => {
+      let options = { transaction: t };
+
+      return this.node.getCluster(options).then(cluster => {
+        return cluster.update({ last_seen: moment() }, options);
+      }).then(cluster => {
+        return cluster.getNodes({ scope: ['defaultScope', 'runningIPs'] },
+          options
+        );
+      }).then(nodes => {
+        return _.map(nodes, node => {
+          return `${node.public_ip}:${config.agent.ports.docker}`;
+        });
       });
     });
   }

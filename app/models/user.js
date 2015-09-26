@@ -8,7 +8,7 @@ let _ = require('lodash'),
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('User', {
     id: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
     },
@@ -97,8 +97,8 @@ module.exports = function(sequelize, DataTypes) {
         user.generateToken();
         return Promise.resolve(user);
       },
-      afterCreate: function(user) {
-        return user.createProfile();
+      afterCreate: function(user, options) {
+        return user.createProfile({}, { transaction: options.transaction });
       }
     }
   });

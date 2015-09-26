@@ -1,6 +1,7 @@
 'use strict';
 
 let _ = require('lodash'),
+  sequelize = require('../models').sequelize,
   config = require('../../config'),
   Machine = require('../connectors').Machine;
 
@@ -14,38 +15,44 @@ class MachineManager {
     return this.node.id;
   }
   deploy() {
-    return this.node.validate().then(err => {
-      if (err) { return Promise.reject(err); }
+    let action;
 
-      return this._createMachine();
+    this.node.cluster_id = this.cluster.id;
+
+    return sequelize.transaction(t => {
+      let options = { transaction: t };
+
+      return this.node.save(options).then(() => {
+        return this.node.createAction({ type: 'deploy' }, options);
+      }).then(createdAction => {
+        action = createdAction;
+        return this.cluster.update({ last_state: 'deploying' }, options);
+      }).then(() => {
+        return this._createMachine();
+      });
     }).then(id => {
-      this.node.provider_id = id;
-
-      return this.cluster.addNode(this.node);
-    }).then(() => {
-      return this.cluster.notify(this.deployChanges);
-    }).then(() => {
-      return this.node.createAction({ type: 'deploy' });
+      return this.node.update({ provider_id: id }).return(action);
     });
   }
   destroy() {
-    return this._deleteMachine().then(() => {
-      return this.node.destroy();
-    }).then(() => {
-      return this.cluster.notify(this.destroyChanges);
-    }).then(() => {
-      return this.node.getActions();
-    }).then(actions => {
-      return Promise.all(_.invoke(actions, 'destroy'));
-    });
-  }
-  get deployChanges() {
-    return _.pick(this.node, 'last_state');
-  }
-  get destroyChanges() {
-    let changes = this.node.master ? { last_seen: null } : {};
+    return sequelize.transaction(t => {
+      let options = { transaction: t };
 
-    return _.merge(changes, { last_state: 'destroyed' });
+      return this.node.getActions(options)
+      .then(actions => {
+        return Promise.all(_.invoke(actions, 'destroy', options));
+      }).then(() => {
+        return this.node.destroy(options);
+      }).then(() => {
+        return this.cluster.adaptStateTo({
+          action:  'destroyed',
+          node:    this.node,
+          options: options
+        });
+      }).then(() => {
+        return this._deleteMachine();
+      });
+    });
   }
   _createMachine() {
     return this.node.byon ? Promise.resolve() : this.machine.create({

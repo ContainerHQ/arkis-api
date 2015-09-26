@@ -15,14 +15,13 @@ describe('GET /clusters/:cluster_id/nodes/:node_id/actions/', () => {
   let user, cluster, node;
 
   beforeEach(done => {
-    user    = factory.buildSync('user');
-    cluster = factory.buildSync('cluster');
-    node    = factory.buildSync('node');
-
+    user = factory.buildSync('user');
     user.save().then(() => {
-      return user.addCluster(cluster);
+      cluster = factory.buildSync('cluster', { user_id: user.id });
+      return cluster.save();
     }).then(() => {
-      return cluster.addNode(node);
+      node = factory.buildSync('node', { cluster_id: cluster.id });
+      return node.save();
     }).then(() => {
       /*
        * We need to ensure that our actions are properly ordered by started_at.

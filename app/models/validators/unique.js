@@ -13,7 +13,7 @@ module.exports = function({ attribute, scope }) {
       if (!value) { return Promise.resolve(); }
 
       let models  = require('../../models'),
-        modelName = this.__options.name.singular,
+        modelName = this['$modelOptions'].name.singular,
         criterias = _(this)
           .pick(scopeId, attribute)
           .merge({ id: { $ne: this.id } })

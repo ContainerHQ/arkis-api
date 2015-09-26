@@ -1,6 +1,7 @@
 'use strict';
 
 let _ = require('lodash'),
+  Sequelize = require('sequelize'),
   versions = require('./versions');
 
 let config = {
@@ -36,7 +37,8 @@ config.secrets = require('./secrets')[config.env];
 _.merge(config, require(`./environments/${config.env}`));
 _.merge(config.db, {
   logging: config.logging,
-  define: { underscored: true }
+  define: { underscored: true },
+  isolationLevel: Sequelize.Transaction.ISOLATION_LEVELS.READ_COMMITTED
 });
 
 module.exports = config;

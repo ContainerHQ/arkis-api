@@ -6,7 +6,7 @@ let _ = require('lodash'),
 
 module.exports = function(factoryName) {
   return function({ attribute, expiration }) {
-    let modelName = factory.buildSync(factoryName).__options.name.singular;
+    let modelName = factory.buildSync(factoryName)['$modelOptions'].name.singular;
 
     describe('behaves as a state machine:', () => {
       let has = require('./has')(factoryName),

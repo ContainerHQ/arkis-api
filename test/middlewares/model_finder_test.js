@@ -18,13 +18,15 @@ describe('ModelFinder Middleware', () => {
         res = {};
 
         req[belongsTo] = factory.buildSync(belongsTo);
-        resource       = factory.buildSync(name);
 
         return req[belongsTo].save().then(() => {
           let modelName = _.capitalize(name);
 
-          return req[belongsTo][`add${modelName}`](resource);
-        }).then(() => {
+          return req[belongsTo][`create${modelName}`](
+            factory.buildSync(name).dataValues
+          );
+        }).then(createdResource => {
+          resource = createdResource;
           find = modelFinder(name, { belongsTo: belongsTo, findBy: findBy });
         });
       });

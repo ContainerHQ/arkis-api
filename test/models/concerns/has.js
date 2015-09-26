@@ -18,7 +18,6 @@ has.default = function(factoryName, attributes) {
 
 has.counterCache = function(factoryName, children) {
   children.forEach(child => {
-
     context(`when ${factoryName} exists`, () => {
       let model;
 
@@ -29,13 +28,13 @@ has.counterCache = function(factoryName, children) {
 
       context(`adding a ${child} to this ${factoryName}`, () => {
         beforeEach(() => {
-          return model[`add${_.capitalize(child)}`](
-            factory.buildSync(child)
+          return model[`create${_.capitalize(child)}`](
+            factory.buildSync(child).dataValues
           );
         });
 
         it(`increases ${factoryName} counter cache`, () => {
-          expect(model.reload())
+          return expect(model.reload())
             .to.eventually.have.property(`${child}s_count`, 1);
         });
       });

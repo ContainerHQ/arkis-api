@@ -108,19 +108,19 @@ module.exports = function(sequelize, DataTypes) {
         unique: true
       },
       cpu: {
-        type: DataTypes.INTEGER.UNSIGNED,
+        type: DataTypes.INTEGER,
         defaultValue: null,
         allowNull: true,
         validate: { min: 1, max: 4000000 }
       },
       memory: {
-        type: DataTypes.INTEGER.UNSIGNED,
+        type: DataTypes.INTEGER,
         defaultValue: null,
         allowNull: true,
         validate: { min: 128, max: 4000000 }
       },
       disk: {
-        type: DataTypes.REAL.UNSIGNED,
+        type: DataTypes.REAL,
         defaultValue: null,
         allowNull: true,
         validate: { min: 1.0, max: 4000000.0 }
@@ -165,6 +165,12 @@ module.exports = function(sequelize, DataTypes) {
           let criterias = _.pick(filters, [
             'byon', 'master', 'name', 'region', 'size', 'labels'
           ]);
+          /* Sequelize now verifies if filter is a boolean... */
+          ['byon', 'master'].forEach(filter => {
+            let filterValue = String(criterias[filter]);
+
+            criterias[filter] = filterValue === 'true' ? true : false;
+          });
           return { where: criterias };
         },
         nonRunningNorUnreachable: {
