@@ -29,9 +29,10 @@ describe('POST /clusters/', () => {
       .expect(400, (err, res) => {
         if (err) { return done(err); }
 
-        expect(Cluster.create())
-          .to.be.rejectedWith(res.body.errors)
-          .notify(done);
+        Cluster.create().then(done).catch(err => {
+          expect(res.body).to.deep.equal(format.error(err));
+          done();
+        });
       });
     });
   });

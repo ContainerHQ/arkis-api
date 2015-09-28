@@ -62,9 +62,10 @@ describe('POST /clusters/:cluster_id/nodes', () => {
       .expect(400, (err, res) => {
         if (err) { return done(err); }
 
-        expect(Node.create())
-          .to.be.rejectedWith(res.body.errors)
-          .notify(done);
+        Node.create().then(done).catch(err => {
+          expect(res.body).to.deep.equal(format.error(err));
+          done();
+        });
       });
     });
   });

@@ -51,9 +51,10 @@ describe('PATCH /clusters/:cluster_id/nodes/:node_id', () => {
       .expect(400, (err, res) => {
         if (err) { return done(err); }
 
-        expect(node.update(form))
-          .to.be.rejectedWith(res.body.errors)
-          .notify(done);
+        node.update(form).then(done).catch(err => {
+          expect(res.body).to.deep.equal(format.error(err));
+          done();
+        });
       });
     });
   });

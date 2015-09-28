@@ -32,11 +32,12 @@ describe('PATCH /account/profile', () => {
       .expect(400, (err, res) => {
         if (err) { return done(err); }
 
-        expect(user.getProfile().then(profile => {
+        user.getProfile().then(profile => {
           return profile.update({ fullname: fullname });
-        }))
-        .to.be.rejectedWith(res.body.errors)
-        .notify(done);
+        }).then(done).catch(err => {
+          expect(res.body).to.deep.equal(format.error(err));
+          done();
+        });
       });
     });
   });

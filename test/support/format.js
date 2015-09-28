@@ -41,3 +41,24 @@ module.exports.serialize = function(model) {
   }
   return singleSerialize(model);
 };
+
+/*
+ * This function is a bit dangerous, we need to cloneDeep the errors for some
+ * tests which are moving the same error object in and out.
+ */
+module.exports.error = function(error) {
+  return _.mapValues(_.cloneDeep(error), (value, key) => {
+    switch (key) {
+      case 'name':
+        return _.snakeCase(value.replace('Sequelize', ''));
+      case 'errors':
+        return _.map(value, err => {
+          err.name = _.snakeCase(err.name || err.type);
+          delete err.type;
+          return err;
+        });
+      default:
+        return value;
+    }
+  });
+};

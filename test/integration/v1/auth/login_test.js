@@ -77,9 +77,10 @@ describe('POST /auth/login', () => {
       api.auth.login().expect(400, (err, res) => {
         if (err) { return done(err); }
 
-        expect(User.create())
-          .to.be.rejectedWith(res.body.errors)
-          .notify(done);
+        User.create().then(done).catch(err => {
+          expect(res.body).to.deep.equal(format.error(err));
+          done();
+        });
       });
     });
   });
