@@ -117,7 +117,10 @@ module.exports = function(sequelize, DataTypes) {
         _lastStateFromNodes: function({ ignore, options }) {
           let criterias = {
             scope: 'nonRunningNorUnreachable',
-            where: { id: { $ne: ignore.id } }
+            where: { id: { $ne: ignore.id } },
+            attributes: ['last_state'],
+            order: [['updated_at', 'DESC']],
+            limit: 1
           };
           return this.getNodes(criterias, options).then(_.first).then(node => {
             return !node ? 'running' : node.last_state;
