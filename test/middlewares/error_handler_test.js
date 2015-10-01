@@ -19,37 +19,8 @@ describe('ErrorHandler Middleware', () => {
     errorHandler.__set__('console', fakeConsole);
   });
 
-  [
-    ['validation', new sequelize.ValidationError()],
-    ['mismatch',   new errors.MismatchError('test')]
-  ].forEach(([name, err]) => {
-    context(`with a ${name} error`, () => {
-      it('sends a bad request status', done => {
-        errorHandler(err, {}, res, () => {
-          expect(res.status).to.have.been.calledWith(400);
-          done();
-        });
-      });
-
-      it('sends validation errors', done => {
-        errorHandler(err, {}, res, () => {
-          expect(res.json).to.have.been.calledWith({
-            name: 'validation_error',
-            message: err.message,
-            errors: serializedErrors(err.errors, { key: 'type' })
-          });
-          done();
-        });
-      });
-    });
-  });
-
-  context('with a PaginationError', () => {
-    let err = new errors.PaginationError({
-      attribute: 'limit',
-      value: -5,
-      range: [0, 25]
-    });
+  context(`with a ValidationError`, () => {
+    let err = new sequelize.ValidationError();
 
     it('sends a bad request status', done => {
       errorHandler(err, {}, res, () => {
@@ -58,25 +29,30 @@ describe('ErrorHandler Middleware', () => {
       });
     });
 
-    it('sends a pagination error', done => {
+    it('sends validation errors', done => {
       errorHandler(err, {}, res, () => {
-        expect(res.json).to.have.been.calledWith({
-          name: 'pagination_error',
-          message: err.message
-        });
+        expect(res.json).to.have.been.calledWith(
+          format.error(err)
+        );
         done();
       });
     });
   });
 
   [
+    ['MismatchError', 400, 'test'],
     ['StateError', 422],
     ['AlreadyUpgradedError', 409],
     ['DeletionError', 409, [new errors.StateError()]],
     ['NotMasterError', 403],
     ['MachineCredentialsError', 401],
     ['MachineNotFoundError', 404],
-    ['MachineUnprocessableError', 422, random.string()]
+    ['MachineUnprocessableError', 422, random.string()],
+    ['PaginationError', 400, {
+      attribute: 'limit',
+      value: -5,
+      range: [0, 25]
+    }]
   ].forEach(([errorName, status, opts]) => {
     context(`with a ${errorName}`, () => {
       let err = new errors[errorName](opts);
@@ -90,29 +66,14 @@ describe('ErrorHandler Middleware', () => {
 
       it('sends the error message back', done => {
         errorHandler(err, {}, res, () => {
-          let expected = {
-            name: _.snakeCase(err.name),
-            message: err.message
-          };
-          if (_.has(err, 'errors')) {
-            _.merge(expected, {
-              errors: serializedErrors(err.errors, { key: 'name' })
-            });
-          }
+          let expected = format.error(err);
+
           expect(res.json).to.have.been.calledWith(expected);
           done();
         });
       });
     });
   });
-
-  function serializedErrors(errors, { key }) {
-    return _.map(errors, err => {
-      err.name = _.snakeCase(err[key]);
-      delete err[key];
-      return err;
-    });
-  }
 
   context('with any other error', () => {
     let err = new Error('whatever');

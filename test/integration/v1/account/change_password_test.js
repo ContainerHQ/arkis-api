@@ -70,9 +70,10 @@ describe('PATCH /account/change_password', () => {
       .expect(400, (err, res) => {
         if (err) { return done(err); }
 
-        user.password = null;
-
-        expect(user.save()).to.be.rejectedWith(res.body.errors).notify(done);
+        user.update({ password: null }).then(done).catch(err => {
+          expect(res.body).to.deep.equal(format.error(err));
+          done();
+        });
       });
     });
   });

@@ -52,9 +52,10 @@ describe('PATCH /account/change_email', () => {
       .expect(400, (err, res) => {
         if (err) { return done(err); }
 
-        expect(user.reload())
-          .to.eventually.have.property('email', oldEmail)
-          .notify(done);
+        user.update({ email: null }).then(done).catch(err => {
+          expect(res.body).to.deep.equal(format.error(err));
+          done();
+        });
       });
     });
   });

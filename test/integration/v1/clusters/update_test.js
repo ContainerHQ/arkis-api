@@ -31,9 +31,10 @@ describe('PATCH /clusters/:cluster_id', () => {
       .expect(400, (err, res) => {
         if (err) { return done(err); }
 
-        expect(cluster.update(form))
-          .to.be.rejectedWith(res.body.errors)
-          .notify(done);
+        cluster.update(form).then(done).catch(err => {
+          expect(res.body).to.deep.equal(format.error(err));
+          done();
+        });
       });
     });
   });

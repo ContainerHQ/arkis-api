@@ -4,7 +4,7 @@ let moment = require('moment');
 
 describe('POST /agent/clusters/:token/', () => {
   db.sync();
-  db.create(['cluster', 'node']);  
+  db.create(['cluster', 'node']);
 
   let node;
 
@@ -40,9 +40,10 @@ describe('POST /agent/clusters/:token/', () => {
       api.agent(node).register('').expect(400, (err, res) => {
         if (err) { return done(err); }
 
-        expect(node.update({ public_ip: '' }))
-          .to.be.rejectedWith(res.body.errors)
-          .notify(done);
+        node.update({ public_ip: '' }).then(done).catch(err => {
+          expect(res.body).to.deep.equal(format.error(err));
+          done();
+        });
       });
     });
   });
