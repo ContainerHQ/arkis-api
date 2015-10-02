@@ -45,6 +45,7 @@
     "pg": "4.3.x",
     "pg-hstore": "2.3.x",
     "sequelize": "3.9.x",
+    "superagent": "1.4.x",
     "validator": "3.40.x"
   },
   "devDependencies": {
@@ -62,6 +63,7 @@
     "rewire": "2.3.x",
     "sinon": "1.14.x",
     "sinon-chai": "2.8.x",
+    "superagent-mocker": "shuvalov-anton/superagent-mocker",
     "supertest": "1.0.x"
   }
 }

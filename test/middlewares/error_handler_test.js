@@ -47,6 +47,7 @@ describe('ErrorHandler Middleware', () => {
     ['NotMasterError', 403],
     ['MachineCredentialsError', 401],
     ['MachineNotFoundError', 404],
+    ['AgentUnprocessableError', 422, random.error()],
     ['MachineUnprocessableError', 422, random.string()],
     ['PaginationError', 400, {
       attribute: 'limit',

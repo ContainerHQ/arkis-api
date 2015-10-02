@@ -9,7 +9,7 @@ let _ = require('lodash'),
 
 const CONCERNS = {
   serializable: {
-    omit:  ['token', 'provider_id', 'last_state'],
+    omit:  ['token', 'provider_id', 'last_state', 'addr'],
     links: ['actions'],
     specifics: { byon: { merge: { agent_cmd: null } } }
   },
@@ -212,6 +212,9 @@ module.exports = function(sequelize, DataTypes) {
             clusterShortId = clusterId.slice(0, 8);
 
           return `${name}-${clusterShortId}.node.${config.domain}`;
+        },
+        addr: function() {
+          return this.get('public_ip');
         }
       },
       hooks: {

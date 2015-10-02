@@ -27,6 +27,7 @@ let config = {
       docker: 2375,
       swarm:  2376
     },
+    timeout: 5000, // In ms
     heartbeat: { amount: 5, key: 'minutes' }
   },
 };

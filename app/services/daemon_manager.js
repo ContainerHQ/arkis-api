@@ -3,7 +3,7 @@
 let _ = require('lodash'),
   sequelize = require('../models').sequelize,
   StateManager = require('./state_manager'),
-  Daemon = require('../support').Daemon;
+  Daemon = require('../connectors').Daemon;
 
 const UPDATING_STATE  = { last_state: 'updating'  },
       UPGRADING_STATE = { last_state: 'upgrading' };

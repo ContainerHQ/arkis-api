@@ -17,7 +17,8 @@ const HTTP_CODES = {
   'MachineCredentialsError':   401,
   'MachineNotFoundError':      404,
   'StateError':                422,
-  'MachineUnprocessableError': 422
+  'MachineUnprocessableError': 422,
+  'AgentUnprocessableError':   422
 };
 
 module.exports = function(err, req, res, next) {

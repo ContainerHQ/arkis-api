@@ -97,3 +97,12 @@ error.MachineUnprocessableError = class extends Error {
     this.message = message;
   }
 };
+
+error.AgentUnprocessableError = class extends Error {
+  constructor(err) {
+    super();
+
+    this.name = 'AgentUnprocessableError';
+    this.message = err.message;
+  }
+};

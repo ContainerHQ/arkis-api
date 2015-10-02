@@ -9,7 +9,7 @@ let _ = require('lodash'),
   models = require('../../app/models');
 
 const SERIALIZATION = {
-  omit:  ['token', 'provider_id', 'last_state'],
+  omit:  ['token', 'provider_id', 'last_state', 'addr'],
   links: ['actions']
 };
 
