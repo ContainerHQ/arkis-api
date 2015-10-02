@@ -75,7 +75,7 @@ class DigitalOcean {
 
         return new errors.MachineUnprocessableError(message);
       default:
-        return new Error(res);
+        return new Error(res.body.message);
     }
   }
   _get(resource) {
