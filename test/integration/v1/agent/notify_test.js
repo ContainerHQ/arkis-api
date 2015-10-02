@@ -94,8 +94,7 @@ describe('POST /agent/:token/notify', () => {
 
         node.update(form).then(done).catch(err => {
           expect(res.body).to.deep.equal(format.error(err));
-          done();
-        });
+        }).then(done).catch(done);
       });
     });
   });

@@ -182,8 +182,7 @@ describe('AgentManager Service', () => {
       it('returns a validation error', done => {
         manager.node.update(ATTRIBUTES).then(done).catch(err => {
           expect(actualErr).to.deep.equal(err);
-          done();
-        });
+        }).then(done).catch(done);
       });
 
       it("doesn't update the node with attributes", () => {
@@ -248,8 +247,7 @@ describe('AgentManager Service', () => {
           manager.node.update({ public_ip: addr || 'null' })
           .then(done).catch(err => {
             expect(actualErr).to.deep.equal(err);
-            done();
-          });
+          }).then(done).catch(done);
         });
 
         it("doesn't update node last_seen", () => {

@@ -72,8 +72,7 @@ describe('PATCH /account/change_password', () => {
 
         user.update({ password: null }).then(done).catch(err => {
           expect(res.body).to.deep.equal(format.error(err));
-          done();
-        });
+        }).then(done).catch(done);
       });
     });
   });

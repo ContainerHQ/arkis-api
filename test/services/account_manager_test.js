@@ -114,8 +114,7 @@ describe('AccountManager Service', () => {
           };
           manager.destroy().then(done).catch(err => {
             actualErr = err;
-            done();
-          });
+          }).then(done).catch(done);
         });
 
         it("doesn't remove the user", () => {

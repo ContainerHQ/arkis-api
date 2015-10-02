@@ -36,8 +36,7 @@ describe('PATCH /account/profile', () => {
           return profile.update({ fullname: fullname });
         }).then(done).catch(err => {
           expect(res.body).to.deep.equal(format.error(err));
-          done();
-        });
+        }).then(done).catch(done);
       });
     });
   });

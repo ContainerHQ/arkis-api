@@ -79,8 +79,7 @@ describe('Machine DigitalOcean Connector', () => {
             expect(err).to.deep.equal(
               new errors.MachineUnprocessableError(UNPROCESSABLE_MESSAGE)
             );
-            done();
-          });
+          }).then(done).catch(done);
         });
       });
     });
@@ -108,8 +107,7 @@ describe('Machine DigitalOcean Connector', () => {
         it('returns an error', done => {
           client.delete({}).then(done).catch(err => {
             expect(err).to.deep.equal(new errors.MachineNotFoundError());
-            done();
-          });
+          }).then(done).catch(done);
         });
       });
     });
@@ -126,8 +124,7 @@ describe('Machine DigitalOcean Connector', () => {
       it('is rejected', done => {
         client.verifyCredentials().then(done).catch(err => {
           expect(err).to.deep.equal(new errors.MachineCredentialsError());
-          done();
-        });
+        }).then(done).catch(done);
       });
     });
 
@@ -147,8 +144,7 @@ describe('Machine DigitalOcean Connector', () => {
       it('returns an error', done => {
         client.create({}).then(done).catch(err => {
           expect(err).to.deep.equal(new errors.MachineCredentialsError());
-          done();
-        });
+        }).then(done).catch(done);
       });
     });
 
@@ -156,8 +152,7 @@ describe('Machine DigitalOcean Connector', () => {
       it('returns an error', done => {
         client.delete({}).then(done).catch(err => {
           expect(err).to.deep.equal(new errors.MachineCredentialsError());
-          done();
-        });
+        }).then(done).catch(done);
       });
     });
   });

@@ -64,8 +64,7 @@ describe('POST /clusters/:cluster_id/nodes', () => {
 
         Node.create().then(done).catch(err => {
           expect(res.body).to.deep.equal(format.error(err));
-          done();
-        });
+        }).then(done).catch(done);
       });
     });
   });

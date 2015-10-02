@@ -42,8 +42,7 @@ describe('POST /agent/clusters/:token/', () => {
 
         node.update({ public_ip: '' }).then(done).catch(err => {
           expect(res.body).to.deep.equal(format.error(err));
-          done();
-        });
+        }).then(done).catch(done);
       });
     });
   });

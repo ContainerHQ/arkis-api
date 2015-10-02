@@ -39,8 +39,7 @@ describe('Daemon Connector', () => {
         it('sends an agent error', done => {
           daemon[action]().then(done).catch(err => {
             expect(err.name).to.equal('AgentUnprocessableError');
-            done();
-          });
+          }).then(done).catch(done);
         });
       });
 
