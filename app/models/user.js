@@ -2,6 +2,7 @@
 
 let _ = require('lodash'),
   bcrypt = require('bcrypt'),
+  connectors = require('../connectors'),
   token = require('../support').token,
   is = require('./validators');
 
@@ -66,6 +67,11 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: DataTypes.UUIDV1,
       unique: true
     },
+    ssh_key: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: null
+    }
   }, {
     instanceMethods: {
       verifyPassword: function(password) {
@@ -95,7 +101,10 @@ module.exports = function(sequelize, DataTypes) {
     hooks: {
       beforeCreate: function(user) {
         user.generateToken();
-        return Promise.resolve(user);
+
+        return connectors.SSH.generateKey().then(key => {
+          user.ssh_key = key;
+        });
       },
       afterCreate: function(user, options) {
         return user.createProfile({}, { transaction: options.transaction });

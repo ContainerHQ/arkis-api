@@ -13,11 +13,16 @@ describe('MachineManager Service', () => {
   let manager;
 
   beforeEach(() => {
-    let cluster = factory.buildSync('cluster'),
-        node    = factory.buildSync('node');
+    let user = factory.buildSync('user'), cluster;
 
-    return cluster.save().then(() => {
-      manager = new MachineManager(cluster, node);
+    return user.save().then(() => {
+      cluster = factory.buildSync('cluster', { user_id: user.id });
+
+      return cluster.save();
+    }).then(() => {
+      let node = factory.buildSync('node');
+
+      manager = new MachineManager(cluster, node, user);
     });
   });
 
@@ -75,7 +80,7 @@ describe('MachineManager Service', () => {
           name: manager.node.id || '.',
           region: manager.node.region || '.',
           size: manager.node.size || '.'
-        });
+        }, manager.user.ssh_key);
       });
 
       it('adds the machine id to the node', () => {

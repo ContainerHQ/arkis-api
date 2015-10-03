@@ -6,5 +6,6 @@ let dir = config.useFakes ? './fakes' : '.';
 
 module.exports = {
   Machine: require(`${dir}/machine`),
-  Daemon:  require(`${dir}/daemon`)
+  Daemon:  require(`${dir}/daemon`),
+  SSH:     require(`${dir}/ssh`)
 };

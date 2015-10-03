@@ -3,11 +3,13 @@
 let chai = require('chai'),
   chaiAsPromised = require('chai-as-promised'),
   chaiSubset = require('chai-subset'),
-  sinonChai = require('sinon-chai');
+  sinonChai = require('sinon-chai'),
+  chaiString = require('chai-string');
 
 chai.use(chaiAsPromised);
 chai.use(chaiSubset);
 chai.use(sinonChai);
+chai.use(chaiString);
 
 global.chai = chai;
 global.expect = chai.expect;

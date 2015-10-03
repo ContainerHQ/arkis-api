@@ -22,7 +22,7 @@ router
 })
 .post('/', (req, res, next) => {
   let node  = Node.build(_.pick(req.body, CREATE_PARAMS)),
-    machine = new services.MachineManager(req.cluster, node);
+    machine = new services.MachineManager(req.cluster, node, req.user);
 
   return machine.deploy().then(action => {
     res.status(202).serialize({ node: node, action: action });
@@ -54,7 +54,7 @@ router
   }).catch(next);
 })
 .delete((req, res, next) => {
-  let machine = new services.MachineManager(req.cluster, req.node);
+  let machine = new services.MachineManager(req.cluster, req.node, req.user);
 
   machine.destroy().then(res.noContent).catch(next);
 });

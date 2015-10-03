@@ -19,6 +19,7 @@ let config = {
       token: process.env.DIGITAL_OCEAN_TOKEN || ''
     }
   },
+  project: 'arkis',
   domain: 'arkis.io',
   agent: {
     cmd: 'curl -Ls https://get.arkis.io/ | sudo -H sh -s',

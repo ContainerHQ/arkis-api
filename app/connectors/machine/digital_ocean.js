@@ -1,8 +1,10 @@
 'use strict';
 
 let _ = require('lodash'),
-  errors = require('../../support').errors,
-  Client = require('do-wrapper');
+  uuid = require('node-uuid'),
+  Client = require('do-wrapper'),
+  config = require('../../../config'),
+  errors = require('../../support').errors;
 
 const IMAGE_SLUG = 'ubuntu-14-04-x64';
 
@@ -28,17 +30,32 @@ class DigitalOcean {
   getSizes() {
     return this._get('sizes');
   }
-  create(options) {
+  _get(resource) {
     return new Promise((resolve, reject) => {
-      let opts = _.merge({ image: IMAGE_SLUG }, options);
-
-      this._client.dropletsCreate(opts, (err, res, body) => {
+      this._client[`${resource}GetAll`]({}, (err, res, body) => {
         if (err) { return reject(err); }
 
-        if (res.statusCode === 202) {
-          return resolve(body.droplet.id);
-        }
-        reject(this._formatError(res));
+        let method = `_format${_.capitalize(resource)}`;
+
+        resolve(this[method](body[resource]));
+      });
+    });
+  }
+  create(options, publicKey) {
+    return this.getSSHKey(publicKey).then(key => {
+      return new Promise((resolve, reject) => {
+        let opts = _.merge({
+          image: IMAGE_SLUG,
+          ssh_keys: [key.fingerprint]
+        }, options);
+        this._client.dropletsCreate(opts, (err, res, body) => {
+          if (err) { return reject(err); }
+
+          if (res.statusCode === 202) {
+            return resolve(body.droplet.id);
+          }
+          reject(this._formatError(res));
+        });
       });
     });
   }
@@ -49,6 +66,39 @@ class DigitalOcean {
 
         if (res.statusCode === 200) {
           return resolve();
+        }
+        reject(this._formatError(res));
+      });
+    });
+  }
+  getSSHKey(publicKey) {
+    return this.verifyCredentials().then(() => {
+      return new Promise((resolve, reject) => {
+        this._client.accountGetKeys({ includeAll: true }, (err, res, body) => {
+          if (err) { return reject(err); }
+
+          if (res.statusCode === 200) {
+            return resolve(_.find(body, { public_key: publicKey }));
+          }
+          reject(this._formatError(res));
+        });
+      });
+    }).then(key => {
+      if (!!key) { return key; }
+
+      return this._addSSHKey(publicKey);
+    });
+  }
+  _addSSHKey(publicKey) {
+    let opts = {
+      name: `${config.project}-` + uuid.v1(), public_key: publicKey
+    };
+    return new Promise((resolve, reject) => {
+      this._client.accountAddKey(opts, (err, res, body) => {
+        if (err) { return reject(err); }
+
+        if (res.statusCode === 201) {
+          resolve(body.ssh_key);
         }
         reject(this._formatError(res));
       });
@@ -77,17 +127,6 @@ class DigitalOcean {
       default:
         return new Error(res.body.message);
     }
-  }
-  _get(resource) {
-    return new Promise((resolve, reject) => {
-      this._client[`${resource}GetAll`]({}, (err, res, body) => {
-        if (err) { return reject(err); }
-
-        let method = `_format${_.capitalize(resource)}`;
-
-        resolve(this[method](body[resource]));
-      });
-    });
   }
 }
 
