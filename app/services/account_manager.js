@@ -18,7 +18,7 @@ class AccountManager {
       return this.user.save(options).then(() => {
         return this.user.createProfile({}, options);
       }).then(() => {
-        return this.provider.link();
+        return this.provider.link(options);
       });
     });
   }
@@ -45,9 +45,9 @@ class AccountManager {
       }).then(profile => {
         return profile.destroy(options);
       }).then(() => {
-        return this.user.destroy(options);
+        return this.provider.unlink(options);
       }).then(() => {
-        return this.provider.unlink();
+        return this.user.destroy(options);
       });
     });
   }

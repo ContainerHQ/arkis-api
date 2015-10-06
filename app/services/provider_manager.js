@@ -9,23 +9,25 @@ class ProviderManager {
     this.user    = user;
     this.machine = new Machine(config.auth.machine);
   }
-  link() {
+  link(options) {
     return this.machine.addKey(this.user.ssh_key.public).then(id => {
       return this.user.createUserProviderLink({
         type: 'ssh_key', provider_id: id
-      });
+      }, options);
     });
   }
-  unlink() {
+  unlink(options) {
     let sshKeyLink;
 
     return this.user.getUserProviderLinks({
       where: { type: 'ssh_key' }
-    }).then(_.first).then(link => {
+    }, options).then(_.first).then(link => {
       sshKeyLink = link;
-      return this.machine.removeKey(sshKeyLink.provider_id);
+      return this.machine.removeKey(sshKeyLink.provider_id).catch(err => {
+        if (err.name !== 'MachineNotFoundError') { throw err; }
+      });
     }).then(() => {
-      return sshKeyLink.destroy();
+      return sshKeyLink.destroy(options);
     });
   }
 }

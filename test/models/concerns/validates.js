@@ -12,12 +12,11 @@ class Validator {
   }
   buildModelWith(value) {
     beforeEach(() => {
-      let opts = {};
+      this._model = factory.buildSync(this.factoryName);
 
       if (!!this.attribute) {
-        opts[this.attribute] = value;
+        this._model[this.attribute] = value;
       }
-      this._model = factory.buildSync(this.factoryName, opts);
     });
   }
   expectFailure() {

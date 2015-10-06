@@ -1,5 +1,7 @@
 'use strict';
 
+let services = require('../../../../app/services');
+
 describe('GET /account/profile', () => {
   db.sync();
   db.create(['user']);
@@ -8,7 +10,7 @@ describe('GET /account/profile', () => {
 
   beforeEach(() => {
     user = factory.buildSync('user');
-    return user.save();
+    return new services.AccountManager(user).register();
   });
 
   it('returns the user profile', done => {

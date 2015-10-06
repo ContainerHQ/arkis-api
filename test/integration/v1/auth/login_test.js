@@ -29,6 +29,18 @@ describe('POST /auth/login', () => {
     });
   });
 
+  it('creates a profile for the user', done => {
+    api.auth.login(user).expect(201, (err, res) => {
+      if (err) { return done(err); }
+      /*
+       * Retrieve the newly created user and verify the token.
+       */
+      expect(User.findOne({ where: { email: user.email } }).then(user => {
+        return user.getProfile();
+      })).to.eventually.exist.notify(done);
+    });
+  });
+
   context('when user already exists', () => {
     beforeEach(() => {
       return user.save();

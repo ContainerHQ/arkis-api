@@ -36,12 +36,6 @@ describe('User Model', () => {
         .to.eventually.satisfy(has.hashPassword(user.password));
     });
 
-    it('creates its profile', () => {
-      return expect(user.save().then(user => {
-        return user.getProfile();
-      })).to.eventually.exist;
-    });
-
     it('inializes its ssh key', () => {
       let revert = connectors.SSH.generateKey,
         key = { public: random.string(), private: random.string() };

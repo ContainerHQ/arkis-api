@@ -3,7 +3,8 @@
 let _ = require('lodash'),
   config = require('../../config'),
   models = require('../../app/models'),
-  services = require('../../app/services');
+  services = require('../../app/services'),
+  errors = require('../../app/support').errors;
 
 describe('ProviderManager Service', () => {
   let manager;
@@ -91,26 +92,47 @@ describe('ProviderManager Service', () => {
     });
 
     context('when machine.removeKey failed', done => {
-      let actualErr, expectedErr;
+      context('with not found error', () => {
+        beforeEach(() => {
+          manager.machine.removeKey = sinon.stub().returns(
+            Promise.reject(new errors.MachineNotFoundError())
+          );
+          return manager.unlink();
+        });
 
-      beforeEach(done => {
-        expectedErr = random.error();
-        manager.machine.removeKey = sinon.stub().returns(
-          Promise.reject(expectedErr)
-        );
-        manager.unlink().then(done).catch(err => {
-          actualErr = err;
-          done();
+        it('removes the ssh key from the provider', () => {
+          expect(manager.machine.removeKey)
+            .to.have.been.calledWith(sshKeyLink.provider_id);
+        });
+
+        it('removes the link to the ssh key provider id', () => {
+          return expect(models.UserProviderLink.findById(sshKeyLink.id))
+            .to.eventually.not.exist;
         });
       });
 
-      it("doesn't remove the link to the ssh key provider id", () => {
-        return expect(models.UserProviderLink.findById(sshKeyLink.id))
-          .to.eventually.exist;
-      });
+      context('with another error', () => {
+        let actualErr, expectedErr;
 
-      it('returns the error', () => {
-        expect(actualErr).to.deep.equal(expectedErr);
+        beforeEach(done => {
+          expectedErr = random.error();
+          manager.machine.removeKey = sinon.stub().returns(
+            Promise.reject(expectedErr)
+          );
+          manager.unlink().then(done).catch(err => {
+            actualErr = err;
+            done();
+          });
+        });
+
+        it("doesn't remove the link to the ssh key provider id", () => {
+          return expect(models.UserProviderLink.findById(sshKeyLink.id))
+            .to.eventually.exist;
+        });
+
+        it('returns the error', () => {
+          expect(actualErr).to.deep.equal(expectedErr);
+        });
       });
     });
   });

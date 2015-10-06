@@ -5,7 +5,9 @@
 let _ = require('lodash'),
   models = require('../../app/models');
 
-const ENTITIES_TO_DESTROY = ['Profile', 'Action', 'Node', 'Cluster', 'User'];
+const ENTITIES_TO_DESTROY = [
+  'UserProviderLink', 'Profile', 'Action', 'Node', 'Cluster', 'User'
+];
 
 /*
  * Generate a promise chain to delete database entities.
