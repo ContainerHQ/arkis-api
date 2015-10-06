@@ -96,6 +96,7 @@ module.exports = function(sequelize, DataTypes) {
       associate: function(models) {
         this.hasOne(models.Profile);
         this.hasMany(models.Cluster);
+        this.hasMany(models.UserProviderLink);
       }
     },
     hooks: {

@@ -2,7 +2,7 @@
 
 class SSH {
   static generateKey() {
-    return Promise.resolve({});
+    return Promise.resolve({ public: 'a', private: 'b' });
   }
 }
 

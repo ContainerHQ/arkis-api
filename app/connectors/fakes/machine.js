@@ -84,6 +84,9 @@ class Machine {
     }
     return Promise.resolve();
   }
+  addKey() {
+    return Promise.resolve('12890');
+  }
 }
 
 module.exports = Machine;
