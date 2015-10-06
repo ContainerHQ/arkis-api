@@ -105,9 +105,6 @@ module.exports = function(sequelize, DataTypes) {
         return connectors.SSH.generateKey().then(key => {
           user.ssh_key = key;
         });
-      },
-      afterCreate: function(user, options) {
-        return user.createProfile({}, { transaction: options.transaction });
       }
     }
   });

@@ -3,11 +3,24 @@
 let _ = require('lodash'),
   sequelize = require('../models').sequelize,
   errors = require('../support').errors,
+  ProviderManager = require('./provider_manager'),
   ClusterManager = require('./cluster_manager');
 
 class AccountManager {
   constructor(user) {
-    this.user = user;
+    this.user     = user;
+    this.provider = new ProviderManager(user);
+  }
+  register() {
+    return sequelize.transaction(t => {
+      let options = { transaction: t };
+
+      return this.user.save(options).then(() => {
+        return this.user.createProfile({}, options);
+      }).then(() => {
+        return this.provider.link();
+      });
+    });
   }
   destroy() {
     return sequelize.transaction(t => {
@@ -33,6 +46,8 @@ class AccountManager {
         return profile.destroy(options);
       }).then(() => {
         return this.user.destroy(options);
+      }).then(() => {
+        return this.provider.unlink();
       });
     });
   }
