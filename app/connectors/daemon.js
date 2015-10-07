@@ -23,8 +23,12 @@ class Daemon {
       .set('Authorization', `JWT ${this.node.token}`)
       .send(body)
       .end((err, res) => {
-        if (err) { return reject(new errors.AgentUnprocessableError(err)); }
-
+        if (err) {
+          return reject(new errors.AgentUnreachableError());
+        }
+        if (!res.accepted) {
+          return reject(new errors.AgentLockedError());
+        }
         resolve(res);
       });
     });

@@ -36,9 +36,9 @@ describe('Daemon Connector', () => {
           revert();
         });
 
-        it('sends an agent error', done => {
+        it('sends an agent unreachable error', done => {
           daemon[action]().then(done).catch(err => {
-            expect(err.name).to.equal('AgentUnprocessableError');
+            expect(err).to.deep.equal(new errors.AgentUnreachableError());
           }).then(done).catch(done);
         });
       });
@@ -64,31 +64,50 @@ describe('Daemon Connector', () => {
           Daemon.__set__('request', require('superagent'));
         });
 
-        it(`sends an ${action} request with given attributes`, done => {
+        it(`sends an ${action} request with given attributes`, () => {
+          let reqBody;
+
           mockAPI.post(url, req => {
-            expect(req.body).to.deep.equal(attributes);
-            done();
+            reqBody = req.body;
+            return { accepted: true };
           });
-          daemon[action](attributes).catch(done);
+          return expect(daemon[action](attributes).then(() => {
+            expect(reqBody).to.deep.equal(attributes);
+          })).to.be.fulfilled;
         });
 
-        it('attaches the proper authorization header to the request', done => {
+        it('attaches the proper authorization header to the request', () => {
+          let reqHeaders;
+
           mockAPI.post(url, req => {
+            reqHeaders = req.headers;
+            return { accepted: true };
+          });
+          return expect(daemon[action]().then(() => {
             let expected = `JWT ${daemon.node.token || ''}`;
 
-            expect(req.headers).to.have.property('authorization', expected);
-            done();
-          });
-          daemon[action]().catch(done);
+            expect(reqHeaders).to.have.property('authorization', expected);
+          })).to.be.fulfilled;
         });
 
         it('returns the request response', () => {
-          let response = random.obj();
+          let response = _.merge(random.obj(), { accepted: true });
 
-          mockAPI.post(url, req => {
+          mockAPI.post(url, () => {
             return response;
           });
           return expect(daemon[action]()).to.eventually.deep.equal(response);
+        });
+
+        context('when request is not accepted', done => {
+          it('returns an agent locked error', () => {
+            mockAPI.post(url, () => {
+              return { accepted: false };
+            });
+            daemon[action]().then(done).catch(err => {
+              expect(err).to.deep.equal(new errors.AgentLockedError());
+            }).then(done).catch(done);
+          });
         });
       });
     });

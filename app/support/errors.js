@@ -98,11 +98,20 @@ error.MachineUnprocessableError = class extends Error {
   }
 };
 
-error.AgentUnprocessableError = class extends Error {
-  constructor(err) {
+error.AgentUnreachableError = class extends Error {
+  constructor() {
     super();
 
-    this.name = 'AgentUnprocessableError';
-    this.message = err.message;
+    this.name = 'AgentUnreachableError';
+    this.message = "Node agent doesn't respond.";
+  }
+};
+
+error.AgentLockedError = class extends Error {
+  constructor() {
+    super();
+
+    this.name = 'AgentLockedError';
+    this.message = 'Node agent is currently locked. Please try again later.';
   }
 };

@@ -18,7 +18,8 @@ const HTTP_CODES = {
   'MachineNotFoundError':      404,
   'StateError':                422,
   'MachineUnprocessableError': 422,
-  'AgentUnprocessableError':   422
+  'AgentUnreachableError':     422,
+  'AgentLockedError':          409
 };
 
 module.exports = function(err, req, res, next) {
