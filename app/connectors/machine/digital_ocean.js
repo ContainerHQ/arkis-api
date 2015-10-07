@@ -41,21 +41,17 @@ class DigitalOcean {
       });
     });
   }
-  create(options, publicKey) {
-    return this.getSSHKey(publicKey).then(key => {
-      return new Promise((resolve, reject) => {
-        let opts = _.merge({
-          image: IMAGE_SLUG,
-          ssh_keys: [key.fingerprint]
-        }, options);
-        this._client.dropletsCreate(opts, (err, res, body) => {
-          if (err) { return reject(err); }
+  create(options) {
+    return new Promise((resolve, reject) => {
+      let opts = _.merge({ image: IMAGE_SLUG }, options);
 
-          if (res.statusCode === 202) {
-            return resolve(body.droplet.id);
-          }
-          reject(this._formatError(res));
-        });
+      this._client.dropletsCreate(opts, (err, res, body) => {
+        if (err) { return reject(err); }
+
+        if (res.statusCode === 202) {
+          return resolve(body.droplet.id);
+        }
+        reject(this._formatError(res));
       });
     });
   }
@@ -71,25 +67,7 @@ class DigitalOcean {
       });
     });
   }
-  getSSHKey(publicKey) {
-    return this.verifyCredentials().then(() => {
-      return new Promise((resolve, reject) => {
-        this._client.accountGetKeys({ includeAll: true }, (err, res, body) => {
-          if (err) { return reject(err); }
-
-          if (res.statusCode === 200) {
-            return resolve(_.find(body, { public_key: publicKey }));
-          }
-          reject(this._formatError(res));
-        });
-      });
-    }).then(key => {
-      if (!!key) { return key; }
-
-      return this._addSSHKey(publicKey);
-    });
-  }
-  _addSSHKey(publicKey) {
+  addKey(publicKey) {
     let opts = {
       name: `${config.project}-` + uuid.v1(), public_key: publicKey
     };
@@ -98,8 +76,19 @@ class DigitalOcean {
         if (err) { return reject(err); }
 
         if (res.statusCode === 201) {
-          resolve(body.ssh_key);
+          return resolve(body.ssh_key.id);
         }
+        reject(this._formatError(res));
+      });
+    });
+  }
+  removeKey(id) {
+    return new Promise((resolve, reject) => {
+      this._client.accountDeleteKey(id, (err, res) => {
+        if (err) { return reject(err); }
+
+        if (res.statusCode === 204) { return resolve(); }
+
         reject(this._formatError(res));
       });
     });

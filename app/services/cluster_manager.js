@@ -12,10 +12,11 @@ const LATEST_VERSIONS = {
 };
 
 class ClusterManager extends StateManager {
-  constructor(cluster) {
+  constructor(cluster, user) {
     super(cluster, LATEST_VERSIONS);
 
     this.cluster = cluster;
+    this.user    = user;
   }
   get clusterId() {
     return this.cluster.id;
@@ -82,7 +83,7 @@ class ClusterManager extends StateManager {
           case 'DaemonManager':
             return new DaemonManager(this.cluster, node);
           case 'MachineManager':
-            return new MachineManager(this.cluster, node);
+            return new MachineManager(this.cluster, node, this.user);
         }
       });
     });

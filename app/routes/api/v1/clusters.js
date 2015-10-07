@@ -30,7 +30,7 @@ router
 }))
 
 .post('/:cluster_id/upgrade', (req, res, next) => {
-  let clusterManager = new services.ClusterManager(req.cluster);
+  let clusterManager = new services.ClusterManager(req.cluster, req.user);
 
   clusterManager.upgrade().then(upgradeResult => {
     res.status(202).serialize(
@@ -51,7 +51,7 @@ router
   }).catch(next);
 })
 .delete((req, res, next) => {
-  let clusterManager = new services.ClusterManager(req.cluster);
+  let clusterManager = new services.ClusterManager(req.cluster, req.user);
 
   clusterManager.destroy().then(res.noContent).catch(next);
 });
