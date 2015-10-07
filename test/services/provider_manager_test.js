@@ -66,10 +66,8 @@ describe('ProviderManager Service', () => {
 
     beforeEach(() => {
       return manager.link().then(() => {
-        return manager.user.getUserProviderLinks({
-          where: { type: 'ssh_key' }
-        });
-      }).then(_.first).then(link => {
+        return manager.user.getSSHKeyLink();
+      }).then(link => {
         sshKeyLink = link;
       });
     });

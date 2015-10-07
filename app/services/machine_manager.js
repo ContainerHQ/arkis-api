@@ -56,11 +56,16 @@ class MachineManager {
     });
   }
   _createMachine() {
-    return this.node.byon ? Promise.resolve() : this.machine.create({
-      name:   this.node.id,
-      region: this.node.region,
-      size:   this.node.size
-    }, this.user.ssh_key);
+    if (this.node.byon) { return Promise.resolve(); }
+
+    return this.user.getSSHKeyLink().then(sshKeyLink => {
+      return this.machine.create({
+        name:   this.node.id,
+        region: this.node.region,
+        size:   this.node.size,
+        ssh_keys: [sshKeyLink.provider_id]
+      });
+    });
   }
   _deleteMachine()  {
     let deletion = this.node.byon ? Promise.resolve() : this.machine.delete(

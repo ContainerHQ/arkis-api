@@ -1,7 +1,6 @@
 'use strict';
 
-let _ = require('lodash'),
-  config = require('../../config'),
+let config = require('../../config'),
   Machine = require('../connectors').Machine;
 
 class ProviderManager {
@@ -19,9 +18,7 @@ class ProviderManager {
   unlink(options) {
     let sshKeyLink;
 
-    return this.user.getUserProviderLinks({
-      where: { type: 'ssh_key' }
-    }, options).then(_.first).then(link => {
+    return this.user.getSSHKeyLink(options).then(link => {
       sshKeyLink = link;
       return this.machine.removeKey(sshKeyLink.provider_id).catch(err => {
         if (err.name !== 'MachineNotFoundError') { throw err; }

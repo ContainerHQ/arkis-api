@@ -1,6 +1,7 @@
 'use strict';
 
 let _ = require('lodash'),
+  services = require('../../../../app/services'),
   Node = require('../../../../app/models').Node;
 
 describe('POST /clusters/:cluster_id/nodes', () => {
@@ -10,7 +11,7 @@ describe('POST /clusters/:cluster_id/nodes', () => {
 
   beforeEach(() => {
     user = factory.buildSync('user');
-    return user.save().then(() => {
+    return new services.AccountManager(user).register().then(() => {
       cluster = factory.buildSync('cluster', { user_id: user.id });
       return cluster.save();
     });

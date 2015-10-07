@@ -1,6 +1,7 @@
 'use strict';
 
-let errors = require('../../support').errors;
+let errors = require('../../support').errors,
+  uuid = require('node-uuid');
 
 const UNPROCESSABLE_MESSAGE = 'Invalid region/size for macine creation';
 
@@ -76,7 +77,7 @@ class Machine {
         new errors.MachineUnprocessableError(UNPROCESSABLE_MESSAGE)
       );
     }
-    return Promise.resolve(options.name);
+    return Promise.resolve(uuid.v1());
   }
   delete() {
     if (!this.credentials) {
@@ -85,7 +86,7 @@ class Machine {
     return Promise.resolve();
   }
   addKey() {
-    return Promise.resolve('12890');
+    return Promise.resolve(uuid.v1());
   }
   removeKey() {
     return Promise.resolve();

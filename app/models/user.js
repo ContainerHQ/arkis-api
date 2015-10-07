@@ -90,6 +90,11 @@ module.exports = function(sequelize, DataTypes) {
       },
       revokeToken: function() {
         this.token_id = sequelize.Utils.toDefaultValue(DataTypes.UUIDV1());
+      },
+      getSSHKeyLink: function(options) {
+        let criterias = { where: { type: 'ssh_key' } };
+
+        return this.getUserProviderLinks(criterias, options).then(_.first);
       }
     },
     classMethods: {
