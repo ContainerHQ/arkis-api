@@ -32,6 +32,32 @@ describe('SSH Connector', () => {
       });
     });
 
+    it('generates files with a secret passphrase', () => {
+      let revert = SSH.__set__('keygen', (args, callback) => {
+        revert();
+
+        if (args.password === config.secrets.ssh) {
+          return callback(null, { pubKey: '', key: '' });
+        }
+        callback(new Error('Invalid password binding.'));
+      });
+      return SSH.generateKey();
+    });
+
+    it('returns a key with public/private pair', () => {
+      let sshKey = { pubKey: random.string(), key: random.string() },
+        revert = SSH.__set__('keygen', (args, callback) => {
+        revert();
+        return callback(null, sshKey);
+      });
+      return SSH.generateKey().then(generatedKey => {
+        return expect(generatedKey).to.deep.equal({
+          public:  sshKey.pubKey,
+          private: sshKey.key
+        });
+      });
+    });
+
     context('afterGenerate', () => {
       let key;
 
@@ -39,13 +65,6 @@ describe('SSH Connector', () => {
         return SSH.generateKey().then(generatedKey => {
           key = generatedKey;
         });
-      });
-
-      it.skip('returns a valid ssh key pair', () => {
-      });
-
-      it.skip('key pair is signed with secret passphrase', () => {
-
       });
 
       it('destroys the generated temp files', () => {
