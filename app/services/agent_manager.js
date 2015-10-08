@@ -20,13 +20,22 @@ class AgentManager {
           version: config.latestVersions.docker,
           name:    this.node.name,
           labels:  this.node.labels,
-          cert:    cluster.cert
+          certs: {
+            ca:   cluster.cert.ca,
+            cert: cluster.cert.server.cert,
+            key:  cluster.cert.server.key
+          }
         },
         swarm: {
           port:     config.agent.ports.swarm,
           version:  config.latestVersions.swarm,
           strategy: cluster.strategy,
-          master:   this.node.master
+          master:   this.node.master,
+          certs: {
+            ca:   cluster.cert.ca,
+            cert: cluster.cert.client.cert,
+            key:  cluster.cert.client.key
+          }
         }
       };
     });

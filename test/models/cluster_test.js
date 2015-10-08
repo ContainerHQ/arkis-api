@@ -4,7 +4,7 @@ let _ = require('lodash'),
   moment = require('moment'),
   errors = require('../../app/support').errors,
   models = require('../../app/models'),
-  support = require('../../app/support'),
+  connectors = require('../../app/connectors'),
   concerns = require('./concerns'),
   config = require('../../config');
 
@@ -68,22 +68,23 @@ describe('Cluster Model', () => {
       }
     };
 
-    let cluster;
+    let cluster, revert;
 
     beforeEach(() => {
       cluster = factory.buildSync('cluster');
+      revert  = connectors.Cert.generate;
+    });
+
+    afterEach(() => {
+      connectors.Cert.generate = revert;
     });
 
     context('when cert creation succeeded', () => {
       beforeEach(() => {
-        sinon.stub(support.cert, 'generate').returns(
-          Promise.resolve(FAKE_CERTS)
-        );
+        connectors.Cert.generate = () => {
+          return Promise.resolve(FAKE_CERTS);
+        };
         return cluster.save();
-      });
-
-      afterEach(() => {
-        support.cert.generate.restore();
       });
 
       it('initializes its ssl certificates', () => {
@@ -95,11 +96,9 @@ describe('Cluster Model', () => {
       const ERROR = random.error();
 
       beforeEach(() => {
-        sinon.stub(support.cert, 'generate').returns(Promise.reject(ERROR));
-      });
-
-      afterEach(() => {
-        support.cert.generate.restore();
+        connectors.Cert.generate = () => {
+          return Promise.reject(ERROR);
+        };
       });
 
       it('returns the error', () => {
