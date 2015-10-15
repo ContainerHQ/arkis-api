@@ -56,6 +56,168 @@ describe('ClusterManager Service', () => {
     });
   });
 
+  describe('#update', () => {
+    let attributes, previousState, action, actualErr;
+
+    beforeEach(() => {
+      attributes    = {};
+      previousState = manager.cluster.state;
+    });
+
+    context('with invalid attributes', () => {
+      beforeEach(done => {
+        attributes.name = null;
+        manager.update(attributes).then(done).catch(err => {
+          actualErr = err;
+          done();
+        });
+      });
+
+      itReturnsAValidationError();
+    });
+
+    context('without strategy', () => {
+      beforeEach(() => {
+        attributes.name = random.string();
+        return manager.update(attributes).then(res => {
+          action = res;
+        });
+      });
+
+      itUpdatesTheAttributes();
+      itDoesntChangeState();
+      itReturnsNull();
+    });
+
+    context('with the same strategy', () => {
+      beforeEach(() => {
+        attributes.strategy = manager.cluster.strategy;
+        return manager.update(attributes);
+      });
+
+      itUpdatesTheAttributes();
+      itDoesntChangeState();
+      itReturnsNull();
+    });
+
+    context('with another strategy', () => {
+      beforeEach(() => {
+        attributes.strategy = 'random';
+      });
+
+      context('when cluster has a master node', () => {
+        let node;
+
+        beforeEach(() => {
+          let opts = { master: true, cluster_id: manager.cluster.id };
+
+          node = factory.buildSync('runningNode', opts);
+          return node.save();
+        });
+
+        context('when this node is running', () => {
+          beforeEach(() => {
+            return manager.update(attributes).then(res => {
+              action = res;
+            });
+          });
+
+          it('is in updating state', () => {
+            return expect(manager.cluster.reload())
+              .to.eventually.have.property('state', 'updating');
+          });
+
+          it('returns a node update action', () => {
+            expect(action).to.include({
+              last_state: 'in-progress',
+              type: 'update',
+              resource: 'node',
+              resource_id: node.id
+            });
+          });
+
+          itUpdatesTheAttributes();
+        });
+
+        context('when this node is not running', () => {
+          beforeEach(done => {
+            node.update({ last_state: 'updating' }).then(() => {
+              return manager.update(attributes);
+            }).then(done).catch(err => {
+              actualErr = err;
+              done();
+            });
+          });
+
+          it('returns an error', () => {
+            expect(actualErr).to.exist;
+          });
+
+          it("doesn't change the attributes", () => {
+            return expect(manager.cluster.reload())
+              .to.eventually.not.include(attributes);
+          });
+
+          itDoesntChangeState();
+        });
+
+        context('with invalid strategy', () => {
+          beforeEach(done => {
+            attributes.strategy = 'lol';
+            manager.update(attributes).then(done).catch(err => {
+              actualErr = err;
+              done();
+            });
+          });
+
+          itReturnsAValidationError();
+          itDoesntChangeState();
+        });
+      });
+
+      context('when cluster has no master node', () => {
+        beforeEach(() => {
+          return manager.update(attributes).then(res => {
+            action = res;
+          });
+        });
+
+        itUpdatesTheAttributes();
+        itDoesntChangeState();
+        itReturnsNull();
+      });
+    });
+
+    function itUpdatesTheAttributes() {
+      it('updates the cluster with attributes', () => {
+        return expect(manager.cluster.reload())
+          .to.eventually.include(attributes);
+      });
+    }
+
+    function itDoesntChangeState() {
+      it("doesn't change the cluster state", () => {
+        return expect(manager.cluster.reload())
+          .to.eventually.have.property('state')
+          .that.equals(previousState).and.not.equals('updating');
+      });
+    }
+
+    function itReturnsNull() {
+      it('returns no action', () => {
+        expect(action).to.be.null;
+      });
+    }
+
+    function itReturnsAValidationError() {
+      it('returns a validation error', done => {
+        manager.cluster.update(attributes).then(done).catch(err => {
+          expect(actualErr).to.deep.equal(err);
+        }).then(done).catch(done);
+      });
+    }
+  });
+
   describe('#upgrade', () => {
     let actualErr, result, previousVersions;
 

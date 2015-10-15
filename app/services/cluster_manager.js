@@ -1,6 +1,7 @@
 'use strict';
 
-let _ = require('lodash'), config = require('../../config'),
+let _ = require('lodash'),
+  config = require('../../config'),
   errors = require('../support').errors,
   StateManager = require('./state_manager'),
   DaemonManager = require('./daemon_manager'),
@@ -20,6 +21,35 @@ class ClusterManager extends StateManager {
   }
   get clusterId() {
     return this.cluster.id;
+  }
+  /*
+   * Updates cluster attributes and if the cluster has a master node and the
+   * strategy is changing, attempts to apply then new strategy to the master
+   * node.
+   */
+  update(attributes={}) {
+    let oldStrategy = this.cluster.strategy;
+
+    _.merge(this.cluster, attributes);
+
+     return this.cluster.validate().then(err => {
+      if (err) { return Promise.reject(err); }
+
+      if (!attributes.strategy || attributes.strategy === oldStrategy) {
+        return Promise.resolve(null);
+      }
+      return this._updateMaster(attributes.strategy);
+    }).then(action => {
+      return this.cluster.save().return(action);
+    });
+  }
+  _updateMaster(strategy) {
+    return this.getNodes('DaemonManager', { where: { master: true } })
+    .then(_.first).then(masterDaemon => {
+      let opts = { strategy: strategy };
+
+      return !!masterDaemon ? masterDaemon.update(opts) : Promise.resolve(null);
+    });
   }
   /*
    * Upgrade a cluster to the latest versions available and perform a
@@ -76,8 +106,8 @@ class ClusterManager extends StateManager {
       return this.cluster.destroy();
     });
   }
-  getNodes(service) {
-    return this.cluster.getNodes().then(nodes => {
+  getNodes(service, options={}) {
+    return this.cluster.getNodes(options).then(nodes => {
       return _.map(nodes, node => {
         switch (service) {
           case 'DaemonManager':
