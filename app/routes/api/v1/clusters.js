@@ -8,8 +8,8 @@ let _ = require('lodash'),
 
 let router = express.Router();
 
-const CREATE_PARAMS = ['name', 'strategy', 'token'],
-      UPDATE_PARAMS = ['name'];
+const CREATE_PARAMS = ['name', 'strategy'],
+      UPDATE_PARAMS = CREATE_PARAMS;
 
 router
 .get('/', middlewares.pagination, (req, res, next) => {
@@ -46,8 +46,10 @@ router
   res.serialize({ cluster: req.cluster });
 })
 .patch((req, res, next) => {
-  req.cluster.update(_.pick(req.body, UPDATE_PARAMS)).then(cluster => {
-    res.serialize({ cluster: cluster });
+  let clusterManager = new services.ClusterManager(req.cluster, req.user);
+
+  clusterManager.update(_.pick(req.body, UPDATE_PARAMS)).then(action => {
+    res.serialize({ cluster: req.cluster, action: action });
   }).catch(next);
 })
 .delete((req, res, next) => {

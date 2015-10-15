@@ -55,7 +55,7 @@ module.exports = function(factory) {
     cert: { ca: random.string() },
     last_state: 'running',
     last_seen: moment(),
-    strategy: 'spread',
+    strategy: 'random',
     nodes_count: 1,
   });
 };

@@ -43,8 +43,7 @@ class DaemonManager extends StateManager {
       .then(createdAction => {
         action = createdAction;
         return this.node.update(
-          _.merge({}, attributes, UPDATING_STATE),
-          options
+          _.merge({}, attributes, UPDATING_STATE), options
         );
       }).then(() => {
         return this.cluster.adaptStateTo({
