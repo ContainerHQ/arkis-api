@@ -1,6 +1,7 @@
 'use strict';
 
-let _ = require('lodash');
+let _ = require('lodash'),
+  services = require('../../../../app/services');
 
 const WHITELIST = ['fullname', 'location', 'company'];
 
@@ -12,7 +13,7 @@ describe('PATCH /account/profile', () => {
 
   beforeEach(() => {
     user = factory.buildSync('user');
-    return user.save();
+    return new services.AccountManager(user).register();
   });
 
   it('updates the user profile', done => {
@@ -36,8 +37,7 @@ describe('PATCH /account/profile', () => {
           return profile.update({ fullname: fullname });
         }).then(done).catch(err => {
           expect(res.body).to.deep.equal(format.error(err));
-          done();
-        });
+        }).then(done).catch(done);
       });
     });
   });

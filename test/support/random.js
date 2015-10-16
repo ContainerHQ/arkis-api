@@ -1,6 +1,7 @@
 'use strict';
 
-let uuid = require('node-uuid'),
+let _ = require('lodash'),
+  uuid = require('node-uuid'),
   Chance = require('chance'),
   chance = new Chance(),
   random = {};
@@ -31,6 +32,15 @@ random.ip = function() {
 
 random.uuid = function() {
   return uuid.v1();
+};
+
+random.obj = function() {
+  let count = random.positiveInt(10), obj = {};
+
+  _.times(count, () => {
+    obj[random.string()] = random.string();
+  });
+  return obj;
 };
 
 module.exports = random;

@@ -20,6 +20,7 @@ module.exports = function(factory) {
     provider: 'whatever',
     provider_id: 23,
     token: 'azerty',
-    token_id: '04490f90-0f77-11e5-b3e6-eb141641cd59'
+    token_id: '04490f90-0f77-11e5-b3e6-eb141641cd59',
+    ssk_key: random.string
   });
 };

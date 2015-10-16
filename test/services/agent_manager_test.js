@@ -25,17 +25,26 @@ describe('AgentManager Service', () => {
     it('returns infos required by the agent', () => {
       let expected = {
         docker: {
-          port:    config.agent.ports.docker,
-          version: config.latestVersions.docker,
-          name:    manager.node.name,
-          labels:  manager.node.labels,
-          cert:    cluster.cert
+          port:    config.agent.ports.docker || '.',
+          version: config.latestVersions.docker || '.',
+          name:    manager.node.name || '.',
+          labels:  manager.node.labels || '.',
+          certs: {
+            ca:   cluster.cert.ca || '.',
+            cert: cluster.cert.server.cert || '.',
+            key:  cluster.cert.server.key || '.'
+          }
         },
         swarm: {
-          port:     config.agent.ports.swarm,
-          version:  config.latestVersions.swarm,
-          strategy: cluster.strategy,
-          master:   manager.node.master
+          port:     config.agent.ports.swarm || '.',
+          version:  config.latestVersions.swarm || '.',
+          strategy: cluster.strategy || '.',
+          master:   manager.node.master,
+          certs: {
+            ca:   cluster.cert.ca || '.',
+            cert: cluster.cert.client.cert || '.',
+            key:  cluster.cert.client.key || '.'
+          }
         },
       };
       return expect(manager.infos()).to.eventually.deep.equal(expected);
@@ -182,8 +191,7 @@ describe('AgentManager Service', () => {
       it('returns a validation error', done => {
         manager.node.update(ATTRIBUTES).then(done).catch(err => {
           expect(actualErr).to.deep.equal(err);
-          done();
-        });
+        }).then(done).catch(done);
       });
 
       it("doesn't update the node with attributes", () => {
@@ -248,8 +256,7 @@ describe('AgentManager Service', () => {
           manager.node.update({ public_ip: addr || 'null' })
           .then(done).catch(err => {
             expect(actualErr).to.deep.equal(err);
-            done();
-          });
+          }).then(done).catch(done);
         });
 
         it("doesn't update node last_seen", () => {

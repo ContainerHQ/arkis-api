@@ -1,6 +1,7 @@
 'use strict';
 
 let _ = require('lodash'),
+  services = require('../../../../app/services'),
   models = require('../../../../app/models');
 
 describe('DELETE /account/', () => {
@@ -12,7 +13,7 @@ describe('DELETE /account/', () => {
   beforeEach(() => {
     user     = factory.buildSync('user');
     password = user.password;
-    return user.save().then(() => {
+    return new services.AccountManager(user).register().then(() => {
       return user.getProfile();
     }).then(profile => {
       profileId = profile.id;

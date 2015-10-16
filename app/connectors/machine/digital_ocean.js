@@ -1,8 +1,10 @@
 'use strict';
 
 let _ = require('lodash'),
-  errors = require('../../support').errors,
-  Client = require('do-wrapper');
+  uuid = require('node-uuid'),
+  Client = require('do-wrapper'),
+  config = require('../../../config'),
+  errors = require('../../support').errors;
 
 const IMAGE_SLUG = 'ubuntu-14-04-x64';
 
@@ -27,6 +29,17 @@ class DigitalOcean {
   }
   getSizes() {
     return this._get('sizes');
+  }
+  _get(resource) {
+    return new Promise((resolve, reject) => {
+      this._client[`${resource}GetAll`]({}, (err, res, body) => {
+        if (err) { return reject(err); }
+
+        let method = `_format${_.capitalize(resource)}`;
+
+        resolve(this[method](body[resource]));
+      });
+    });
   }
   create(options) {
     return new Promise((resolve, reject) => {
@@ -54,6 +67,32 @@ class DigitalOcean {
       });
     });
   }
+  addKey(publicKey) {
+    let opts = {
+      name: `${config.project}-` + uuid.v1(), public_key: publicKey
+    };
+    return new Promise((resolve, reject) => {
+      this._client.accountAddKey(opts, (err, res, body) => {
+        if (err) { return reject(err); }
+
+        if (res.statusCode === 201) {
+          return resolve(body.ssh_key.id);
+        }
+        reject(this._formatError(res));
+      });
+    });
+  }
+  removeKey(id) {
+    return new Promise((resolve, reject) => {
+      this._client.accountDeleteKey(id, (err, res) => {
+        if (err) { return reject(err); }
+
+        if (res.statusCode === 204) { return resolve(); }
+
+        reject(this._formatError(res));
+      });
+    });
+  }
   _formatRegions(regions) {
     return _.map(regions || [], region => {
       return _.omit(region, 'features');
@@ -75,19 +114,8 @@ class DigitalOcean {
 
         return new errors.MachineUnprocessableError(message);
       default:
-        return new Error(res);
+        return new Error(res.body.message);
     }
-  }
-  _get(resource) {
-    return new Promise((resolve, reject) => {
-      this._client[`${resource}GetAll`]({}, (err, res, body) => {
-        if (err) { return reject(err); }
-
-        let method = `_format${_.capitalize(resource)}`;
-
-        resolve(this[method](body[resource]));
-      });
-    });
   }
 }
 

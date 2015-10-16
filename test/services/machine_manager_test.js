@@ -5,7 +5,7 @@ var _ = require('lodash'),
   models = require('../../app/models'),
   errors = require('../../app/support').errors,
   models = require('../../app/models'),
-  MachineManager = require('../../app/services').MachineManager;
+  services = require('../../app/services');
 
 const BYON_OPTS = { byon: true, region: null, size: null };
 
@@ -13,11 +13,15 @@ describe('MachineManager Service', () => {
   let manager;
 
   beforeEach(() => {
-    let cluster = factory.buildSync('cluster'),
-        node    = factory.buildSync('node');
+    let user = factory.buildSync('user'), cluster;
 
-    return cluster.save().then(() => {
-      manager = new MachineManager(cluster, node);
+    return new services.AccountManager(user).register().then(() => {
+      cluster = factory.buildSync('cluster', { user_id: user.id });
+      return cluster.save();
+    }).then(() => {
+      let node = factory.buildSync('node');
+
+      manager = new services.MachineManager(cluster, node, user);
     });
   });
 
@@ -71,10 +75,13 @@ describe('MachineManager Service', () => {
       itCreatesADeployActionForTheNode();
 
       it('creates the machine behind with specified options', () => {
-        expect(manager.machine.create).to.have.been.calledWith({
-          name: manager.node.id || '.',
-          region: manager.node.region || '.',
-          size: manager.node.size || '.'
+        return manager.user.getSSHKeyLink().then(sshKeyLink => {
+          return expect(manager.machine.create).to.have.been.calledWith({
+            name: manager.node.id || '.',
+            region: manager.node.region || '.',
+            size: manager.node.size || '.',
+            ssh_keys: [sshKeyLink.provider_id || '.']
+          });
         });
       });
 

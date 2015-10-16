@@ -42,6 +42,11 @@ module.exports = {
         defaultValue: DataTypes.UUIDV1,
         unique: true
       },
+      ssh_key: {
+        type: DataTypes.JSONB,
+        allowNull: false,
+        defaultValue: null
+      },
       created_at: DataTypes.DATE,
       updated_at: DataTypes.DATE
     }).then(function () {

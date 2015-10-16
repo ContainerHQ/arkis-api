@@ -2,6 +2,7 @@
 
 let _ = require('lodash'),
   concerns = require('./concerns'),
+  connectors = require('../../app/connectors'),
   models = require('../../app/models');
 
 describe('User Model', () => {
@@ -35,10 +36,18 @@ describe('User Model', () => {
         .to.eventually.satisfy(has.hashPassword(user.password));
     });
 
-    it('creates its profile', () => {
-      return expect(user.save().then(user => {
-        return user.getProfile();
-      })).to.eventually.exist;
+    it('inializes its ssh key', () => {
+      let revert = connectors.SSH.generateKey,
+        key = { public: random.string(), private: random.string() };
+
+      connectors.SSH.generateKey = () => {
+        return Promise.resolve(key);
+      };
+      return user.save().then(() => {
+        connectors.SSH.generateKey = revert;
+
+        return expect(user.ssh_key).to.deep.equal(key);
+      });
     });
   });
 

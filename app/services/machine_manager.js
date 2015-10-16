@@ -6,9 +6,10 @@ let _ = require('lodash'),
   Machine = require('../connectors').Machine;
 
 class MachineManager {
-  constructor(cluster, node) {
+  constructor(cluster, node, user) {
     this.cluster = cluster;
     this.node    = node;
+    this.user    = user;
     this.machine = new Machine(config.auth.machine);
   }
   get nodeId() {
@@ -55,10 +56,15 @@ class MachineManager {
     });
   }
   _createMachine() {
-    return this.node.byon ? Promise.resolve() : this.machine.create({
-      name:   this.node.id,
-      region: this.node.region,
-      size:   this.node.size
+    if (this.node.byon) { return Promise.resolve(); }
+
+    return this.user.getSSHKeyLink().then(sshKeyLink => {
+      return this.machine.create({
+        name:   this.node.id,
+        region: this.node.region,
+        size:   this.node.size,
+        ssh_keys: [sshKeyLink.provider_id]
+      });
     });
   }
   _deleteMachine()  {

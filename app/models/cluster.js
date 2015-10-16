@@ -3,7 +3,7 @@
 let _ = require('lodash'),
   concerns = require('./concerns'),
   config = require('../../config'),
-  cert = require('../support').cert,
+  Cert = require('../connectors').Cert,
   is = require('./validators');
 
 const CONCERNS = {
@@ -107,7 +107,7 @@ module.exports = function(sequelize, DataTypes) {
       },
       hooks: {
         beforeCreate: function(cluster) {
-          return cert.generate().then(cert => {
+          return Cert.generate().then(cert => {
             cluster.cert = cert;
             return cluster;
           });

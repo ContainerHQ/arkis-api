@@ -1,13 +1,16 @@
 'use strict';
 
 let _ = require('lodash'),
+  validator = require('validator'),
   config = require('../../../config'),
   errors = require('../../../app/support').errors,
+  SSH = require('../../../app/connectors/ssh'),
   Machine = require('../../../app/connectors/machine');
 
 const IMAGE_NAME = 'ubuntu-14-04-x64',
       UNPROCESSABLE_MESSAGE =
-      'You specified an invalid region for machine creation.';
+      'You specified an invalid region for machine creation.',
+      SSH_PREFIX = `${config.project || '.'}-`;
 
 describe('Machine DigitalOcean Connector', () => {
   context('with valid credentials', () => {
@@ -45,31 +48,36 @@ describe('Machine DigitalOcean Connector', () => {
        * to remove.
        */
       context('with valid options', () => {
-        const OPTIONS = {
-          name: random.string(),
-          region: random.string(),
-          size: random.string()
-        },
-          SUCCESS = { statusCode: 202 },
-          BODY = { droplet: { id: random.string() } };
+        const SUCCESS = { statusCode: 202 };
 
-        let dropletId;
+        let opts, body, dropletId;
 
         beforeEach(() => {
-          client._client.dropletsCreate = sinon.stub().yields(null, SUCCESS, BODY);
-          return client.create(OPTIONS).then(id => {
+          opts = {
+            name: random.string(),
+            region: random.string(),
+            size: random.string(),
+            ssh_keys: [random.uuid()]
+          };
+          body = { droplet: { id: random.string() } };
+
+          client._client.dropletsCreate = sinon.stub()
+            .yields(null, SUCCESS, body);
+
+          return client.create(opts).then(id => {
             dropletId = id;
           });
         });
 
         it('creates a machine with given options', () => {
-          let opts = _.merge({ image: IMAGE_NAME }, OPTIONS);
+          _.merge(opts, { image: IMAGE_NAME });
 
-          expect(client._client.dropletsCreate).to.have.been.calledWith(opts);
+          return expect(client._client.dropletsCreate)
+            .to.have.been.calledWith(opts);
         });
 
         it('returns the droplet id', () => {
-          expect(dropletId).to.equal(BODY.droplet.id);
+          expect(dropletId).to.equal(body.droplet.id);
         });
       });
 
@@ -79,8 +87,7 @@ describe('Machine DigitalOcean Connector', () => {
             expect(err).to.deep.equal(
               new errors.MachineUnprocessableError(UNPROCESSABLE_MESSAGE)
             );
-            done();
-          });
+          }).then(done).catch(done);
         });
       });
     });
@@ -108,8 +115,78 @@ describe('Machine DigitalOcean Connector', () => {
         it('returns an error', done => {
           client.delete({}).then(done).catch(err => {
             expect(err).to.deep.equal(new errors.MachineNotFoundError());
-            done();
+          }).then(done).catch(done);
+        });
+      });
+    });
+
+    describe('#addKey', () => {
+      context('with valid public key', () => {
+        let sshKey, keyId;
+
+        beforeEach(() => {
+          return SSH.generateKey().then(key => {
+            sshKey = key;
           });
+        });
+
+        afterEach(done => {
+          client._client.accountDeleteKey(keyId, done);
+        });
+
+        it('creates and returns a new ssh key id', done => {
+          client.addKey(sshKey.public).then(id => {
+            keyId = id;
+
+            client._client.accountGetKeyById(id, (err, res, body) => {
+              if (err) { return done(err); }
+
+              expect(body.ssh_key.name).to.startWith(SSH_PREFIX);
+              expect(body.ssh_key.name.replace(SSH_PREFIX, '')).to.satisfy(
+                validator.isUUID
+              );
+              done();
+            });
+          }).catch(done);
+        });
+      });
+
+      context('with invalid public key', () => {
+        it('returns an error', () => {
+          return expect(client.addKey()).to.be.rejected;
+        });
+      });
+    });
+
+    describe('#removeKey', () => {
+      context('when the specified key exists', () => {
+        let keyId;
+
+        beforeEach(() => {
+          return SSH.generateKey().then(key => {
+            return client.addKey(key.public);
+          }).then(id => {
+            keyId = id;
+          });
+        });
+
+        it('removes the key', done => {
+          client.removeKey(keyId).then(() => {
+            client._client.accountGetKeyById(keyId, (err, res, body) => {
+              if (err) { return done(err); }
+
+              expect(res.statusCode).to.equal(404);
+              done();
+            });
+          }).catch(done);
+        });
+      });
+
+      context('whith invalid id', () => {
+        it('returns an error', done => {
+          client.removeKey().then(done).catch(err => {
+            expect(err).to.deep.equal(new errors.MachineNotFoundError());
+          }).then(done).catch(done);
         });
       });
     });
@@ -122,11 +199,14 @@ describe('Machine DigitalOcean Connector', () => {
       client = Machine.default();
     });
 
-    describe('#verifyCredentials', () => {
-      it('is rejected', done => {
-        client.verifyCredentials().then(done).catch(err => {
-          expect(err).to.deep.equal(new errors.MachineCredentialsError());
-          done();
+    [
+      'verifyCredentials', 'create', 'delete', 'addKey', 'removeKey'
+    ].forEach(method => {
+      describe(`#${method}`, () => {
+        it('returns an error', done => {
+          client[method]({}).then(done).catch(err => {
+            expect(err).to.deep.equal(new errors.MachineCredentialsError());
+          }).then(done).catch(done);
         });
       });
     });
@@ -140,24 +220,6 @@ describe('Machine DigitalOcean Connector', () => {
     describe('#getSizes', () => {
       it('returns an empty list', () => {
         return expect(client.getSizes()).to.eventually.be.empty;
-      });
-    });
-
-    describe('#create', () => {
-      it('returns an error', done => {
-        client.create({}).then(done).catch(err => {
-          expect(err).to.deep.equal(new errors.MachineCredentialsError());
-          done();
-        });
-      });
-    });
-
-    describe('#delete', () => {
-      it('returns an error', done => {
-        client.delete({}).then(done).catch(err => {
-          expect(err).to.deep.equal(new errors.MachineCredentialsError());
-          done();
-        });
       });
     });
   });

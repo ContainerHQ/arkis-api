@@ -12,8 +12,14 @@ describe('ClusterManager Service', () => {
   let manager;
 
   beforeEach(() => {
-    return factory.buildSync('runningCluster').save().then(cluster => {
-      manager = new services.ClusterManager(cluster);
+    let user = factory.buildSync('user');
+
+    return user.save().then(() => {
+      let opts = { user_id: user.id };
+
+      return factory.buildSync('runningCluster', opts).save();
+    }).then(cluster => {
+      manager = new services.ClusterManager(cluster, user);
     });
   });
 
@@ -31,7 +37,7 @@ describe('ClusterManager Service', () => {
 
           return manager.cluster.getNodes().then(nodes => {
             expected = _.map(nodes, node => {
-              return new services[service](manager.cluster, node);
+              return new services[service](manager.cluster, node, manager.user);
             });
             return manager.getNodes(service);
           }).then(managers => {

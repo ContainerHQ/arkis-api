@@ -54,8 +54,7 @@ describe('PATCH /account/change_email', () => {
 
         user.update({ email: null }).then(done).catch(err => {
           expect(res.body).to.deep.equal(format.error(err));
-          done();
-        });
+        }).then(done).catch(done);
       });
     });
   });
