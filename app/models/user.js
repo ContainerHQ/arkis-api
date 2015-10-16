@@ -2,8 +2,9 @@
 
 let _ = require('lodash'),
   bcrypt = require('bcrypt'),
+  uuid = require('node-uuid'),
   connectors = require('../connectors'),
-  token = require('../support').token,
+  support = require('../support'),
   is = require('./validators');
 
 module.exports = function(sequelize, DataTypes) {
@@ -55,7 +56,7 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: null,
       unique: true
     },
-    token: {
+    encrypted_token: {
       type: DataTypes.TEXT,
       allowNull: true,
       defaultValue: null,
@@ -73,11 +74,17 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: null
     }
   }, {
+    getterMethods: {
+      token: function() {
+        let encryptedToken = this.get('encrypted_token');
+
+        return new support.Encryption('aes').decrypt(encryptedToken);
+      }
+    },
     instanceMethods: {
       verifyPassword: function(password) {
         return bcrypt.compareSync(password, this.password_hash);
       },
-
       /* The encoded jwt token includes a unique universal identifier,
        * changing this identifier invalidates the token.
        *
@@ -86,10 +93,12 @@ module.exports = function(sequelize, DataTypes) {
        * programming heaven).
        */
       generateToken: function() {
-        this.token = token.generate(this.token_id);
+        let token = support.token.generate(this.token_id);
+
+        this.encrypted_token = new support.Encryption('aes').encrypt(token);
       },
       revokeToken: function() {
-        this.token_id = sequelize.Utils.toDefaultValue(DataTypes.UUIDV1());
+        this.token_id = uuid.v1();
       },
       getSSHKeyLink: function(options) {
         let criterias = { where: { type: 'ssh_key' } };

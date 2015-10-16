@@ -19,7 +19,7 @@ module.exports = function(factory) {
     password_hash: 'whatever',
     provider: 'whatever',
     provider_id: 23,
-    token: 'azerty',
+    encrypted_token: 'azerty',
     token_id: '04490f90-0f77-11e5-b3e6-eb141641cd59',
     ssk_key: random.string
   });

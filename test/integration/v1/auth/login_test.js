@@ -64,21 +64,21 @@ describe('POST /auth/login', () => {
   });
 
   context('with blacklisted attributes', () => {
-    let attributes;
+    let attributes, form;
 
     beforeEach(() => {
       attributes = _.difference(user.attributes,
-        ['id', 'email', 'password', 'password_hash', 'token', 'token_id']
+        ['id', 'email', 'password', 'password_hash', 'encrypted_token', 'token_id']
       );
-      user = factory.buildSync('forbiddenUser');
+      form = factory.buildSync('forbiddenUser').dataValues;
     });
 
     it('these attributes are filtered', done => {
-      api.auth.login(user).send(user).expect(201, (err, res) => {
+      api.auth.login(user).send(form).expect(201, (err, res) => {
         if (err) { return done(err); }
 
         expect(User.findOne({ where: { email: user.email } }))
-          .to.eventually.satisfy(has.beenFiltered(user, attributes))
+          .to.eventually.satisfy(has.beenFiltered({ dataValues: form }, attributes))
           .notify(done);
       });
     });

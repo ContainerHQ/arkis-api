@@ -63,8 +63,6 @@ describe('PATCH /clusters/:cluster_id', () => {
     });
   });
 
-
-
   context('with invalid attributes', () => {
     let form = { name: null };
 

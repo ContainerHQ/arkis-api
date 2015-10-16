@@ -2,6 +2,7 @@
 
 let _ = require('lodash'),
   concerns = require('./concerns'),
+  support = require('../../app/support'),
   connectors = require('../../app/connectors'),
   models = require('../../app/models');
 
@@ -34,6 +35,12 @@ describe('User Model', () => {
     it('stores its password as a hash', () => {
       return expect(user.save())
         .to.eventually.satisfy(has.hashPassword(user.password));
+    });
+
+    it('stores its token as a encrypted text', () => {
+      return expect(user.save()).to.eventually.satisfy(
+        has.encrypted('token', { algorithm: 'aes' })
+      );
     });
 
     it('inializes its ssh key', () => {

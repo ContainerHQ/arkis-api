@@ -30,7 +30,7 @@ module.exports = {
         defaultValue: null,
         unique: true
       },
-      token: {
+      encrypted_token: {
         type: DataTypes.TEXT,
         allowNull: false,
         defaultValue: null,
