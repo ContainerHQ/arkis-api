@@ -24,8 +24,8 @@ module.exports = {
         defaultValue: null,
         validate: { len: [1, 64] }
       },
-      cert: {
-        type: DataTypes.JSONB,
+      encrypted_cert: {
+        type: DataTypes.TEXT,
         allowNull: false,
         defaultValue: null
       },

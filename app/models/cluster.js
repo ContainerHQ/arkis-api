@@ -3,12 +3,13 @@
 let _ = require('lodash'),
   concerns = require('./concerns'),
   config = require('../../config'),
+  support = require('../support'),
   Cert = require('../connectors').Cert,
   is = require('./validators');
 
 const CONCERNS = {
   serializable: {
-    omit:  ['cert', 'last_state', 'user_id'],
+    omit:  ['cert', 'encrypted_cert', 'last_state', 'user_id'],
     links: ['nodes']
   },
   state: {
@@ -46,8 +47,8 @@ module.exports = function(sequelize, DataTypes) {
           is.unique({ attribute: 'name', scope: 'user' })
         )
       },
-      cert: {
-        type: DataTypes.JSONB,
+      encrypted_cert: {
+        type: DataTypes.TEXT,
         allowNull: true,
         defaultValue: null
       },
@@ -104,12 +105,19 @@ module.exports = function(sequelize, DataTypes) {
               return 'Cluster is running and reachable';
           }
         },
+        cert: function() {
+          let encryptedCert = this.get('encrypted_cert'),
+            cert = new support.Encryption('aes').decrypt(encryptedCert);
+
+          return JSON.parse(cert);
+        }
       },
       hooks: {
         beforeCreate: function(cluster) {
           return Cert.generate().then(cert => {
-            cluster.cert = cert;
-            return cluster;
+            return new support.Encryption('aes').encrypt(JSON.stringify(cert));
+          }).then(encrypted => {
+            cluster.encrypted_cert = encrypted;
           });
         }
       },

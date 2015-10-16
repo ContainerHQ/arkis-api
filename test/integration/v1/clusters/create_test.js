@@ -16,7 +16,7 @@ describe('POST /clusters/', () => {
   it('creates a cluster for the user', done => {
     let form = factory.buildSync('cluster').dataValues,
       params = _.omit(form, [
-        'id', 'token', 'cert', 'docker_version', 'swarm_version'
+        'id', 'encrypted_cert', 'docker_version', 'swarm_version'
       ]);
 
     api.clusters(user).create().send(form)

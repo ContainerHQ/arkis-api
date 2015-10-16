@@ -28,7 +28,7 @@ describe('Cluster Model', () => {
   });
 
   concerns('cluster').serializable({
-    omit:  ['user_id', 'cert', 'last_state'],
+    omit:  ['user_id', 'cert', 'encrypted_cert', 'last_state'],
     links: ['nodes']
   });
 
@@ -89,6 +89,12 @@ describe('Cluster Model', () => {
 
       it('initializes its ssl certificates', () => {
         expect(cluster.cert).to.deep.equal(FAKE_CERTS);
+      });
+
+      it('stores its ssl certificates as a encrypted text', () => {
+        expect(cluster).to.satisfy(
+          has.encrypted('cert', { algorithm: 'aes' })
+        );
       });
     });
 
