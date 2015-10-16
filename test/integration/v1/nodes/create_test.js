@@ -76,12 +76,10 @@ describe('POST /clusters/:cluster_id/nodes', () => {
     beforeEach(() => {
       node = factory.buildSync('forbiddenNode');
       form = node.dataValues;
-      attributes = _.difference(node.attributes,
-        [
-          'id', 'cluster_id', 'token', 'fqdn',
-          'name', 'master', 'labels', 'byon', 'region', 'size',
-        ]
-      );
+      attributes = _.difference(node.attributes, [
+        'id', 'cluster_id', 'encrypted_token', 'fqdn',
+        'name', 'master', 'labels', 'byon', 'region', 'size',
+      ]);
     });
 
     it('these attributes are filtered', done => {

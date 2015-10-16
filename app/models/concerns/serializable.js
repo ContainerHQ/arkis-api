@@ -27,8 +27,10 @@ module.exports = function({ omit, merge, links, specifics}) {
            * Will remove agent_cmd if byon is true.
            */
           _.keys(specifics).forEach(attribute => {
-            if (this[attribute]) {
-              _.keys(specifics[attribute]).forEach(method => {
+            if (this[attribute] === specifics[attribute].if) {
+              let methods = _.omit(specifics[attribute], 'if');
+
+              _.keys(methods).forEach(method => {
                 serialized = _[method](serialized, specifics[attribute][method]);
               });
             }

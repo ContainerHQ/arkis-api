@@ -9,7 +9,7 @@ let _ = require('lodash'),
   models = require('../../app/models');
 
 const SERIALIZATION = {
-  omit:  ['token', 'provider_id', 'last_state', 'addr'],
+  omit:  ['token', 'encrypted_token', 'provider_id', 'last_state', 'addr'],
   links: ['actions']
 };
 
@@ -32,11 +32,11 @@ describe('Node Model', () => {
     }
   });
 
-  concerns('node').serializable(SERIALIZATION);
-
-  concerns('byonNode').serializable(
+  concerns('node').serializable(
     _.merge({ merge: { agent_cmd: null } }, SERIALIZATION)
   );
+
+  concerns('byonNode').serializable(SERIALIZATION);
 
   concerns('node').has({
     default: {
@@ -114,6 +114,12 @@ describe('Node Model', () => {
       let agentCmd = `${config.agent.cmd || '.'} ${node.token || '.'}`;
 
       expect(node.agent_cmd).to.equal(agentCmd);
+    });
+
+    it('stores its token as a encrypted text', () => {
+      expect(node).to.satisfy(
+        has.encrypted('token', { algorithm: 'aes' })
+      );
     });
   });
 

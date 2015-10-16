@@ -4,14 +4,14 @@ let _ = require('lodash'),
   config = require('../../config'),
   concerns = require('./concerns'),
   fqdn = require('../support').fqdn,
-  token = require('../support').token,
+  support = require('../support'),
   is = require('./validators');
 
 const CONCERNS = {
   serializable: {
-    omit:  ['token', 'provider_id', 'last_state', 'addr'],
+    omit:  ['token', 'encrypted_token', 'provider_id', 'last_state', 'addr'],
     links: ['actions'],
-    specifics: { byon: { merge: { agent_cmd: null } } }
+    specifics: { byon: { if: false, merge: { agent_cmd: null } } }
   },
   state: {
     attribute: {
@@ -55,7 +55,7 @@ module.exports = function(sequelize, DataTypes) {
           is.unique({ attribute: 'name', scope: 'cluster' })
         )
       },
-      token: {
+      encrypted_token: {
         type: DataTypes.TEXT,
         allowNull: true,
         defaultValue: null,
@@ -215,11 +215,18 @@ module.exports = function(sequelize, DataTypes) {
         },
         addr: function() {
           return this.get('public_ip');
+        },
+        token: function() {
+          let encryptedToken = this.get('encrypted_token');
+
+          return new support.Encryption('aes').decrypt(encryptedToken);
         }
       },
       hooks: {
         beforeCreate: function(node) {
-          node.token = token.generate(node.id);
+          let token = support.token.generate(node.id);
+
+          node.encrypted_token = new support.Encryption('aes').encrypt(token);
         },
         beforeUpdate: function(node, options) {
           if (
