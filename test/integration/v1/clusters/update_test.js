@@ -23,6 +23,48 @@ describe('PATCH /clusters/:cluster_id', () => {
     .expect(200, has.one(user, 'cluster', { with: form }, done));
   });
 
+  context('with strategy and a master node', () => {
+    let form, node;
+
+    beforeEach(() => {
+
+      let opts = { master: true, cluster_id: cluster.id };
+
+      form = { strategy: 'random' };
+      node = factory.buildSync('runningNode', opts);
+      return node.save();
+    });
+
+    it('returns a node update action', done => {
+      api.clusters(user).update(cluster.id).send(form)
+      .expect(200, (err, res) => {
+        if (err) { return done(err); }
+
+        expect(res.body.action).to.include({
+          state: 'in-progress',
+          type: 'update',
+          resource: 'node',
+          resource_id: node.id
+        });
+        done();
+      });
+    });
+  });
+
+  context('without strategy', () => {
+    it('returns a null action', done => {
+      api.clusters(user).update(cluster.id).send({})
+      .expect(200, (err, res) => {
+        if (err) { return done(err); }
+
+        expect(res.body.action).to.be.null;
+        done();
+      });
+    });
+  });
+
+
+
   context('with invalid attributes', () => {
     let form = { name: null };
 
@@ -44,7 +86,7 @@ describe('PATCH /clusters/:cluster_id', () => {
     beforeEach(() => {
       form = factory.buildSync('forbiddenCluster').dataValues;
       attributes = _.difference(cluster.attributes,
-        ['name', 'cert', 'created_at', 'updated_at']
+        ['name', 'strategy', 'cert', 'created_at', 'updated_at']
       );
     });
 
