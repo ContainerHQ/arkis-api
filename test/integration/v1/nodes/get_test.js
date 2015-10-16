@@ -39,8 +39,8 @@ describe('GET /clusters/:cluster_id/nodes/:node_id', () => {
         let otherCluster;
 
         beforeEach(() => {
-          otherCluster = factory.buildSync('cluster');
-          return user.addCluster(otherCluster);
+          otherCluster = factory.buildSync('cluster', { user_id: user.id });
+          return otherCluster.save();
         });
 
         it('returns a 404 not found', done => {
