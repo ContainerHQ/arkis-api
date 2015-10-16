@@ -3,7 +3,6 @@
 let _ = require('lodash'),
   concerns = require('./concerns'),
   config = require('../../config'),
-  support = require('../support'),
   Cert = require('../connectors').Cert,
   is = require('./validators');
 
@@ -26,7 +25,8 @@ const CONCERNS = {
       },
       after: config.agent.heartbeat,
     }
-  }
+  },
+  encrypted: ['cert']
 };
 
 module.exports = function(sequelize, DataTypes) {
@@ -104,20 +104,12 @@ module.exports = function(sequelize, DataTypes) {
             case 'running':
               return 'Cluster is running and reachable';
           }
-        },
-        cert: function() {
-          let encryptedCert = this.get('encrypted_cert'),
-            cert = new support.Encryption('aes').decrypt(encryptedCert);
-
-          return JSON.parse(cert);
         }
       },
       hooks: {
         beforeCreate: function(cluster) {
           return Cert.generate().then(cert => {
-            return new support.Encryption('aes').encrypt(JSON.stringify(cert));
-          }).then(encrypted => {
-            cluster.encrypted_cert = encrypted;
+            cluster.encryptCert(cert);
           });
         }
       },

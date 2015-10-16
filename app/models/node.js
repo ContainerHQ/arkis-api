@@ -27,7 +27,8 @@ const CONCERNS = {
       },
       after: config.agent.heartbeat,
     }
-  }
+  },
+  encrypted: ['token']
 };
 
 module.exports = function(sequelize, DataTypes) {
@@ -215,18 +216,13 @@ module.exports = function(sequelize, DataTypes) {
         },
         addr: function() {
           return this.get('public_ip');
-        },
-        token: function() {
-          let encryptedToken = this.get('encrypted_token');
-
-          return new support.Encryption('aes').decrypt(encryptedToken);
         }
       },
       hooks: {
         beforeCreate: function(node) {
-          let token = support.token.generate(node.id);
-
-          node.encrypted_token = new support.Encryption('aes').encrypt(token);
+          node.encryptToken(
+            support.token.generate(node.id)
+          );
         },
         beforeUpdate: function(node, options) {
           if (
