@@ -68,8 +68,8 @@ module.exports = function(sequelize, DataTypes) {
       defaultValue: DataTypes.UUIDV1,
       unique: true
     },
-    ssh_key: {
-      type: DataTypes.JSONB,
+    encrypted_ssh_key: {
+      type: DataTypes.TEXT,
       allowNull: true,
       defaultValue: null
     }
@@ -79,6 +79,12 @@ module.exports = function(sequelize, DataTypes) {
         let encryptedToken = this.get('encrypted_token');
 
         return new support.Encryption('aes').decrypt(encryptedToken);
+      },
+      ssh_key: function() {
+        let encrypted = this.get('encrypted_ssh_key'),
+          decrypted = new support.Encryption('aes').decrypt(encrypted);
+
+        return JSON.parse(decrypted);
       }
     },
     instanceMethods: {
@@ -118,7 +124,9 @@ module.exports = function(sequelize, DataTypes) {
         user.generateToken();
 
         return connectors.SSH.generateKey().then(key => {
-          user.ssh_key = key;
+          return new support.Encryption('aes').encrypt(JSON.stringify(key));
+        }).then(encrypted => {
+          user.encrypted_ssh_key = encrypted;
         });
       }
     }

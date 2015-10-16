@@ -42,8 +42,8 @@ module.exports = {
         defaultValue: DataTypes.UUIDV1,
         unique: true
       },
-      ssh_key: {
-        type: DataTypes.JSONB,
+      encrypted_ssh_key: {
+        type: DataTypes.TEXT,
         allowNull: false,
         defaultValue: null
       },
