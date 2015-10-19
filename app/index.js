@@ -6,6 +6,7 @@ let express = require('express'),
   morgan = require('morgan'),
   multer = require('multer'),
   config = require('../config'),
+  jobs = require('./jobs'),
   middlewares = require('./middlewares'),
   routes = require('./routes'),
   app = express();
@@ -31,5 +32,14 @@ app
 if (config.logging) {
   app.use(morgan(config.logger));
 }
+
+process.once('SIGTERM', () => {
+  jobs.shutdown(5000, err => {
+    if (config.logging) {
+      console.log('Jobs queue shutdown: ', err || 'SUCCESS!');
+    }
+    process.exit(0);
+  });
+});
 
 module.exports = app;

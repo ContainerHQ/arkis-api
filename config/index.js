@@ -30,11 +30,16 @@ let config = {
     },
     timeout: 5000, // In ms
     heartbeat: { amount: 5, key: 'minutes' }
-  },
+  }
 };
 
 config.db = require('./database')[config.env];
 config.secrets = require('./secrets')[config.env];
+config.store = require('./store')[config.env];
+config.jobs = {
+  prefix: `${config.project}-${config.env}`,
+  port: process.env.JOBS_PORT || 3000
+}
 
 _.merge(config, require(`./environments/${config.env}`));
 _.merge(config.db, {

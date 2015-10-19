@@ -4,10 +4,14 @@ api:
   user: root
   ports:
     - '4000:4000'
+    - '3000:3000'
   links:
     - 'dbdev'
     - 'dbtest'
     - 'dbproduction'
+    - 'storedev'
+    - 'storetest'
+    - 'storeprod'
   volumes:
     - '$DOCKER_CERT_PATH:/home/.docker'
     - '.:/arkis-api'
@@ -44,3 +48,24 @@ dbproduction:
     service: dbdev
   volumes:
     - '/arkis-dbproduction:/var/lib/postgresql/data'
+
+storedev:
+  image: redis:2.8.9
+  expose:
+    - '6379'
+  volumes:
+    - '/arkis-storedev:/data'
+
+storetest:
+  extends:
+    file: docker-compose.yml
+    service: storedev
+  volumes:
+    - '/arkis-storetest:/data'
+
+storeprod:
+  extends:
+    file: docker-compose.yml
+    service: storedev
+  volumes:
+    - '/arkis-storeprod:/data'

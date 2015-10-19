@@ -3,7 +3,7 @@
 let errors = require('../../support').errors,
   uuid = require('node-uuid');
 
-const UNPROCESSABLE_MESSAGE = 'Invalid region/size for macine creation';
+const UNPROCESSABLE_MESSAGE = 'Invalid region/size for machine creation';
 
 class Machine {
   constructor(credentials) {

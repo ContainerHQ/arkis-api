@@ -1,0 +1,17 @@
+{
+  "development": {
+    "port": 6379,
+    "host": "storedev",
+    "auth": ""
+  },
+  "test": {
+    "port": 6379,
+    "host": "storetest",
+    "auth": ""
+  },
+  "production": {
+    "port": 6379,
+    "host": "storeprod",
+    "auth": ""
+  }
+}

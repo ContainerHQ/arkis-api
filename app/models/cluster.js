@@ -168,6 +168,7 @@ module.exports = function(sequelize, DataTypes) {
       },
       classMethods: {
         associate: function(models) {
+          this.belongsTo(models.User);
           this.hasMany(models.Node, { counterCache: { as: 'nodes_count' } });
         }
       }
