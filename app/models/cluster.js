@@ -8,7 +8,7 @@ let _ = require('lodash'),
 
 const CONCERNS = {
   serializable: {
-    omit:  ['cert', 'last_state', 'user_id'],
+    omit:  ['cert', 'encrypted_cert', 'last_state', 'user_id'],
     links: ['nodes']
   },
   state: {
@@ -25,7 +25,8 @@ const CONCERNS = {
       },
       after: config.agent.heartbeat,
     }
-  }
+  },
+  encrypted: ['cert']
 };
 
 module.exports = function(sequelize, DataTypes) {
@@ -46,8 +47,8 @@ module.exports = function(sequelize, DataTypes) {
           is.unique({ attribute: 'name', scope: 'user' })
         )
       },
-      cert: {
-        type: DataTypes.JSONB,
+      encrypted_cert: {
+        type: DataTypes.TEXT,
         allowNull: true,
         defaultValue: null
       },
@@ -103,13 +104,12 @@ module.exports = function(sequelize, DataTypes) {
             case 'running':
               return 'Cluster is running and reachable';
           }
-        },
+        }
       },
       hooks: {
         beforeCreate: function(cluster) {
           return Cert.generate().then(cert => {
-            cluster.cert = cert;
-            return cluster;
+            cluster.encryptCert(cert);
           });
         }
       },

@@ -52,7 +52,7 @@ module.exports = function(factory) {
     id: 0,
     user_id: 0,
     name: random.string,
-    cert: { ca: random.string() },
+    encrypted_cert: random.string,
     last_state: 'running',
     last_seen: moment(),
     strategy: 'random',

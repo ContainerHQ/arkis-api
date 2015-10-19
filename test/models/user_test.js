@@ -2,6 +2,7 @@
 
 let _ = require('lodash'),
   concerns = require('./concerns'),
+  support = require('../../app/support'),
   connectors = require('../../app/connectors'),
   models = require('../../app/models');
 
@@ -21,10 +22,17 @@ describe('User Model', () => {
   });
 
   describe('#create', () => {
-    let user;
+    const FAKE_KEY = { public: random.string(), private: random.string() };
+
+    let user, revert;
 
     beforeEach(() => {
       user = factory.buildSync('user');
+      revert = connectors.SSH.generateKey;
+    });
+
+    afterEach(() => {
+      connectors.SSH.generateKey = revert;
     });
 
     it('initializes its token', () => {
@@ -36,17 +44,50 @@ describe('User Model', () => {
         .to.eventually.satisfy(has.hashPassword(user.password));
     });
 
-    it('inializes its ssh key', () => {
-      let revert = connectors.SSH.generateKey,
-        key = { public: random.string(), private: random.string() };
+    it('stores its token as a encrypted text', () => {
+      return expect(user.save()).to.eventually.satisfy(
+        has.encrypted('token', { algorithm: 'aes' })
+      );
+    });
 
-      connectors.SSH.generateKey = () => {
-        return Promise.resolve(key);
-      };
-      return user.save().then(() => {
-        connectors.SSH.generateKey = revert;
+    context('when ssh key creation succeeded', () => {
+      beforeEach(() => {
+        connectors.SSH.generateKey = () => {
+          return Promise.resolve(FAKE_KEY);
+        };
+        return user.save();
+      });
 
-        return expect(user.ssh_key).to.deep.equal(key);
+      it('inializes its ssh key', () => {
+        expect(user.ssh_key).to.deep.equal(FAKE_KEY);
+      });
+
+      it('stores its ssh_key as a encrypted text', () => {
+        return expect(user.save()).to.eventually.satisfy(
+          has.encrypted('ssh_key', { algorithm: 'aes' })
+        );
+      });
+    });
+
+    context('when ssh key creation failed', () => {
+      const ERROR = random.error();
+
+      beforeEach(() => {
+        connectors.SSH.generateKey = () => {
+          return Promise.reject(ERROR);
+        };
+      });
+
+      it('returns the error', () => {
+        return expect(user.save()).to.be.rejectedWith(ERROR);
+      });
+
+      it("doesn't create the user", done => {
+        user.save().then(done).catch(err => {
+          expect(models.User.findById(user.id))
+            .to.eventually.not.exist
+            .notify(done);
+        });
       });
     });
   });

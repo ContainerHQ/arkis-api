@@ -92,6 +92,7 @@ module.exports = function(factory) {
     cpu: 2,
     memory: 256,
     disk: 2.0,
+    encrypted_token: random.string,
     labels: {
       storage: 'floppy',
       environment: 'staging'

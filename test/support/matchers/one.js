@@ -24,7 +24,6 @@ module.exports = function (belongsTo, modelName, opts, done) {
 
       expect(model).to.deep.equal(serialized);
       expect(ownerModel).to.containSubset(opts.with);
-      done();
-    }).catch(done);
+    }).then(done).catch(done);
   };
 };

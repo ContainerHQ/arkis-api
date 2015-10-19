@@ -1,6 +1,7 @@
 'use strict';
 
 let random = require('../random'),
+  uuid = require('node-uuid'),
   User = require('../../../app/models').User;
 
 module.exports = function(factory) {
@@ -19,8 +20,10 @@ module.exports = function(factory) {
     password_hash: 'whatever',
     provider: 'whatever',
     provider_id: 23,
-    token: 'azerty',
-    token_id: '04490f90-0f77-11e5-b3e6-eb141641cd59',
+    encrypted_token: random.string,
+    token_id: function() {
+      return uuid.v1();
+    },
     ssk_key: random.string
   });
 };

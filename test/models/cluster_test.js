@@ -28,7 +28,7 @@ describe('Cluster Model', () => {
   });
 
   concerns('cluster').serializable({
-    omit:  ['user_id', 'cert', 'last_state'],
+    omit:  ['user_id', 'cert', 'encrypted_cert', 'last_state'],
     links: ['nodes']
   });
 
@@ -59,7 +59,7 @@ describe('Cluster Model', () => {
   });
 
   describe('#create', () => {
-    const FAKE_CERTS = {
+    const FAKE_CERT = {
       client: {
         cert: random.string(), key: random.string(), ca: random.string()
       },
@@ -82,13 +82,19 @@ describe('Cluster Model', () => {
     context('when cert creation succeeded', () => {
       beforeEach(() => {
         connectors.Cert.generate = () => {
-          return Promise.resolve(FAKE_CERTS);
+          return Promise.resolve(FAKE_CERT);
         };
         return cluster.save();
       });
 
       it('initializes its ssl certificates', () => {
-        expect(cluster.cert).to.deep.equal(FAKE_CERTS);
+        expect(cluster.cert).to.deep.equal(FAKE_CERT);
+      });
+
+      it('stores its ssl certificates as a encrypted text', () => {
+        expect(cluster).to.satisfy(
+          has.encrypted('cert', { algorithm: 'aes' })
+        );
       });
     });
 

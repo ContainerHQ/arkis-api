@@ -22,7 +22,7 @@ module.exports = {
         defaultValue: null,
         validate: { len: [1, 64] }
       },
-      token: {
+      encrypted_token: {
         type: DataTypes.TEXT,
         allowNull: false,
         defaultValue: null,

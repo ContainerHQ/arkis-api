@@ -3,6 +3,7 @@
 module.exports = {
   validJWT: require('./valid_jwt'),
   hashPassword: require('./hash_password'),
+  encrypted: require('./encrypted'),
   beenFiltered: require('./been_filtered'),
   latestVersions: require('./latest_versions'),
   one: require('./one'),

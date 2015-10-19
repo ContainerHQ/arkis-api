@@ -4,14 +4,14 @@ let _ = require('lodash'),
   config = require('../../config'),
   concerns = require('./concerns'),
   fqdn = require('../support').fqdn,
-  token = require('../support').token,
+  support = require('../support'),
   is = require('./validators');
 
 const CONCERNS = {
   serializable: {
-    omit:  ['token', 'provider_id', 'last_state', 'addr'],
+    omit:  ['token', 'encrypted_token', 'provider_id', 'last_state', 'addr'],
     links: ['actions'],
-    specifics: { byon: { merge: { agent_cmd: null } } }
+    specifics: { byon: { if: false, merge: { agent_cmd: null } } }
   },
   state: {
     attribute: {
@@ -27,7 +27,8 @@ const CONCERNS = {
       },
       after: config.agent.heartbeat,
     }
-  }
+  },
+  encrypted: ['token']
 };
 
 module.exports = function(sequelize, DataTypes) {
@@ -55,7 +56,7 @@ module.exports = function(sequelize, DataTypes) {
           is.unique({ attribute: 'name', scope: 'cluster' })
         )
       },
-      token: {
+      encrypted_token: {
         type: DataTypes.TEXT,
         allowNull: true,
         defaultValue: null,
@@ -219,7 +220,9 @@ module.exports = function(sequelize, DataTypes) {
       },
       hooks: {
         beforeCreate: function(node) {
-          node.token = token.generate(node.id);
+          node.encryptToken(
+            support.token.generate(node.id)
+          );
         },
         beforeUpdate: function(node, options) {
           if (
