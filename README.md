@@ -1,32 +1,9 @@
-# Docker Proxy
+# Arkis REST API
 [![Circle CI](https://circleci.com/gh/ContainerHQ/arkis-api.svg?style=svg)](https://circleci.com/gh/ContainerHQ/arkis-api)
 [![Code Climate](https://codeclimate.com/github/ContainerHQ/arkis-api/badges/gpa.svg)](https://codeclimate.com/github/ContainerHQ/arkis-api)
 [![Test Coverage](https://codeclimate.com/github/ContainerHQ/arkis-api/badges/coverage.svg)](https://codeclimate.com/github/ContainerHQ/arkis-api/coverage)
 
-Docker remote API Proxy.
-
-This project aims to be fully compatible with Docker API first,
-then with Docker Swarm API.
-
-This means also that Docker CLI is able to work nicely with this
-proxy.
-
-**This project is at an early development stage. Don't use it in
-production.**
-
-## Missing Endpoints
-
-Some endpoints have not yet been implemented and will return a 404 error:
-
-```
-GET  "/containers/:id/attach/ws"
-GET  "/images/get"
-```
-
-Known issues:
-```
-* Containers attach and exec start are working only on tcp upgrade.
-```
+Online documentation is available [here](http://containerhq.github.io/arkis-api-docs/).
 
 ## Author
 
@@ -37,5 +14,5 @@ Known issues:
 
 ## Licensing
 
-docker-proxy is licensed under the MIT License. See [LICENSE](LICENSE) for full
+arkis-api is licensed under the MIT License. See [LICENSE](LICENSE) for full
 license text.
